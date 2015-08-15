@@ -27,7 +27,7 @@ npm install alex --global
 
 ## Command Line
 
-![Example of how alex looks on screen](https://cdn.rawgit.com/wooorm/alex/master/screen-shot.png)
+![Example of how alex looks on screen](screen-shot.png)
 
 Let’s say `example.md` looks as follows:
 
