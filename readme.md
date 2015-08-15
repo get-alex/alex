@@ -8,6 +8,13 @@ Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, binary thinking, identity insensitive, race related,
 religion inconsiderate, or other **unequal** phrasing.
 
+<!--lint disable no-html-->
+
+For example, when `We’ve confirmed his identity` is given to **alex**,
+it will warn you and suggest using `their` instead of `his`. (And yes, using
+`they` here is standard English since the 16<sup>th</sup> century, and was
+used by Shakespeare.)
+
 ## Why
 
 *   [x] Catches numerous different possible offenses;
