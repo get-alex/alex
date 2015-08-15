@@ -51,7 +51,7 @@ example.md
   2:70  warning  `he` may be insensitive, use `they`, `it` instead
 ```
 
-See `mdast --help` for more information.
+See `alex --help` for more information.
 
 ## Programmatic
 
