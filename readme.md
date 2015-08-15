@@ -90,6 +90,22 @@ alex('We’ve confirmed his identity.').messages;
 in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
 demonstrated in the example above, as it holds the possible violations.
 
+## Internals
+
+**Alex** checks for many patterns of English language, and warns for:
+
+*   Gendered work-titles, for example warning about `garbageman` and suggesting
+    `garbage collector` instead;
+
+*   Gendered proverbs, such as warning about `like a man` and suggesting
+    `bravely` instead, or `ladylike` and suggesting `courteous`;
+
+*   Blunt phrases, such as warning about `cripple` and suggesting
+    `person with a limp` instead;
+
+*   Intolerant phrasing, such as warning about using `master` and `slave`
+    together, and suggesting `primary` and `replica` instead.
+
 ## License
 
 [MIT](LICENSE) © [Titus Wormer](http://wooorm.com)
