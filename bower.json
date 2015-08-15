@@ -1,0 +1,48 @@
+{
+  "name": "alex",
+  "main": "alex.js",
+  "description": "Catch insensitive, inconsiderate writing",
+  "license": "MIT",
+  "keywords": [
+    "alex",
+    "equal",
+    "race",
+    "religion",
+    "sex",
+    "orientation",
+    "identity",
+    "gender",
+    "sensitive",
+    "insensitive",
+    "neutral",
+    "writing",
+    "language",
+    "english"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wooorm/alex.git"
+  },
+  "authors": [
+    "Titus Wormer <tituswormer@gmail.com>"
+  ],
+  "ignore": [
+    ".*",
+    "*.log",
+    "*.md",
+    "*.sh",
+    "*.svg",
+    "build/",
+    "components/",
+    "coverage/",
+    "node_modules/",
+    "script/",
+    "build.js",
+    "cli.js",
+    "component.json",
+    "example.js",
+    "index.js",
+    "package.json",
+    "test.js"
+  ]
+}

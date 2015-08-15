@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="270" height="234">
+  <line x1="4" y1="202" x2="268" y2="202" stroke="#8060E5" stroke-width="3"/>
+  <line x1="4" y1="230" x2="268" y2="230" stroke="#8060E5" stroke-width="3"/>
+  <text x="0" y="164" font-family="helvetica-neue, helvetica neue, helvetica" font-weight="100" font-size="176">
+    <tspan fill="#8060E5">alex</tspan>
+  </text>
+</svg>

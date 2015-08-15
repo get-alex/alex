@@ -1,0 +1,6 @@
+build/
+components/
+coverage/
+build.js
+alex.js
+alex.min.js

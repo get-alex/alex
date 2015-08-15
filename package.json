@@ -1,0 +1,80 @@
+{
+  "name": "alex",
+  "version": "0.0.0",
+  "description": "Catch insensitive, inconsiderate writing",
+  "license": "MIT",
+  "repository": "wooorm/alex",
+  "keywords": [
+    "cli-app",
+    "cli",
+    "bin",
+    "alex",
+    "equal",
+    "race",
+    "religion",
+    "sex",
+    "orientation",
+    "identity",
+    "gender",
+    "sensitive",
+    "insensitive",
+    "neutral",
+    "writing",
+    "language",
+    "english"
+  ],
+  "author": {
+    "name": "Titus Wormer",
+    "email": "tituswormer@gmail.com",
+    "url": "wooorm.com"
+  },
+  "bin": "cli.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "files": [
+    "index.js",
+    "cli.js"
+  ],
+  "dependencies": {
+    "bail": "^1.0.0",
+    "eslint-stylish": "^0.2.0",
+    "get-stdin": "^4.0.1",
+    "mdast": "^1.0.0",
+    "mdast-util-to-nlcst": "^0.2.0",
+    "meow": "^3.3.0",
+    "parse-english": "^0.5.0",
+    "retext": "^1.0.0-rc.3",
+    "retext-equality": "^1.0.0",
+    "to-vfile": "^1.0.0",
+    "vfile": "^1.0.0"
+  },
+  "devDependencies": {
+    "browserify": "^11.0.1",
+    "eslint": "^1.0.0",
+    "esmangle": "^1.0.1",
+    "istanbul": "^0.3.0",
+    "jscs": "^2.0.0",
+    "jscs-jsdoc": "^1.0.0",
+    "mdast-comment-config": "^0.1.2",
+    "mdast-github": "^0.3.2",
+    "mdast-lint": "^0.4.2",
+    "mdast-slug": "^0.1.1",
+    "mdast-validate-links": "^0.3.1",
+    "mocha": "^2.0.0"
+  },
+  "scripts": {
+    "test-api": "mocha --check-leaks test.js",
+    "test-coverage": "istanbul cover _mocha -- test.js",
+    "test-travis": "npm run test-coverage",
+    "test": "npm run test-api",
+    "lint-api": "eslint .",
+    "lint-style": "jscs --reporter inline .",
+    "lint": "npm run lint-api && npm run lint-style",
+    "make": "npm run lint && npm run test-coverage",
+    "bundle": "browserify index.js --no-builtins -s alex > alex.js",
+    "postbundle": "esmangle alex.js > alex.min.js",
+    "build-md": "mdast . --quiet",
+    "build": "npm run bundle && npm run build-md"
+  }
+}
