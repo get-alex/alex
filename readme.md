@@ -106,6 +106,10 @@ demonstrated in the example above, as it holds the possible violations.
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 [MIT](LICENSE) © [Titus Wormer](http://wooorm.com)
