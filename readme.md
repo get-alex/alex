@@ -11,9 +11,11 @@ religion inconsiderate, or other **unequal** phrasing.
 <!--lint disable no-html-->
 
 For example, when `We’ve confirmed his identity` is given to **alex**,
-it will warn you and suggest using `their` instead of `his`. (And yes, using
+it will warn you and suggest using `their` instead of `his`<sup>†</sip>.
+
+† - Yes, using
 `they` here is standard English since the 16<sup>th</sup> century, and was
-used by Shakespeare.)
+used by Shakespeare.
 
 ## Why
 
@@ -26,7 +28,7 @@ used by Shakespeare.)
 
 ## Installation
 
-[npm](https://docs.npmjs.com/cli/install):
+[npm](https://docs.npmjs.com/cli/install) (with [node](https://nodejs.org/download/)):
 
 ```bash
 npm install alex --global
