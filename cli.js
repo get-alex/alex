@@ -3,6 +3,7 @@
 
 /* eslint-disable no-console */
 
+var chalk = require('chalk');
 var meow = require('meow');
 var getStdin = require('get-stdin');
 var styl = require(require('eslint-stylish'));
@@ -31,13 +32,19 @@ var exit = 0;
  * @param {VFile} file - Virtual file.
  */
 function log(file) {
-    console.log(styl([file], /* work around stylish */ {
-        'rules': {
-            'undefined': [1]
-        }
-    }));
+    var failed = Boolean(file.messages.length);
 
-    if (!exit && file.hasFailed()) {
+    if (failed) {
+        console.log(styl([file], /* work around stylish */ {
+            'rules': {
+                'undefined': [1]
+            }
+        }));
+    } else {
+        console.log(chalk.green(file.filePath()) + ': no issues found');
+    }
+
+    if (!exit && failed) {
         exit = 1;
     }
 }

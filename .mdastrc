@@ -4,7 +4,7 @@
     "lint",
     "github",
     "comment-config",
-    "slug",
+    "toc",
     "validate-links"
   ],
   "settings": {
