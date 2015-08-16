@@ -34,6 +34,24 @@ used by Shakespeare.
 npm install alex --global
 ```
 
+## Table of Contents
+
+*   [Command Line](#command-line)
+
+*   [Programmatic](#programmatic)
+
+    *   [alex(value)](#alexvalue)
+
+*   [Editors](#editors)
+
+*   [Support](#support)
+
+*   [Globbing](#globbing)
+
+*   [Contributing](#contributing)
+
+*   [License](#license)
+
 ## Command Line
 
 ![Example of how alex looks on screen](screen-shot.png)
@@ -92,7 +110,11 @@ alex('We’ve confirmed his identity.').messages;
 in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
 demonstrated in the example above, as it holds the possible violations.
 
-## Internals
+## Editors
+
+*   Atom — [atom-linter-alex](https://github.com/wooorm/atom-linter-alex).
+
+## Support
 
 **Alex** checks for many patterns of English language, and warns for:
 
@@ -107,6 +129,16 @@ demonstrated in the example above, as it holds the possible violations.
 
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead.
+
+## Globbing
+
+```sh
+alex $(git ls-files | awk '/.(md|txt)$/')
+```
+
+There’s no native support for globbing yet, but Unix is awesome. The above
+script will process all by git known (and not ignored) files with an `md` or
+`txt` extension.
 
 ## Contributing
 
