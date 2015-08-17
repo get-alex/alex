@@ -1,4 +1,10 @@
-# ![alex](https://cdn.rawgit.com/wooorm/alex/master/logo.svg)
+<!--lint disable no-html-->
+
+<h1 align="center">
+    <br>
+    <img width="400" src="./logo.svg" alt="alex">
+    <br>
+</h1>
 
 >   📝 **alex** — Catch insensitive, inconsiderate writing.
 
@@ -8,14 +14,11 @@ Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, binary thinking, identity insensitive, race related,
 religion inconsiderate, or other **unequal** phrasing.
 
-<!--lint disable no-html-->
-
 For example, when `We’ve confirmed his identity` is given to **alex**,
 it will warn you and suggest using `their` instead of `his`<sup>†</sip>.
 
-† - Yes, using
-`they` here is standard English since the 16<sup>th</sup> century, and was
-used by Shakespeare.
+† - Yes, using `they` here is standard English since the 16<sup>th</sup>
+century, and was used by Shakespeare.
 
 ## Why
 
