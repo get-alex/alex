@@ -3,10 +3,9 @@
 
 /* eslint-disable no-console */
 
-var chalk = require('chalk');
 var meow = require('meow');
 var getStdin = require('get-stdin');
-var styl = require(require('eslint-stylish'));
+var format = require('vfile-reporter');
 var toFile = require('to-vfile');
 var alex = require('./');
 
@@ -26,25 +25,17 @@ var cli = meow({
 var input = cli.input;
 var exit = 0;
 
+var result = [];
+
 /**
  * Log a virtual file processed by alex.
  *
  * @param {VFile} file - Virtual file.
  */
 function log(file) {
-    var failed = Boolean(file.messages.length);
+    result.push(file);
 
-    if (failed) {
-        console.log(styl([file], /* work around stylish */ {
-            'rules': {
-                'undefined': [1]
-            }
-        }));
-    } else {
-        console.log(chalk.green(file.filePath()) + ': no issues found');
-    }
-
-    if (!exit && failed) {
+    if (!exit && file.messages.length) {
         exit = 1;
     }
 }
@@ -77,6 +68,7 @@ input.forEach(function (filePath) {
  */
 
 process.on('exit', function () {
+    console.log(format(result));
     /* eslint-disable no-process-exit */
     process.exit(exit);
     /* eslint-enable no-process-exit */

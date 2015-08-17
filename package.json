@@ -39,17 +39,16 @@
   "dependencies": {
     "bail": "^1.0.0",
     "chalk": "^1.1.0",
-    "eslint-stylish": "^0.2.0",
     "get-stdin": "^4.0.1",
     "mdast": "^1.0.0",
-    "mdast-message-sort": "^0.1.0",
     "mdast-util-to-nlcst": "^0.2.0",
     "meow": "^3.3.0",
     "parse-english": "^0.5.0",
     "retext": "^1.0.0-rc.3",
     "retext-equality": "^1.0.0",
     "to-vfile": "^1.0.0",
-    "vfile": "^1.0.0"
+    "vfile": "^1.0.0",
+    "vfile-reporter": "^1.0.0"
   },
   "devDependencies": {
     "browserify": "^11.0.1",
