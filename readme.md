@@ -57,7 +57,7 @@ npm install alex --global
 
 ## Command Line
 
-![Example of how alex looks on screen](screen-shot.png)
+![Example of how alex looks on screen](screenshot.png)
 
 Let’s say `example.md` looks as follows:
 
