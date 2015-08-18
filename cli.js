@@ -4,6 +4,7 @@
 /* eslint-disable no-console */
 
 var meow = require('meow');
+var globby = require('globby');
 var getStdin = require('get-stdin');
 var format = require('vfile-reporter');
 var toFile = require('to-vfile');
@@ -51,15 +52,17 @@ if (expextPipeIn) {
     return;
 }
 
-input.forEach(function (filePath) {
-    toFile.read(filePath, function (err, file) {
-        if (err) {
-            throw err;
-        }
+globby(input, function () {
+    input.forEach(function (filePath) {
+        toFile.read(filePath, function (err, file) {
+            if (err) {
+                throw err;
+            }
 
-        alex(file);
+            alex(file);
 
-        log(file);
+            log(file);
+        });
     });
 });
 
@@ -69,6 +72,7 @@ input.forEach(function (filePath) {
 
 process.on('exit', function () {
     console.log(format(result));
+
     /* eslint-disable no-process-exit */
     process.exit(exit);
     /* eslint-enable no-process-exit */
