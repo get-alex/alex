@@ -1,5 +1,7 @@
 <!--lint disable no-html-->
 
+<!--lint disable first-heading-level-->
+
 <h1 align="center">
     <br>
     <img width="400" src="./logo.svg" alt="alex">
@@ -45,11 +47,13 @@ npm install alex --global
 
     *   [alex(value)](#alexvalue)
 
-*   [Editors](#editors)
-
 *   [Support](#support)
 
-*   [Globbing](#globbing)
+*   [Editors](#editors)
+
+*   [Workflow](#workflow)
+
+*   [Ignoring files](#ignoring-files)
 
 *   [Contributing](#contributing)
 
@@ -114,10 +118,6 @@ alex('We’ve confirmed his identity.').messages;
 in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
 demonstrated in the example above, as it holds the possible violations.
 
-## Editors
-
-*   Atom — [atom-linter-alex](https://github.com/wooorm/atom-linter-alex).
-
 ## Support
 
 **Alex** checks for many patterns of English language, and warns for:
@@ -134,15 +134,43 @@ demonstrated in the example above, as it holds the possible violations.
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead.
 
-## Traversal
+## Editors
+
+*   Atom — [atom-linter-alex](https://github.com/wooorm/atom-linter-alex).
+
+## Workflow
+
+The recommended workflow is to add **alex** to locally and to run it with
+your tests.
+
+A `package.json` file with [npm scripts](https://docs.npmjs.com/misc/scripts),
+and additionally using [mocha](http://mochajs.org) for unit tests, could look
+as follows:
+
+```json
+{
+  "name": "alpha",
+  "scripts": {
+    "test-api": "mocha",
+    "test-doc": "alex docs/*.md",
+    "test": "npm run test-api && npm run test-doc"
+  },
+  "devDependencies": {
+    "alex": "^1.0.0",
+    "mocha": "^2.0.0"
+  }
+}
+```
+
+## Ignoring files
 
 ```sh
 alex $(git ls-files | awk '/.(md|txt)$/')
 ```
 
-There’s no native support for globbing yet, but Unix is awesome. The above
-script will process all by git known (and not ignored) files with an `md` or
-`txt` extension.
+There’s no support for ignoring or extension searching yet. Luckily, Unix is
+awesome. The above script will process all by git known (and not ignored) files
+with an `md` or `txt` extension.
 
 ## Contributing
 
