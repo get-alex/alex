@@ -1,4 +1,14 @@
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.alex = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module alex
+ * @fileoverview
+ *   Alex checks your (or someone else’s) writing for possible
+ *   inconsiderate wording.
+ */
+
 'use strict';
 
 /*
@@ -24,6 +34,16 @@ var english = retext(parser).use(equality);
  *
  * Read markdown as input, converts to natural language,
  * then detect violations.
+ *
+ * @example
+ *   alex('We’ve confirmed his identity.').messages;
+ *   // [ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs` instead]
+ *   //   name: '1:17-1:20',
+ *   //   file: '',
+ *   //   reason: '`his` may be insensitive, use `their`, `theirs` instead',
+ *   //   line: 1,
+ *   //   column: 17,
+ *   //   fatal: false } ]
  *
  * @param {string|VFile} value - Content
  * @return {VFile} - Result.
@@ -54,7 +74,7 @@ function alex(value) {
 
 module.exports = alex;
 
-},{"bail":2,"mdast":6,"mdast-util-to-nlcst":3,"parse-english":30,"retext":55,"retext-equality":67}],2:[function(require,module,exports){
+},{"bail":2,"mdast":35,"mdast-util-to-nlcst":7,"parse-english":58,"retext":91,"retext-equality":84}],2:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -93,6 +113,1775 @@ function bail(err) {
 module.exports = bail;
 
 },{}],3:[function(require,module,exports){
+/*!
+ * The buffer module from node.js, for the browser.
+ *
+ * @author   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * @license  MIT
+ */
+
+var base64 = require('base64-js')
+var ieee754 = require('ieee754')
+var isArray = require('is-array')
+
+exports.Buffer = Buffer
+exports.SlowBuffer = SlowBuffer
+exports.INSPECT_MAX_BYTES = 50
+Buffer.poolSize = 8192 // not used by this implementation
+
+var rootParent = {}
+
+/**
+ * If `Buffer.TYPED_ARRAY_SUPPORT`:
+ *   === true    Use Uint8Array implementation (fastest)
+ *   === false   Use Object implementation (most compatible, even IE6)
+ *
+ * Browsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,
+ * Opera 11.6+, iOS 4.2+.
+ *
+ * Due to various browser bugs, sometimes the Object implementation will be used even
+ * when the browser supports typed arrays.
+ *
+ * Note:
+ *
+ *   - Firefox 4-29 lacks support for adding new properties to `Uint8Array` instances,
+ *     See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.
+ *
+ *   - Safari 5-7 lacks support for changing the `Object.prototype.constructor` property
+ *     on objects.
+ *
+ *   - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.
+ *
+ *   - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of
+ *     incorrect length in some situations.
+
+ * We detect these buggy browsers and set `Buffer.TYPED_ARRAY_SUPPORT` to `false` so they
+ * get the Object implementation, which is slower but behaves correctly.
+ */
+Buffer.TYPED_ARRAY_SUPPORT = (function () {
+  function Bar () {}
+  try {
+    var arr = new Uint8Array(1)
+    arr.foo = function () { return 42 }
+    arr.constructor = Bar
+    return arr.foo() === 42 && // typed array instances can be augmented
+        arr.constructor === Bar && // constructor can be set
+        typeof arr.subarray === 'function' && // chrome 9-10 lack `subarray`
+        arr.subarray(1, 1).byteLength === 0 // ie10 has broken `subarray`
+  } catch (e) {
+    return false
+  }
+})()
+
+function kMaxLength () {
+  return Buffer.TYPED_ARRAY_SUPPORT
+    ? 0x7fffffff
+    : 0x3fffffff
+}
+
+/**
+ * Class: Buffer
+ * =============
+ *
+ * The Buffer constructor returns instances of `Uint8Array` that are augmented
+ * with function properties for all the node `Buffer` API functions. We use
+ * `Uint8Array` so that square bracket notation works as expected -- it returns
+ * a single octet.
+ *
+ * By augmenting the instances, we can avoid modifying the `Uint8Array`
+ * prototype.
+ */
+function Buffer (arg) {
+  if (!(this instanceof Buffer)) {
+    // Avoid going through an ArgumentsAdaptorTrampoline in the common case.
+    if (arguments.length > 1) return new Buffer(arg, arguments[1])
+    return new Buffer(arg)
+  }
+
+  this.length = 0
+  this.parent = undefined
+
+  // Common case.
+  if (typeof arg === 'number') {
+    return fromNumber(this, arg)
+  }
+
+  // Slightly less common case.
+  if (typeof arg === 'string') {
+    return fromString(this, arg, arguments.length > 1 ? arguments[1] : 'utf8')
+  }
+
+  // Unusual.
+  return fromObject(this, arg)
+}
+
+function fromNumber (that, length) {
+  that = allocate(that, length < 0 ? 0 : checked(length) | 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) {
+    for (var i = 0; i < length; i++) {
+      that[i] = 0
+    }
+  }
+  return that
+}
+
+function fromString (that, string, encoding) {
+  if (typeof encoding !== 'string' || encoding === '') encoding = 'utf8'
+
+  // Assumption: byteLength() return value is always < kMaxLength.
+  var length = byteLength(string, encoding) | 0
+  that = allocate(that, length)
+
+  that.write(string, encoding)
+  return that
+}
+
+function fromObject (that, object) {
+  if (Buffer.isBuffer(object)) return fromBuffer(that, object)
+
+  if (isArray(object)) return fromArray(that, object)
+
+  if (object == null) {
+    throw new TypeError('must start with number, buffer, array or string')
+  }
+
+  if (typeof ArrayBuffer !== 'undefined') {
+    if (object.buffer instanceof ArrayBuffer) {
+      return fromTypedArray(that, object)
+    }
+    if (object instanceof ArrayBuffer) {
+      return fromArrayBuffer(that, object)
+    }
+  }
+
+  if (object.length) return fromArrayLike(that, object)
+
+  return fromJsonObject(that, object)
+}
+
+function fromBuffer (that, buffer) {
+  var length = checked(buffer.length) | 0
+  that = allocate(that, length)
+  buffer.copy(that, 0, 0, length)
+  return that
+}
+
+function fromArray (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+// Duplicate of fromArray() to keep fromArray() monomorphic.
+function fromTypedArray (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  // Truncating the elements is probably not what people expect from typed
+  // arrays with BYTES_PER_ELEMENT > 1 but it's compatible with the behavior
+  // of the old Buffer constructor.
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+function fromArrayBuffer (that, array) {
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    array.byteLength
+    that = Buffer._augment(new Uint8Array(array))
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that = fromTypedArray(that, new Uint8Array(array))
+  }
+  return that
+}
+
+function fromArrayLike (that, array) {
+  var length = checked(array.length) | 0
+  that = allocate(that, length)
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+// Deserialize { type: 'Buffer', data: [1,2,3,...] } into a Buffer object.
+// Returns a zero-length buffer for inputs that don't conform to the spec.
+function fromJsonObject (that, object) {
+  var array
+  var length = 0
+
+  if (object.type === 'Buffer' && isArray(object.data)) {
+    array = object.data
+    length = checked(array.length) | 0
+  }
+  that = allocate(that, length)
+
+  for (var i = 0; i < length; i += 1) {
+    that[i] = array[i] & 255
+  }
+  return that
+}
+
+function allocate (that, length) {
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    // Return an augmented `Uint8Array` instance, for best performance
+    that = Buffer._augment(new Uint8Array(length))
+  } else {
+    // Fallback: Return an object instance of the Buffer class
+    that.length = length
+    that._isBuffer = true
+  }
+
+  var fromPool = length !== 0 && length <= Buffer.poolSize >>> 1
+  if (fromPool) that.parent = rootParent
+
+  return that
+}
+
+function checked (length) {
+  // Note: cannot use `length < kMaxLength` here because that fails when
+  // length is NaN (which is otherwise coerced to zero.)
+  if (length >= kMaxLength()) {
+    throw new RangeError('Attempt to allocate Buffer larger than maximum ' +
+                         'size: 0x' + kMaxLength().toString(16) + ' bytes')
+  }
+  return length | 0
+}
+
+function SlowBuffer (subject, encoding) {
+  if (!(this instanceof SlowBuffer)) return new SlowBuffer(subject, encoding)
+
+  var buf = new Buffer(subject, encoding)
+  delete buf.parent
+  return buf
+}
+
+Buffer.isBuffer = function isBuffer (b) {
+  return !!(b != null && b._isBuffer)
+}
+
+Buffer.compare = function compare (a, b) {
+  if (!Buffer.isBuffer(a) || !Buffer.isBuffer(b)) {
+    throw new TypeError('Arguments must be Buffers')
+  }
+
+  if (a === b) return 0
+
+  var x = a.length
+  var y = b.length
+
+  var i = 0
+  var len = Math.min(x, y)
+  while (i < len) {
+    if (a[i] !== b[i]) break
+
+    ++i
+  }
+
+  if (i !== len) {
+    x = a[i]
+    y = b[i]
+  }
+
+  if (x < y) return -1
+  if (y < x) return 1
+  return 0
+}
+
+Buffer.isEncoding = function isEncoding (encoding) {
+  switch (String(encoding).toLowerCase()) {
+    case 'hex':
+    case 'utf8':
+    case 'utf-8':
+    case 'ascii':
+    case 'binary':
+    case 'base64':
+    case 'raw':
+    case 'ucs2':
+    case 'ucs-2':
+    case 'utf16le':
+    case 'utf-16le':
+      return true
+    default:
+      return false
+  }
+}
+
+Buffer.concat = function concat (list, length) {
+  if (!isArray(list)) throw new TypeError('list argument must be an Array of Buffers.')
+
+  if (list.length === 0) {
+    return new Buffer(0)
+  }
+
+  var i
+  if (length === undefined) {
+    length = 0
+    for (i = 0; i < list.length; i++) {
+      length += list[i].length
+    }
+  }
+
+  var buf = new Buffer(length)
+  var pos = 0
+  for (i = 0; i < list.length; i++) {
+    var item = list[i]
+    item.copy(buf, pos)
+    pos += item.length
+  }
+  return buf
+}
+
+function byteLength (string, encoding) {
+  if (typeof string !== 'string') string = '' + string
+
+  var len = string.length
+  if (len === 0) return 0
+
+  // Use a for loop to avoid recursion
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'ascii':
+      case 'binary':
+      // Deprecated
+      case 'raw':
+      case 'raws':
+        return len
+      case 'utf8':
+      case 'utf-8':
+        return utf8ToBytes(string).length
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return len * 2
+      case 'hex':
+        return len >>> 1
+      case 'base64':
+        return base64ToBytes(string).length
+      default:
+        if (loweredCase) return utf8ToBytes(string).length // assume utf8
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+Buffer.byteLength = byteLength
+
+// pre-set for values that may exist in the future
+Buffer.prototype.length = undefined
+Buffer.prototype.parent = undefined
+
+function slowToString (encoding, start, end) {
+  var loweredCase = false
+
+  start = start | 0
+  end = end === undefined || end === Infinity ? this.length : end | 0
+
+  if (!encoding) encoding = 'utf8'
+  if (start < 0) start = 0
+  if (end > this.length) end = this.length
+  if (end <= start) return ''
+
+  while (true) {
+    switch (encoding) {
+      case 'hex':
+        return hexSlice(this, start, end)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Slice(this, start, end)
+
+      case 'ascii':
+        return asciiSlice(this, start, end)
+
+      case 'binary':
+        return binarySlice(this, start, end)
+
+      case 'base64':
+        return base64Slice(this, start, end)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return utf16leSlice(this, start, end)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = (encoding + '').toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.toString = function toString () {
+  var length = this.length | 0
+  if (length === 0) return ''
+  if (arguments.length === 0) return utf8Slice(this, 0, length)
+  return slowToString.apply(this, arguments)
+}
+
+Buffer.prototype.equals = function equals (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return true
+  return Buffer.compare(this, b) === 0
+}
+
+Buffer.prototype.inspect = function inspect () {
+  var str = ''
+  var max = exports.INSPECT_MAX_BYTES
+  if (this.length > 0) {
+    str = this.toString('hex', 0, max).match(/.{2}/g).join(' ')
+    if (this.length > max) str += ' ... '
+  }
+  return '<Buffer ' + str + '>'
+}
+
+Buffer.prototype.compare = function compare (b) {
+  if (!Buffer.isBuffer(b)) throw new TypeError('Argument must be a Buffer')
+  if (this === b) return 0
+  return Buffer.compare(this, b)
+}
+
+Buffer.prototype.indexOf = function indexOf (val, byteOffset) {
+  if (byteOffset > 0x7fffffff) byteOffset = 0x7fffffff
+  else if (byteOffset < -0x80000000) byteOffset = -0x80000000
+  byteOffset >>= 0
+
+  if (this.length === 0) return -1
+  if (byteOffset >= this.length) return -1
+
+  // Negative offsets start from the end of the buffer
+  if (byteOffset < 0) byteOffset = Math.max(this.length + byteOffset, 0)
+
+  if (typeof val === 'string') {
+    if (val.length === 0) return -1 // special case: looking for empty string always fails
+    return String.prototype.indexOf.call(this, val, byteOffset)
+  }
+  if (Buffer.isBuffer(val)) {
+    return arrayIndexOf(this, val, byteOffset)
+  }
+  if (typeof val === 'number') {
+    if (Buffer.TYPED_ARRAY_SUPPORT && Uint8Array.prototype.indexOf === 'function') {
+      return Uint8Array.prototype.indexOf.call(this, val, byteOffset)
+    }
+    return arrayIndexOf(this, [ val ], byteOffset)
+  }
+
+  function arrayIndexOf (arr, val, byteOffset) {
+    var foundIndex = -1
+    for (var i = 0; byteOffset + i < arr.length; i++) {
+      if (arr[byteOffset + i] === val[foundIndex === -1 ? 0 : i - foundIndex]) {
+        if (foundIndex === -1) foundIndex = i
+        if (i - foundIndex + 1 === val.length) return byteOffset + foundIndex
+      } else {
+        foundIndex = -1
+      }
+    }
+    return -1
+  }
+
+  throw new TypeError('val must be string, number or Buffer')
+}
+
+// `get` is deprecated
+Buffer.prototype.get = function get (offset) {
+  console.log('.get() is deprecated. Access using array indexes instead.')
+  return this.readUInt8(offset)
+}
+
+// `set` is deprecated
+Buffer.prototype.set = function set (v, offset) {
+  console.log('.set() is deprecated. Access using array indexes instead.')
+  return this.writeUInt8(v, offset)
+}
+
+function hexWrite (buf, string, offset, length) {
+  offset = Number(offset) || 0
+  var remaining = buf.length - offset
+  if (!length) {
+    length = remaining
+  } else {
+    length = Number(length)
+    if (length > remaining) {
+      length = remaining
+    }
+  }
+
+  // must be an even number of digits
+  var strLen = string.length
+  if (strLen % 2 !== 0) throw new Error('Invalid hex string')
+
+  if (length > strLen / 2) {
+    length = strLen / 2
+  }
+  for (var i = 0; i < length; i++) {
+    var parsed = parseInt(string.substr(i * 2, 2), 16)
+    if (isNaN(parsed)) throw new Error('Invalid hex string')
+    buf[offset + i] = parsed
+  }
+  return i
+}
+
+function utf8Write (buf, string, offset, length) {
+  return blitBuffer(utf8ToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+function asciiWrite (buf, string, offset, length) {
+  return blitBuffer(asciiToBytes(string), buf, offset, length)
+}
+
+function binaryWrite (buf, string, offset, length) {
+  return asciiWrite(buf, string, offset, length)
+}
+
+function base64Write (buf, string, offset, length) {
+  return blitBuffer(base64ToBytes(string), buf, offset, length)
+}
+
+function ucs2Write (buf, string, offset, length) {
+  return blitBuffer(utf16leToBytes(string, buf.length - offset), buf, offset, length)
+}
+
+Buffer.prototype.write = function write (string, offset, length, encoding) {
+  // Buffer#write(string)
+  if (offset === undefined) {
+    encoding = 'utf8'
+    length = this.length
+    offset = 0
+  // Buffer#write(string, encoding)
+  } else if (length === undefined && typeof offset === 'string') {
+    encoding = offset
+    length = this.length
+    offset = 0
+  // Buffer#write(string, offset[, length][, encoding])
+  } else if (isFinite(offset)) {
+    offset = offset | 0
+    if (isFinite(length)) {
+      length = length | 0
+      if (encoding === undefined) encoding = 'utf8'
+    } else {
+      encoding = length
+      length = undefined
+    }
+  // legacy write(string, encoding, offset, length) - remove in v0.13
+  } else {
+    var swap = encoding
+    encoding = offset
+    offset = length | 0
+    length = swap
+  }
+
+  var remaining = this.length - offset
+  if (length === undefined || length > remaining) length = remaining
+
+  if ((string.length > 0 && (length < 0 || offset < 0)) || offset > this.length) {
+    throw new RangeError('attempt to write outside buffer bounds')
+  }
+
+  if (!encoding) encoding = 'utf8'
+
+  var loweredCase = false
+  for (;;) {
+    switch (encoding) {
+      case 'hex':
+        return hexWrite(this, string, offset, length)
+
+      case 'utf8':
+      case 'utf-8':
+        return utf8Write(this, string, offset, length)
+
+      case 'ascii':
+        return asciiWrite(this, string, offset, length)
+
+      case 'binary':
+        return binaryWrite(this, string, offset, length)
+
+      case 'base64':
+        // Warning: maxLength not taken into account in base64Write
+        return base64Write(this, string, offset, length)
+
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return ucs2Write(this, string, offset, length)
+
+      default:
+        if (loweredCase) throw new TypeError('Unknown encoding: ' + encoding)
+        encoding = ('' + encoding).toLowerCase()
+        loweredCase = true
+    }
+  }
+}
+
+Buffer.prototype.toJSON = function toJSON () {
+  return {
+    type: 'Buffer',
+    data: Array.prototype.slice.call(this._arr || this, 0)
+  }
+}
+
+function base64Slice (buf, start, end) {
+  if (start === 0 && end === buf.length) {
+    return base64.fromByteArray(buf)
+  } else {
+    return base64.fromByteArray(buf.slice(start, end))
+  }
+}
+
+function utf8Slice (buf, start, end) {
+  end = Math.min(buf.length, end)
+  var firstByte
+  var secondByte
+  var thirdByte
+  var fourthByte
+  var bytesPerSequence
+  var tempCodePoint
+  var codePoint
+  var res = []
+  var i = start
+
+  for (; i < end; i += bytesPerSequence) {
+    firstByte = buf[i]
+    codePoint = 0xFFFD
+
+    if (firstByte > 0xEF) {
+      bytesPerSequence = 4
+    } else if (firstByte > 0xDF) {
+      bytesPerSequence = 3
+    } else if (firstByte > 0xBF) {
+      bytesPerSequence = 2
+    } else {
+      bytesPerSequence = 1
+    }
+
+    if (i + bytesPerSequence <= end) {
+      switch (bytesPerSequence) {
+        case 1:
+          if (firstByte < 0x80) {
+            codePoint = firstByte
+          }
+          break
+        case 2:
+          secondByte = buf[i + 1]
+          if ((secondByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0x1F) << 0x6 | (secondByte & 0x3F)
+            if (tempCodePoint > 0x7F) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 3:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0xC | (secondByte & 0x3F) << 0x6 | (thirdByte & 0x3F)
+            if (tempCodePoint > 0x7FF && (tempCodePoint < 0xD800 || tempCodePoint > 0xDFFF)) {
+              codePoint = tempCodePoint
+            }
+          }
+          break
+        case 4:
+          secondByte = buf[i + 1]
+          thirdByte = buf[i + 2]
+          fourthByte = buf[i + 3]
+          if ((secondByte & 0xC0) === 0x80 && (thirdByte & 0xC0) === 0x80 && (fourthByte & 0xC0) === 0x80) {
+            tempCodePoint = (firstByte & 0xF) << 0x12 | (secondByte & 0x3F) << 0xC | (thirdByte & 0x3F) << 0x6 | (fourthByte & 0x3F)
+            if (tempCodePoint > 0xFFFF && tempCodePoint < 0x110000) {
+              codePoint = tempCodePoint
+            }
+          }
+      }
+    }
+
+    if (codePoint === 0xFFFD) {
+      // we generated an invalid codePoint so make sure to only advance by 1 byte
+      bytesPerSequence = 1
+    } else if (codePoint > 0xFFFF) {
+      // encode to utf16 (surrogate pair dance)
+      codePoint -= 0x10000
+      res.push(codePoint >>> 10 & 0x3FF | 0xD800)
+      codePoint = 0xDC00 | codePoint & 0x3FF
+    }
+
+    res.push(codePoint)
+  }
+
+  return String.fromCharCode.apply(String, res)
+}
+
+function asciiSlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i] & 0x7F)
+  }
+  return ret
+}
+
+function binarySlice (buf, start, end) {
+  var ret = ''
+  end = Math.min(buf.length, end)
+
+  for (var i = start; i < end; i++) {
+    ret += String.fromCharCode(buf[i])
+  }
+  return ret
+}
+
+function hexSlice (buf, start, end) {
+  var len = buf.length
+
+  if (!start || start < 0) start = 0
+  if (!end || end < 0 || end > len) end = len
+
+  var out = ''
+  for (var i = start; i < end; i++) {
+    out += toHex(buf[i])
+  }
+  return out
+}
+
+function utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end)
+  var res = ''
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256)
+  }
+  return res
+}
+
+Buffer.prototype.slice = function slice (start, end) {
+  var len = this.length
+  start = ~~start
+  end = end === undefined ? len : ~~end
+
+  if (start < 0) {
+    start += len
+    if (start < 0) start = 0
+  } else if (start > len) {
+    start = len
+  }
+
+  if (end < 0) {
+    end += len
+    if (end < 0) end = 0
+  } else if (end > len) {
+    end = len
+  }
+
+  if (end < start) end = start
+
+  var newBuf
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    newBuf = Buffer._augment(this.subarray(start, end))
+  } else {
+    var sliceLen = end - start
+    newBuf = new Buffer(sliceLen, undefined)
+    for (var i = 0; i < sliceLen; i++) {
+      newBuf[i] = this[i + start]
+    }
+  }
+
+  if (newBuf.length) newBuf.parent = this.parent || this
+
+  return newBuf
+}
+
+/*
+ * Need to make sure that buffer isn't trying to write out of bounds.
+ */
+function checkOffset (offset, ext, length) {
+  if ((offset % 1) !== 0 || offset < 0) throw new RangeError('offset is not uint')
+  if (offset + ext > length) throw new RangeError('Trying to access beyond buffer length')
+}
+
+Buffer.prototype.readUIntLE = function readUIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUIntBE = function readUIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) {
+    checkOffset(offset, byteLength, this.length)
+  }
+
+  var val = this[offset + --byteLength]
+  var mul = 1
+  while (byteLength > 0 && (mul *= 0x100)) {
+    val += this[offset + --byteLength] * mul
+  }
+
+  return val
+}
+
+Buffer.prototype.readUInt8 = function readUInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  return this[offset]
+}
+
+Buffer.prototype.readUInt16LE = function readUInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return this[offset] | (this[offset + 1] << 8)
+}
+
+Buffer.prototype.readUInt16BE = function readUInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  return (this[offset] << 8) | this[offset + 1]
+}
+
+Buffer.prototype.readUInt32LE = function readUInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return ((this[offset]) |
+      (this[offset + 1] << 8) |
+      (this[offset + 2] << 16)) +
+      (this[offset + 3] * 0x1000000)
+}
+
+Buffer.prototype.readUInt32BE = function readUInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] * 0x1000000) +
+    ((this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    this[offset + 3])
+}
+
+Buffer.prototype.readIntLE = function readIntLE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var val = this[offset]
+  var mul = 1
+  var i = 0
+  while (++i < byteLength && (mul *= 0x100)) {
+    val += this[offset + i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readIntBE = function readIntBE (offset, byteLength, noAssert) {
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkOffset(offset, byteLength, this.length)
+
+  var i = byteLength
+  var mul = 1
+  var val = this[offset + --i]
+  while (i > 0 && (mul *= 0x100)) {
+    val += this[offset + --i] * mul
+  }
+  mul *= 0x80
+
+  if (val >= mul) val -= Math.pow(2, 8 * byteLength)
+
+  return val
+}
+
+Buffer.prototype.readInt8 = function readInt8 (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 1, this.length)
+  if (!(this[offset] & 0x80)) return (this[offset])
+  return ((0xff - this[offset] + 1) * -1)
+}
+
+Buffer.prototype.readInt16LE = function readInt16LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset] | (this[offset + 1] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt16BE = function readInt16BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 2, this.length)
+  var val = this[offset + 1] | (this[offset] << 8)
+  return (val & 0x8000) ? val | 0xFFFF0000 : val
+}
+
+Buffer.prototype.readInt32LE = function readInt32LE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset]) |
+    (this[offset + 1] << 8) |
+    (this[offset + 2] << 16) |
+    (this[offset + 3] << 24)
+}
+
+Buffer.prototype.readInt32BE = function readInt32BE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+
+  return (this[offset] << 24) |
+    (this[offset + 1] << 16) |
+    (this[offset + 2] << 8) |
+    (this[offset + 3])
+}
+
+Buffer.prototype.readFloatLE = function readFloatLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, true, 23, 4)
+}
+
+Buffer.prototype.readFloatBE = function readFloatBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 4, this.length)
+  return ieee754.read(this, offset, false, 23, 4)
+}
+
+Buffer.prototype.readDoubleLE = function readDoubleLE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, true, 52, 8)
+}
+
+Buffer.prototype.readDoubleBE = function readDoubleBE (offset, noAssert) {
+  if (!noAssert) checkOffset(offset, 8, this.length)
+  return ieee754.read(this, offset, false, 52, 8)
+}
+
+function checkInt (buf, value, offset, ext, max, min) {
+  if (!Buffer.isBuffer(buf)) throw new TypeError('buffer must be a Buffer instance')
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+}
+
+Buffer.prototype.writeUIntLE = function writeUIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var mul = 1
+  var i = 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUIntBE = function writeUIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  byteLength = byteLength | 0
+  if (!noAssert) checkInt(this, value, offset, byteLength, Math.pow(2, 8 * byteLength), 0)
+
+  var i = byteLength - 1
+  var mul = 1
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = (value / mul) & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeUInt8 = function writeUInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0xff, 0)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  this[offset] = value
+  return offset + 1
+}
+
+function objectWriteUInt16 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 2); i < j; i++) {
+    buf[offset + i] = (value & (0xff << (8 * (littleEndian ? i : 1 - i)))) >>>
+      (littleEndian ? i : 1 - i) * 8
+  }
+}
+
+Buffer.prototype.writeUInt16LE = function writeUInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeUInt16BE = function writeUInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0xffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = value
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+function objectWriteUInt32 (buf, value, offset, littleEndian) {
+  if (value < 0) value = 0xffffffff + value + 1
+  for (var i = 0, j = Math.min(buf.length - offset, 4); i < j; i++) {
+    buf[offset + i] = (value >>> (littleEndian ? i : 3 - i) * 8) & 0xff
+  }
+}
+
+Buffer.prototype.writeUInt32LE = function writeUInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset + 3] = (value >>> 24)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 1] = (value >>> 8)
+    this[offset] = value
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeUInt32BE = function writeUInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0xffffffff, 0)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = value
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeIntLE = function writeIntLE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = 0
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset] = value & 0xFF
+  while (++i < byteLength && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeIntBE = function writeIntBE (value, offset, byteLength, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) {
+    var limit = Math.pow(2, 8 * byteLength - 1)
+
+    checkInt(this, value, offset, byteLength, limit - 1, -limit)
+  }
+
+  var i = byteLength - 1
+  var mul = 1
+  var sub = value < 0 ? 1 : 0
+  this[offset + i] = value & 0xFF
+  while (--i >= 0 && (mul *= 0x100)) {
+    this[offset + i] = ((value / mul) >> 0) - sub & 0xFF
+  }
+
+  return offset + byteLength
+}
+
+Buffer.prototype.writeInt8 = function writeInt8 (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 1, 0x7f, -0x80)
+  if (!Buffer.TYPED_ARRAY_SUPPORT) value = Math.floor(value)
+  if (value < 0) value = 0xff + value + 1
+  this[offset] = value
+  return offset + 1
+}
+
+Buffer.prototype.writeInt16LE = function writeInt16LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+  } else {
+    objectWriteUInt16(this, value, offset, true)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt16BE = function writeInt16BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 2, 0x7fff, -0x8000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 8)
+    this[offset + 1] = value
+  } else {
+    objectWriteUInt16(this, value, offset, false)
+  }
+  return offset + 2
+}
+
+Buffer.prototype.writeInt32LE = function writeInt32LE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = value
+    this[offset + 1] = (value >>> 8)
+    this[offset + 2] = (value >>> 16)
+    this[offset + 3] = (value >>> 24)
+  } else {
+    objectWriteUInt32(this, value, offset, true)
+  }
+  return offset + 4
+}
+
+Buffer.prototype.writeInt32BE = function writeInt32BE (value, offset, noAssert) {
+  value = +value
+  offset = offset | 0
+  if (!noAssert) checkInt(this, value, offset, 4, 0x7fffffff, -0x80000000)
+  if (value < 0) value = 0xffffffff + value + 1
+  if (Buffer.TYPED_ARRAY_SUPPORT) {
+    this[offset] = (value >>> 24)
+    this[offset + 1] = (value >>> 16)
+    this[offset + 2] = (value >>> 8)
+    this[offset + 3] = value
+  } else {
+    objectWriteUInt32(this, value, offset, false)
+  }
+  return offset + 4
+}
+
+function checkIEEE754 (buf, value, offset, ext, max, min) {
+  if (value > max || value < min) throw new RangeError('value is out of bounds')
+  if (offset + ext > buf.length) throw new RangeError('index out of range')
+  if (offset < 0) throw new RangeError('index out of range')
+}
+
+function writeFloat (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 4, 3.4028234663852886e+38, -3.4028234663852886e+38)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 23, 4)
+  return offset + 4
+}
+
+Buffer.prototype.writeFloatLE = function writeFloatLE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeFloatBE = function writeFloatBE (value, offset, noAssert) {
+  return writeFloat(this, value, offset, false, noAssert)
+}
+
+function writeDouble (buf, value, offset, littleEndian, noAssert) {
+  if (!noAssert) {
+    checkIEEE754(buf, value, offset, 8, 1.7976931348623157E+308, -1.7976931348623157E+308)
+  }
+  ieee754.write(buf, value, offset, littleEndian, 52, 8)
+  return offset + 8
+}
+
+Buffer.prototype.writeDoubleLE = function writeDoubleLE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, true, noAssert)
+}
+
+Buffer.prototype.writeDoubleBE = function writeDoubleBE (value, offset, noAssert) {
+  return writeDouble(this, value, offset, false, noAssert)
+}
+
+// copy(targetBuffer, targetStart=0, sourceStart=0, sourceEnd=buffer.length)
+Buffer.prototype.copy = function copy (target, targetStart, start, end) {
+  if (!start) start = 0
+  if (!end && end !== 0) end = this.length
+  if (targetStart >= target.length) targetStart = target.length
+  if (!targetStart) targetStart = 0
+  if (end > 0 && end < start) end = start
+
+  // Copy 0 bytes; we're done
+  if (end === start) return 0
+  if (target.length === 0 || this.length === 0) return 0
+
+  // Fatal error conditions
+  if (targetStart < 0) {
+    throw new RangeError('targetStart out of bounds')
+  }
+  if (start < 0 || start >= this.length) throw new RangeError('sourceStart out of bounds')
+  if (end < 0) throw new RangeError('sourceEnd out of bounds')
+
+  // Are we oob?
+  if (end > this.length) end = this.length
+  if (target.length - targetStart < end - start) {
+    end = target.length - targetStart + start
+  }
+
+  var len = end - start
+  var i
+
+  if (this === target && start < targetStart && targetStart < end) {
+    // descending copy from end
+    for (i = len - 1; i >= 0; i--) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else if (len < 1000 || !Buffer.TYPED_ARRAY_SUPPORT) {
+    // ascending copy from start
+    for (i = 0; i < len; i++) {
+      target[i + targetStart] = this[i + start]
+    }
+  } else {
+    target._set(this.subarray(start, start + len), targetStart)
+  }
+
+  return len
+}
+
+// fill(value, start=0, end=buffer.length)
+Buffer.prototype.fill = function fill (value, start, end) {
+  if (!value) value = 0
+  if (!start) start = 0
+  if (!end) end = this.length
+
+  if (end < start) throw new RangeError('end < start')
+
+  // Fill 0 bytes; we're done
+  if (end === start) return
+  if (this.length === 0) return
+
+  if (start < 0 || start >= this.length) throw new RangeError('start out of bounds')
+  if (end < 0 || end > this.length) throw new RangeError('end out of bounds')
+
+  var i
+  if (typeof value === 'number') {
+    for (i = start; i < end; i++) {
+      this[i] = value
+    }
+  } else {
+    var bytes = utf8ToBytes(value.toString())
+    var len = bytes.length
+    for (i = start; i < end; i++) {
+      this[i] = bytes[i % len]
+    }
+  }
+
+  return this
+}
+
+/**
+ * Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.
+ * Added in Node 0.12. Only available in browsers that support ArrayBuffer.
+ */
+Buffer.prototype.toArrayBuffer = function toArrayBuffer () {
+  if (typeof Uint8Array !== 'undefined') {
+    if (Buffer.TYPED_ARRAY_SUPPORT) {
+      return (new Buffer(this)).buffer
+    } else {
+      var buf = new Uint8Array(this.length)
+      for (var i = 0, len = buf.length; i < len; i += 1) {
+        buf[i] = this[i]
+      }
+      return buf.buffer
+    }
+  } else {
+    throw new TypeError('Buffer.toArrayBuffer not supported in this browser')
+  }
+}
+
+// HELPER FUNCTIONS
+// ================
+
+var BP = Buffer.prototype
+
+/**
+ * Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods
+ */
+Buffer._augment = function _augment (arr) {
+  arr.constructor = Buffer
+  arr._isBuffer = true
+
+  // save reference to original Uint8Array set method before overwriting
+  arr._set = arr.set
+
+  // deprecated
+  arr.get = BP.get
+  arr.set = BP.set
+
+  arr.write = BP.write
+  arr.toString = BP.toString
+  arr.toLocaleString = BP.toString
+  arr.toJSON = BP.toJSON
+  arr.equals = BP.equals
+  arr.compare = BP.compare
+  arr.indexOf = BP.indexOf
+  arr.copy = BP.copy
+  arr.slice = BP.slice
+  arr.readUIntLE = BP.readUIntLE
+  arr.readUIntBE = BP.readUIntBE
+  arr.readUInt8 = BP.readUInt8
+  arr.readUInt16LE = BP.readUInt16LE
+  arr.readUInt16BE = BP.readUInt16BE
+  arr.readUInt32LE = BP.readUInt32LE
+  arr.readUInt32BE = BP.readUInt32BE
+  arr.readIntLE = BP.readIntLE
+  arr.readIntBE = BP.readIntBE
+  arr.readInt8 = BP.readInt8
+  arr.readInt16LE = BP.readInt16LE
+  arr.readInt16BE = BP.readInt16BE
+  arr.readInt32LE = BP.readInt32LE
+  arr.readInt32BE = BP.readInt32BE
+  arr.readFloatLE = BP.readFloatLE
+  arr.readFloatBE = BP.readFloatBE
+  arr.readDoubleLE = BP.readDoubleLE
+  arr.readDoubleBE = BP.readDoubleBE
+  arr.writeUInt8 = BP.writeUInt8
+  arr.writeUIntLE = BP.writeUIntLE
+  arr.writeUIntBE = BP.writeUIntBE
+  arr.writeUInt16LE = BP.writeUInt16LE
+  arr.writeUInt16BE = BP.writeUInt16BE
+  arr.writeUInt32LE = BP.writeUInt32LE
+  arr.writeUInt32BE = BP.writeUInt32BE
+  arr.writeIntLE = BP.writeIntLE
+  arr.writeIntBE = BP.writeIntBE
+  arr.writeInt8 = BP.writeInt8
+  arr.writeInt16LE = BP.writeInt16LE
+  arr.writeInt16BE = BP.writeInt16BE
+  arr.writeInt32LE = BP.writeInt32LE
+  arr.writeInt32BE = BP.writeInt32BE
+  arr.writeFloatLE = BP.writeFloatLE
+  arr.writeFloatBE = BP.writeFloatBE
+  arr.writeDoubleLE = BP.writeDoubleLE
+  arr.writeDoubleBE = BP.writeDoubleBE
+  arr.fill = BP.fill
+  arr.inspect = BP.inspect
+  arr.toArrayBuffer = BP.toArrayBuffer
+
+  return arr
+}
+
+var INVALID_BASE64_RE = /[^+\/0-9A-Za-z-_]/g
+
+function base64clean (str) {
+  // Node strips out invalid characters like \n and \t from the string, base64-js does not
+  str = stringtrim(str).replace(INVALID_BASE64_RE, '')
+  // Node converts strings with length < 2 to ''
+  if (str.length < 2) return ''
+  // Node allows for non-padded base64 strings (missing trailing ===), base64-js does not
+  while (str.length % 4 !== 0) {
+    str = str + '='
+  }
+  return str
+}
+
+function stringtrim (str) {
+  if (str.trim) return str.trim()
+  return str.replace(/^\s+|\s+$/g, '')
+}
+
+function toHex (n) {
+  if (n < 16) return '0' + n.toString(16)
+  return n.toString(16)
+}
+
+function utf8ToBytes (string, units) {
+  units = units || Infinity
+  var codePoint
+  var length = string.length
+  var leadSurrogate = null
+  var bytes = []
+
+  for (var i = 0; i < length; i++) {
+    codePoint = string.charCodeAt(i)
+
+    // is surrogate component
+    if (codePoint > 0xD7FF && codePoint < 0xE000) {
+      // last char was a lead
+      if (!leadSurrogate) {
+        // no lead yet
+        if (codePoint > 0xDBFF) {
+          // unexpected trail
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+
+        } else if (i + 1 === length) {
+          // unpaired lead
+          if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+          continue
+        }
+
+        // valid lead
+        leadSurrogate = codePoint
+
+        continue
+      }
+
+      // 2 leads in a row
+      if (codePoint < 0xDC00) {
+        if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+        leadSurrogate = codePoint
+        continue
+      }
+
+      // valid surrogate pair
+      codePoint = leadSurrogate - 0xD800 << 10 | codePoint - 0xDC00 | 0x10000
+
+    } else if (leadSurrogate) {
+      // valid bmp char, but last char was a lead
+      if ((units -= 3) > -1) bytes.push(0xEF, 0xBF, 0xBD)
+    }
+
+    leadSurrogate = null
+
+    // encode utf8
+    if (codePoint < 0x80) {
+      if ((units -= 1) < 0) break
+      bytes.push(codePoint)
+    } else if (codePoint < 0x800) {
+      if ((units -= 2) < 0) break
+      bytes.push(
+        codePoint >> 0x6 | 0xC0,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x10000) {
+      if ((units -= 3) < 0) break
+      bytes.push(
+        codePoint >> 0xC | 0xE0,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else if (codePoint < 0x110000) {
+      if ((units -= 4) < 0) break
+      bytes.push(
+        codePoint >> 0x12 | 0xF0,
+        codePoint >> 0xC & 0x3F | 0x80,
+        codePoint >> 0x6 & 0x3F | 0x80,
+        codePoint & 0x3F | 0x80
+      )
+    } else {
+      throw new Error('Invalid code point')
+    }
+  }
+
+  return bytes
+}
+
+function asciiToBytes (str) {
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    // Node's code seems to be doing this and not & 0x7F..
+    byteArray.push(str.charCodeAt(i) & 0xFF)
+  }
+  return byteArray
+}
+
+function utf16leToBytes (str, units) {
+  var c, hi, lo
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    if ((units -= 2) < 0) break
+
+    c = str.charCodeAt(i)
+    hi = c >> 8
+    lo = c % 256
+    byteArray.push(lo)
+    byteArray.push(hi)
+  }
+
+  return byteArray
+}
+
+function base64ToBytes (str) {
+  return base64.toByteArray(base64clean(str))
+}
+
+function blitBuffer (src, dst, offset, length) {
+  for (var i = 0; i < length; i++) {
+    if ((i + offset >= dst.length) || (i >= src.length)) break
+    dst[i + offset] = src[i]
+  }
+  return i
+}
+
+},{"base64-js":4,"ieee754":5,"is-array":6}],4:[function(require,module,exports){
+var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+;(function (exports) {
+	'use strict';
+
+  var Arr = (typeof Uint8Array !== 'undefined')
+    ? Uint8Array
+    : Array
+
+	var PLUS   = '+'.charCodeAt(0)
+	var SLASH  = '/'.charCodeAt(0)
+	var NUMBER = '0'.charCodeAt(0)
+	var LOWER  = 'a'.charCodeAt(0)
+	var UPPER  = 'A'.charCodeAt(0)
+	var PLUS_URL_SAFE = '-'.charCodeAt(0)
+	var SLASH_URL_SAFE = '_'.charCodeAt(0)
+
+	function decode (elt) {
+		var code = elt.charCodeAt(0)
+		if (code === PLUS ||
+		    code === PLUS_URL_SAFE)
+			return 62 // '+'
+		if (code === SLASH ||
+		    code === SLASH_URL_SAFE)
+			return 63 // '/'
+		if (code < NUMBER)
+			return -1 //no match
+		if (code < NUMBER + 10)
+			return code - NUMBER + 26 + 26
+		if (code < UPPER + 26)
+			return code - UPPER
+		if (code < LOWER + 26)
+			return code - LOWER + 26
+	}
+
+	function b64ToByteArray (b64) {
+		var i, j, l, tmp, placeHolders, arr
+
+		if (b64.length % 4 > 0) {
+			throw new Error('Invalid string. Length must be a multiple of 4')
+		}
+
+		// the number of equal signs (place holders)
+		// if there are two placeholders, than the two characters before it
+		// represent one byte
+		// if there is only one, then the three characters before it represent 2 bytes
+		// this is just a cheap hack to not do indexOf twice
+		var len = b64.length
+		placeHolders = '=' === b64.charAt(len - 2) ? 2 : '=' === b64.charAt(len - 1) ? 1 : 0
+
+		// base64 is 4/3 + up to two characters of the original data
+		arr = new Arr(b64.length * 3 / 4 - placeHolders)
+
+		// if there are placeholders, only get up to the last complete 4 chars
+		l = placeHolders > 0 ? b64.length - 4 : b64.length
+
+		var L = 0
+
+		function push (v) {
+			arr[L++] = v
+		}
+
+		for (i = 0, j = 0; i < l; i += 4, j += 3) {
+			tmp = (decode(b64.charAt(i)) << 18) | (decode(b64.charAt(i + 1)) << 12) | (decode(b64.charAt(i + 2)) << 6) | decode(b64.charAt(i + 3))
+			push((tmp & 0xFF0000) >> 16)
+			push((tmp & 0xFF00) >> 8)
+			push(tmp & 0xFF)
+		}
+
+		if (placeHolders === 2) {
+			tmp = (decode(b64.charAt(i)) << 2) | (decode(b64.charAt(i + 1)) >> 4)
+			push(tmp & 0xFF)
+		} else if (placeHolders === 1) {
+			tmp = (decode(b64.charAt(i)) << 10) | (decode(b64.charAt(i + 1)) << 4) | (decode(b64.charAt(i + 2)) >> 2)
+			push((tmp >> 8) & 0xFF)
+			push(tmp & 0xFF)
+		}
+
+		return arr
+	}
+
+	function uint8ToBase64 (uint8) {
+		var i,
+			extraBytes = uint8.length % 3, // if we have 1 byte left, pad 2 bytes
+			output = "",
+			temp, length
+
+		function encode (num) {
+			return lookup.charAt(num)
+		}
+
+		function tripletToBase64 (num) {
+			return encode(num >> 18 & 0x3F) + encode(num >> 12 & 0x3F) + encode(num >> 6 & 0x3F) + encode(num & 0x3F)
+		}
+
+		// go through the array every three bytes, we'll deal with trailing stuff later
+		for (i = 0, length = uint8.length - extraBytes; i < length; i += 3) {
+			temp = (uint8[i] << 16) + (uint8[i + 1] << 8) + (uint8[i + 2])
+			output += tripletToBase64(temp)
+		}
+
+		// pad the end with zeros, but make sure to not forget the extra bytes
+		switch (extraBytes) {
+			case 1:
+				temp = uint8[uint8.length - 1]
+				output += encode(temp >> 2)
+				output += encode((temp << 4) & 0x3F)
+				output += '=='
+				break
+			case 2:
+				temp = (uint8[uint8.length - 2] << 8) + (uint8[uint8.length - 1])
+				output += encode(temp >> 10)
+				output += encode((temp >> 4) & 0x3F)
+				output += encode((temp << 2) & 0x3F)
+				output += '='
+				break
+		}
+
+		return output
+	}
+
+	exports.toByteArray = b64ToByteArray
+	exports.fromByteArray = uint8ToBase64
+}(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
+
+},{}],5:[function(require,module,exports){
+exports.read = function (buffer, offset, isLE, mLen, nBytes) {
+  var e, m
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var nBits = -7
+  var i = isLE ? (nBytes - 1) : 0
+  var d = isLE ? -1 : 1
+  var s = buffer[offset + i]
+
+  i += d
+
+  e = s & ((1 << (-nBits)) - 1)
+  s >>= (-nBits)
+  nBits += eLen
+  for (; nBits > 0; e = e * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  m = e & ((1 << (-nBits)) - 1)
+  e >>= (-nBits)
+  nBits += mLen
+  for (; nBits > 0; m = m * 256 + buffer[offset + i], i += d, nBits -= 8) {}
+
+  if (e === 0) {
+    e = 1 - eBias
+  } else if (e === eMax) {
+    return m ? NaN : ((s ? -1 : 1) * Infinity)
+  } else {
+    m = m + Math.pow(2, mLen)
+    e = e - eBias
+  }
+  return (s ? -1 : 1) * m * Math.pow(2, e - mLen)
+}
+
+exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
+  var e, m, c
+  var eLen = nBytes * 8 - mLen - 1
+  var eMax = (1 << eLen) - 1
+  var eBias = eMax >> 1
+  var rt = (mLen === 23 ? Math.pow(2, -24) - Math.pow(2, -77) : 0)
+  var i = isLE ? 0 : (nBytes - 1)
+  var d = isLE ? 1 : -1
+  var s = value < 0 || (value === 0 && 1 / value < 0) ? 1 : 0
+
+  value = Math.abs(value)
+
+  if (isNaN(value) || value === Infinity) {
+    m = isNaN(value) ? 1 : 0
+    e = eMax
+  } else {
+    e = Math.floor(Math.log(value) / Math.LN2)
+    if (value * (c = Math.pow(2, -e)) < 1) {
+      e--
+      c *= 2
+    }
+    if (e + eBias >= 1) {
+      value += rt / c
+    } else {
+      value += rt * Math.pow(2, 1 - eBias)
+    }
+    if (value * c >= 2) {
+      e++
+      c /= 2
+    }
+
+    if (e + eBias >= eMax) {
+      m = 0
+      e = eMax
+    } else if (e + eBias >= 1) {
+      m = (value * c - 1) * Math.pow(2, mLen)
+      e = e + eBias
+    } else {
+      m = value * Math.pow(2, eBias - 1) * Math.pow(2, mLen)
+      e = 0
+    }
+  }
+
+  for (; mLen >= 8; buffer[offset + i] = m & 0xff, i += d, m /= 256, mLen -= 8) {}
+
+  e = (e << mLen) | m
+  eLen += mLen
+  for (; eLen > 0; buffer[offset + i] = e & 0xff, i += d, e /= 256, eLen -= 8) {}
+
+  buffer[offset + i - d] |= s * 128
+}
+
+},{}],6:[function(require,module,exports){
+
+/**
+ * isArray
+ */
+
+var isArray = Array.isArray;
+
+/**
+ * toString
+ */
+
+var str = Object.prototype.toString;
+
+/**
+ * Whether or not the given `val`
+ * is an array.
+ *
+ * example:
+ *
+ *        isArray([]);
+ *        // > true
+ *        isArray(arguments);
+ *        // > false
+ *        isArray('');
+ *        // > false
+ *
+ * @param {mixed} val
+ * @return {bool}
+ */
+
+module.exports = isArray || function (val) {
+  return !! val && '[object Array]' == str.call(val);
+};
+
+},{}],7:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -383,7 +2172,7 @@ function toNLCST(file, Parser) {
 
 module.exports = toNLCST;
 
-},{"mdast-range":4,"nlcst-to-string":29,"parse-latin":31}],4:[function(require,module,exports){
+},{"mdast-range":8,"nlcst-to-string":10,"parse-latin":11}],8:[function(require,module,exports){
 'use strict';
 
 /*
@@ -553,7 +2342,7 @@ function attacher() {
 
 module.exports = attacher;
 
-},{"mdast-util-visit":5}],5:[function(require,module,exports){
+},{"mdast-util-visit":9}],9:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -668,7 +2457,2596 @@ function visit(tree, type, callback, reverse) {
 
 module.exports = visit;
 
-},{}],6:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
+'use strict';
+
+/**
+ * Stringify an NLCST node.
+ *
+ * @param {NLCSTNode} nlcst
+ * @return {string}
+ */
+function nlcstToString(nlcst) {
+    var values,
+        length,
+        children;
+
+    if (typeof nlcst.value === 'string') {
+        return nlcst.value;
+    }
+
+    children = nlcst.children;
+    length = children.length;
+
+    /**
+     * Shortcut: This is pretty common, and a small performance win.
+     */
+
+    if (length === 1 && 'value' in children[0]) {
+        return children[0].value;
+    }
+
+    values = [];
+
+    while (length--) {
+        values[length] = nlcstToString(children[length]);
+    }
+
+    return values.join('');
+}
+
+/*
+ * Expose `nlcstToString`.
+ */
+
+module.exports = nlcstToString;
+
+},{}],11:[function(require,module,exports){
+'use strict';
+
+module.exports = require('./lib/parse-latin');
+
+},{"./lib/parse-latin":14}],12:[function(require,module,exports){
+module.exports = {
+    'affixSymbol': /^([\)\]\}\u0F3B\u0F3D\u169C\u2046\u207E\u208E\u2309\u230B\u232A\u2769\u276B\u276D\u276F\u2771\u2773\u2775\u27C6\u27E7\u27E9\u27EB\u27ED\u27EF\u2984\u2986\u2988\u298A\u298C\u298E\u2990\u2992\u2994\u2996\u2998\u29D9\u29DB\u29FD\u2E23\u2E25\u2E27\u2E29\u3009\u300B\u300D\u300F\u3011\u3015\u3017\u3019\u301B\u301E\u301F\uFD3E\uFE18\uFE36\uFE38\uFE3A\uFE3C\uFE3E\uFE40\uFE42\uFE44\uFE48\uFE5A\uFE5C\uFE5E\uFF09\uFF3D\uFF5D\uFF60\uFF63]|["'\xBB\u2019\u201D\u203A\u2E03\u2E05\u2E0A\u2E0D\u2E1D\u2E21]|[!\.\?\u2026\u203D])\1*$/,
+    'newLine': /^(\r?\n|\r)+$/,
+    'newLineMulti': /^(\r?\n|\r){2,}$/,
+    'terminalMarker': /^((?:[!\.\?\u2026\u203D])+)$/,
+    'wordSymbolInner': /^((?:[&'\-\.:=\?@\xAD\xB7\u2010\u2011\u2019\u2027])|(?:[\/_])+)$/,
+    'punctuation': /^(?:[!"'-\),-\/:;\?\[-\]_\{\}\xA1\xA7\xAB\xB6\xB7\xBB\xBF\u037E\u0387\u055A-\u055F\u0589\u058A\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0609\u060A\u060C\u060D\u061B\u061E\u061F\u066A-\u066D\u06D4\u0700-\u070D\u07F7-\u07F9\u0830-\u083E\u085E\u0964\u0965\u0970\u0AF0\u0DF4\u0E4F\u0E5A\u0E5B\u0F04-\u0F12\u0F14\u0F3A-\u0F3D\u0F85\u0FD0-\u0FD4\u0FD9\u0FDA\u104A-\u104F\u10FB\u1360-\u1368\u1400\u166D\u166E\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DA\u1800-\u180A\u1944\u1945\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B5A-\u1B60\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u2010-\u201F\u2022-\u2027\u2032-\u203A\u203C-\u2043\u2045-\u2051\u2053-\u205E\u207D\u207E\u208D\u208E\u2308-\u230B\u2329\u232A\u2768-\u2775\u27C5\u27C6\u27E6-\u27EF\u2983-\u2998\u29D8-\u29DB\u29FC\u29FD\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E42\u3001-\u3003\u3008-\u3011\u3014-\u301F\u3030\u303D\u30A0\u30FB\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAADE\uAADF\uAAF0\uAAF1\uABEB\uFD3E\uFD3F\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE61\uFE63\uFE68\uFE6A\uFE6B\uFF01-\uFF03\uFF05-\uFF0A\uFF0C-\uFF0F\uFF1A\uFF1B\uFF1F\uFF20\uFF3B-\uFF3D\uFF3F\uFF5B\uFF5D\uFF5F-\uFF65]|\uD800[\uDD00-\uDD02\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC9\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9]|\uD805[\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDF3C-\uDF3E]|\uD809[\uDC70-\uDC74]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3B\uDF44]|\uD82F\uDC9F|\uD836[\uDE87-\uDE8B])+$/,
+    'numerical': /^(?:[0-9\xB2\xB3\xB9\xBC-\xBE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0DE6-\u0DEF\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uA9F0-\uA9F9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]|\uD800[\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDEE1-\uDEFB\uDF20-\uDF23\uDF41\uDF4A\uDFD1-\uDFD5]|\uD801[\uDCA0-\uDCA9]|\uD802[\uDC58-\uDC5F\uDC79-\uDC7F\uDCA7-\uDCAF\uDCFB-\uDCFF\uDD16-\uDD1B\uDDBC\uDDBD\uDDC0-\uDDCF\uDDD2-\uDDFF\uDE40-\uDE47\uDE7D\uDE7E\uDE9D-\uDE9F\uDEEB-\uDEEF\uDF58-\uDF5F\uDF78-\uDF7F\uDFA9-\uDFAF]|\uD803[\uDCFA-\uDCFF\uDE60-\uDE7E]|\uD804[\uDC52-\uDC6F\uDCF0-\uDCF9\uDD36-\uDD3F\uDDD0-\uDDD9\uDDE1-\uDDF4\uDEF0-\uDEF9]|\uD805[\uDCD0-\uDCD9\uDE50-\uDE59\uDEC0-\uDEC9\uDF30-\uDF3B]|\uD806[\uDCE0-\uDCF2]|\uD809[\uDC00-\uDC6E]|\uD81A[\uDE60-\uDE69\uDF50-\uDF59\uDF5B-\uDF61]|\uD834[\uDF60-\uDF71]|\uD835[\uDFCE-\uDFFF]|\uD83A[\uDCC7-\uDCCF]|\uD83C[\uDD00-\uDD0C])+$/,
+    'lowerInitial': /^(?:[a-z\xB5\xDF-\xF6\xF8-\xFF\u0101\u0103\u0105\u0107\u0109\u010B\u010D\u010F\u0111\u0113\u0115\u0117\u0119\u011B\u011D\u011F\u0121\u0123\u0125\u0127\u0129\u012B\u012D\u012F\u0131\u0133\u0135\u0137\u0138\u013A\u013C\u013E\u0140\u0142\u0144\u0146\u0148\u0149\u014B\u014D\u014F\u0151\u0153\u0155\u0157\u0159\u015B\u015D\u015F\u0161\u0163\u0165\u0167\u0169\u016B\u016D\u016F\u0171\u0173\u0175\u0177\u017A\u017C\u017E-\u0180\u0183\u0185\u0188\u018C\u018D\u0192\u0195\u0199-\u019B\u019E\u01A1\u01A3\u01A5\u01A8\u01AA\u01AB\u01AD\u01B0\u01B4\u01B6\u01B9\u01BA\u01BD-\u01BF\u01C6\u01C9\u01CC\u01CE\u01D0\u01D2\u01D4\u01D6\u01D8\u01DA\u01DC\u01DD\u01DF\u01E1\u01E3\u01E5\u01E7\u01E9\u01EB\u01ED\u01EF\u01F0\u01F3\u01F5\u01F9\u01FB\u01FD\u01FF\u0201\u0203\u0205\u0207\u0209\u020B\u020D\u020F\u0211\u0213\u0215\u0217\u0219\u021B\u021D\u021F\u0221\u0223\u0225\u0227\u0229\u022B\u022D\u022F\u0231\u0233-\u0239\u023C\u023F\u0240\u0242\u0247\u0249\u024B\u024D\u024F-\u0293\u0295-\u02AF\u0371\u0373\u0377\u037B-\u037D\u0390\u03AC-\u03CE\u03D0\u03D1\u03D5-\u03D7\u03D9\u03DB\u03DD\u03DF\u03E1\u03E3\u03E5\u03E7\u03E9\u03EB\u03ED\u03EF-\u03F3\u03F5\u03F8\u03FB\u03FC\u0430-\u045F\u0461\u0463\u0465\u0467\u0469\u046B\u046D\u046F\u0471\u0473\u0475\u0477\u0479\u047B\u047D\u047F\u0481\u048B\u048D\u048F\u0491\u0493\u0495\u0497\u0499\u049B\u049D\u049F\u04A1\u04A3\u04A5\u04A7\u04A9\u04AB\u04AD\u04AF\u04B1\u04B3\u04B5\u04B7\u04B9\u04BB\u04BD\u04BF\u04C2\u04C4\u04C6\u04C8\u04CA\u04CC\u04CE\u04CF\u04D1\u04D3\u04D5\u04D7\u04D9\u04DB\u04DD\u04DF\u04E1\u04E3\u04E5\u04E7\u04E9\u04EB\u04ED\u04EF\u04F1\u04F3\u04F5\u04F7\u04F9\u04FB\u04FD\u04FF\u0501\u0503\u0505\u0507\u0509\u050B\u050D\u050F\u0511\u0513\u0515\u0517\u0519\u051B\u051D\u051F\u0521\u0523\u0525\u0527\u0529\u052B\u052D\u052F\u0561-\u0587\u13F8-\u13FD\u1D00-\u1D2B\u1D6B-\u1D77\u1D79-\u1D9A\u1E01\u1E03\u1E05\u1E07\u1E09\u1E0B\u1E0D\u1E0F\u1E11\u1E13\u1E15\u1E17\u1E19\u1E1B\u1E1D\u1E1F\u1E21\u1E23\u1E25\u1E27\u1E29\u1E2B\u1E2D\u1E2F\u1E31\u1E33\u1E35\u1E37\u1E39\u1E3B\u1E3D\u1E3F\u1E41\u1E43\u1E45\u1E47\u1E49\u1E4B\u1E4D\u1E4F\u1E51\u1E53\u1E55\u1E57\u1E59\u1E5B\u1E5D\u1E5F\u1E61\u1E63\u1E65\u1E67\u1E69\u1E6B\u1E6D\u1E6F\u1E71\u1E73\u1E75\u1E77\u1E79\u1E7B\u1E7D\u1E7F\u1E81\u1E83\u1E85\u1E87\u1E89\u1E8B\u1E8D\u1E8F\u1E91\u1E93\u1E95-\u1E9D\u1E9F\u1EA1\u1EA3\u1EA5\u1EA7\u1EA9\u1EAB\u1EAD\u1EAF\u1EB1\u1EB3\u1EB5\u1EB7\u1EB9\u1EBB\u1EBD\u1EBF\u1EC1\u1EC3\u1EC5\u1EC7\u1EC9\u1ECB\u1ECD\u1ECF\u1ED1\u1ED3\u1ED5\u1ED7\u1ED9\u1EDB\u1EDD\u1EDF\u1EE1\u1EE3\u1EE5\u1EE7\u1EE9\u1EEB\u1EED\u1EEF\u1EF1\u1EF3\u1EF5\u1EF7\u1EF9\u1EFB\u1EFD\u1EFF-\u1F07\u1F10-\u1F15\u1F20-\u1F27\u1F30-\u1F37\u1F40-\u1F45\u1F50-\u1F57\u1F60-\u1F67\u1F70-\u1F7D\u1F80-\u1F87\u1F90-\u1F97\u1FA0-\u1FA7\u1FB0-\u1FB4\u1FB6\u1FB7\u1FBE\u1FC2-\u1FC4\u1FC6\u1FC7\u1FD0-\u1FD3\u1FD6\u1FD7\u1FE0-\u1FE7\u1FF2-\u1FF4\u1FF6\u1FF7\u210A\u210E\u210F\u2113\u212F\u2134\u2139\u213C\u213D\u2146-\u2149\u214E\u2184\u2C30-\u2C5E\u2C61\u2C65\u2C66\u2C68\u2C6A\u2C6C\u2C71\u2C73\u2C74\u2C76-\u2C7B\u2C81\u2C83\u2C85\u2C87\u2C89\u2C8B\u2C8D\u2C8F\u2C91\u2C93\u2C95\u2C97\u2C99\u2C9B\u2C9D\u2C9F\u2CA1\u2CA3\u2CA5\u2CA7\u2CA9\u2CAB\u2CAD\u2CAF\u2CB1\u2CB3\u2CB5\u2CB7\u2CB9\u2CBB\u2CBD\u2CBF\u2CC1\u2CC3\u2CC5\u2CC7\u2CC9\u2CCB\u2CCD\u2CCF\u2CD1\u2CD3\u2CD5\u2CD7\u2CD9\u2CDB\u2CDD\u2CDF\u2CE1\u2CE3\u2CE4\u2CEC\u2CEE\u2CF3\u2D00-\u2D25\u2D27\u2D2D\uA641\uA643\uA645\uA647\uA649\uA64B\uA64D\uA64F\uA651\uA653\uA655\uA657\uA659\uA65B\uA65D\uA65F\uA661\uA663\uA665\uA667\uA669\uA66B\uA66D\uA681\uA683\uA685\uA687\uA689\uA68B\uA68D\uA68F\uA691\uA693\uA695\uA697\uA699\uA69B\uA723\uA725\uA727\uA729\uA72B\uA72D\uA72F-\uA731\uA733\uA735\uA737\uA739\uA73B\uA73D\uA73F\uA741\uA743\uA745\uA747\uA749\uA74B\uA74D\uA74F\uA751\uA753\uA755\uA757\uA759\uA75B\uA75D\uA75F\uA761\uA763\uA765\uA767\uA769\uA76B\uA76D\uA76F\uA771-\uA778\uA77A\uA77C\uA77F\uA781\uA783\uA785\uA787\uA78C\uA78E\uA791\uA793-\uA795\uA797\uA799\uA79B\uA79D\uA79F\uA7A1\uA7A3\uA7A5\uA7A7\uA7A9\uA7B5\uA7B7\uA7FA\uAB30-\uAB5A\uAB60-\uAB65\uAB70-\uABBF\uFB00-\uFB06\uFB13-\uFB17\uFF41-\uFF5A]|\uD801[\uDC28-\uDC4F]|\uD803[\uDCC0-\uDCF2]|\uD806[\uDCC0-\uDCDF]|\uD835[\uDC1A-\uDC33\uDC4E-\uDC54\uDC56-\uDC67\uDC82-\uDC9B\uDCB6-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDCCF\uDCEA-\uDD03\uDD1E-\uDD37\uDD52-\uDD6B\uDD86-\uDD9F\uDDBA-\uDDD3\uDDEE-\uDE07\uDE22-\uDE3B\uDE56-\uDE6F\uDE8A-\uDEA5\uDEC2-\uDEDA\uDEDC-\uDEE1\uDEFC-\uDF14\uDF16-\uDF1B\uDF36-\uDF4E\uDF50-\uDF55\uDF70-\uDF88\uDF8A-\uDF8F\uDFAA-\uDFC2\uDFC4-\uDFC9\uDFCB])/,
+    'token': /(?:[0-9A-Za-z\xAA\xB2\xB3\xB5\xB9\xBA\xBC-\xBE\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B4\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09F4-\u09F9\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71-\u0B77\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BF2\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C78-\u0C7E\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D5F-\u0D63\u0D66-\u0D75\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F33\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u137C\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u17F0-\u17F9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABE\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2070\u2071\u2074-\u2079\u207F-\u2089\u2090-\u209C\u20D0-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2150-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2CFD\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u3192-\u3195\u31A0-\u31BA\u31F0-\u31FF\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA672\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AD\uA7B0-\uA7B7\uA7F7-\uA827\uA830-\uA835\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0-\uDEFB\uDF00-\uDF23\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC58-\uDC76\uDC79-\uDC9E\uDCA7-\uDCAF\uDCE0-\uDCF2\uDCF4\uDCF5\uDCFB-\uDD1B\uDD20-\uDD39\uDD80-\uDDB7\uDDBC-\uDDCF\uDDD2-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F-\uDE47\uDE60-\uDE7E\uDE80-\uDE9F\uDEC0-\uDEC7\uDEC9-\uDEE6\uDEEB-\uDEEF\uDF00-\uDF35\uDF40-\uDF55\uDF58-\uDF72\uDF78-\uDF91\uDFA9-\uDFAF]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDCFA-\uDCFF\uDE60-\uDE7E]|\uD804[\uDC00-\uDC46\uDC52-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDCA-\uDDCC\uDDD0-\uDDDA\uDDDC\uDDE1-\uDDF4\uDE00-\uDE11\uDE13-\uDE37\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9\uDF00-\uDF19\uDF1D-\uDF2B\uDF30-\uDF3B]|\uD806[\uDCA0-\uDCF2\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF5B-\uDF61\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44\uDF60-\uDF71]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD83A[\uDC00-\uDCC4\uDCC7-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD83C[\uDD00-\uDD0C]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF])+|(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+|(?:[\uD800-\uDFFF])+|([\s\S])\1*/g,
+    'word': /^(?:[0-9A-Za-z\xAA\xB2\xB3\xB5\xB9\xBA\xBC-\xBE\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B4\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09F4-\u09F9\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71-\u0B77\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BF2\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C78-\u0C7E\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D5F-\u0D63\u0D66-\u0D75\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F33\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u137C\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u17F0-\u17F9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABE\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2070\u2071\u2074-\u2079\u207F-\u2089\u2090-\u209C\u20D0-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2150-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2CFD\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u3192-\u3195\u31A0-\u31BA\u31F0-\u31FF\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA672\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AD\uA7B0-\uA7B7\uA7F7-\uA827\uA830-\uA835\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0-\uDEFB\uDF00-\uDF23\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC58-\uDC76\uDC79-\uDC9E\uDCA7-\uDCAF\uDCE0-\uDCF2\uDCF4\uDCF5\uDCFB-\uDD1B\uDD20-\uDD39\uDD80-\uDDB7\uDDBC-\uDDCF\uDDD2-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F-\uDE47\uDE60-\uDE7E\uDE80-\uDE9F\uDEC0-\uDEC7\uDEC9-\uDEE6\uDEEB-\uDEEF\uDF00-\uDF35\uDF40-\uDF55\uDF58-\uDF72\uDF78-\uDF91\uDFA9-\uDFAF]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDCFA-\uDCFF\uDE60-\uDE7E]|\uD804[\uDC00-\uDC46\uDC52-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDCA-\uDDCC\uDDD0-\uDDDA\uDDDC\uDDE1-\uDDF4\uDE00-\uDE11\uDE13-\uDE37\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9\uDF00-\uDF19\uDF1D-\uDF2B\uDF30-\uDF3B]|\uD806[\uDCA0-\uDCF2\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF5B-\uDF61\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44\uDF60-\uDF71]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD83A[\uDC00-\uDCC4\uDCC7-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD83C[\uDD00-\uDD0C]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF])+$/,
+    'whiteSpace': /^(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+$/
+};
+
+},{}],13:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var iterate;
+
+iterate = require('array-iterate');
+
+/**
+ * Pass the context as the third argument to `callback`.
+ *
+ * @param {function(Object, number, Object): number|undefined} callback
+ * @return {function(Object, number)}
+ */
+function wrapperFactory(callback) {
+    return function (value, index) {
+        return callback(value, index, this);
+    };
+}
+
+/**
+ * Turns `callback` into a ``iterator'' accepting a parent.
+ *
+ * see ``array-iterate'' for more info.
+ *
+ * @param {function(Object, number, Object): number|undefined} callback
+ * @return {function(NLCSTParent)}
+ */
+function iteratorFactory(callback) {
+    return function (parent) {
+        return iterate(parent.children, callback, parent);
+    };
+}
+
+/**
+ * Turns `callback` into a ``iterator'' accepting a parent.
+ *
+ * see ``array-iterate'' for more info.
+ *
+ * @param {function(Object, number, Object): number|undefined} callback
+ * @return {function(Object)}
+ */
+function modifierFactory(callback) {
+    return iteratorFactory(wrapperFactory(callback));
+}
+
+/*
+ * Expose `modifierFactory`.
+ */
+
+module.exports = modifierFactory;
+
+},{"array-iterate":34}],14:[function(require,module,exports){
+/*!
+ * parse-latin
+ *
+ * Licensed under MIT.
+ * Copyright (c) 2014 Titus Wormer <tituswormer@gmail.com>
+ */
+
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var createParser,
+    expressions,
+    pluginFactory,
+    modifierFactory;
+
+createParser = require('./parser');
+expressions = require('./expressions');
+pluginFactory = require('./plugin');
+modifierFactory = require('./modifier');
+
+/*
+ * == CLASSIFY ===============================================================
+ */
+
+/*
+ * Constants.
+ */
+
+var EXPRESSION_TOKEN,
+    EXPRESSION_WORD,
+    EXPRESSION_PUNCTUATION,
+    EXPRESSION_WHITE_SPACE;
+
+/*
+ * Match all tokens:
+ * - One or more number, alphabetic, or
+ *   combining characters;
+ * - One or more white space characters;
+ * - One or more astral plane characters;
+ * - One or more of the same character;
+ */
+
+EXPRESSION_TOKEN = expressions.token;
+
+/*
+ * Match a word.
+ */
+
+EXPRESSION_WORD = expressions.word;
+
+/*
+ * Match a string containing ONLY punctuation.
+ */
+
+EXPRESSION_PUNCTUATION = expressions.punctuation;
+
+/*
+ * Match a string containing ONLY white space.
+ */
+
+EXPRESSION_WHITE_SPACE = expressions.whiteSpace;
+
+/**
+ * Classify a token.
+ *
+ * @param {string?} value
+ * @return {string} - value's type.
+ */
+function classify(value) {
+    if (EXPRESSION_WHITE_SPACE.test(value)) {
+        return 'WhiteSpace';
+    }
+
+    if (EXPRESSION_WORD.test(value)) {
+        return 'Word';
+    }
+
+    if (EXPRESSION_PUNCTUATION.test(value)) {
+        return 'Punctuation';
+    }
+
+    return 'Symbol';
+}
+
+/**
+ * Transform a `value` into a list of `NLCSTNode`s.
+ *
+ * @param {ParseLatin} parser
+ * @param {string?} value
+ * @return {Array.<NLCSTNode>}
+ */
+function tokenize(parser, value) {
+    var tokens,
+        offset,
+        line,
+        column,
+        match;
+
+    if (value === null || value === undefined) {
+        value = '';
+    } else if (value instanceof String) {
+        value = value.toString();
+    }
+
+    if (typeof value !== 'string') {
+        /**
+         * Return the given nodes if this is either an
+         * empty array, or an array with a node as a first
+         * child.
+         */
+
+        if ('length' in value && (!value[0] || value[0].type)) {
+            return value;
+        }
+
+        throw new Error(
+            'Illegal invocation: \'' + value + '\'' +
+            ' is not a valid argument for \'ParseLatin\''
+        );
+    }
+
+    tokens = [];
+
+    if (!value) {
+        return tokens;
+    }
+
+    offset = 0;
+    line = 1;
+    column = 1;
+
+    /**
+     * Get the current position.
+     *
+     * @example
+     *   position = now(); // {line: 1, column: 1}
+     *
+     * @return {Object}
+     */
+    function now() {
+        return {
+            'line': line,
+            'column': column,
+            'offset': offset
+        };
+    }
+
+    /**
+     * Store position information for a node.
+     *
+     * @example
+     *   start = now();
+     *   updatePosition('foo');
+     *   location = new Position(start);
+     *   // {start: {line: 1, column: 1}, end: {line: 1, column: 3}}
+     *
+     * @param {Object} start
+     */
+    function Position(start) {
+        this.start = start;
+        this.end = now();
+    }
+
+    /**
+     * Mark position and patch `node.position`.
+     *
+     * @example
+     *   var update = position();
+     *   updatePosition('foo');
+     *   update({});
+     *   // {
+     *   //   position: {
+     *   //     start: {line: 1, column: 1}
+     *   //     end: {line: 1, column: 3}
+     *   //   }
+     *   // }
+     *
+     * @returns {function(Node): Node}
+     */
+    function position() {
+        var before = now();
+
+        /**
+         * Add the position to a node.
+         *
+         * @example
+         *   update({type: 'text', value: 'foo'});
+         *
+         * @param {Node} node - Node to attach position
+         *   on.
+         * @return {Node} - `node`.
+         */
+        function patch(node) {
+            node.position = new Position(before);
+
+            return node;
+        }
+
+        return patch;
+    }
+
+    /**
+     * Update line and column based on `value`.
+     *
+     * @example
+     *   update('foo');
+     *
+     * @param {string} subvalue
+     */
+    function update(subvalue) {
+        var subvalueLength = subvalue.length,
+            character = -1,
+            lastIndex = -1;
+
+        offset += subvalueLength;
+
+        while (++character < subvalueLength) {
+            if (subvalue.charAt(character) === '\n') {
+                lastIndex = character;
+                line++;
+            }
+        }
+
+        if (lastIndex === -1) {
+            column = column + subvalueLength;
+        } else {
+            column = subvalueLength - lastIndex;
+        }
+    }
+
+    /**
+     * Add mechanism.
+     *
+     * @param {NLCSTNode} node - Node to add.
+     * @param {NLCSTParentNode?} [parent] - Optional parent
+     *   node to insert into.
+     * @return {NLCSTNode} - `node`.
+     */
+    function add(node, parent) {
+        if (parent) {
+            parent.children.push(node);
+        } else {
+            tokens.push(node);
+        }
+
+        return node;
+    }
+
+    /**
+     * Remove `subvalue` from `value`.
+     * Expects `subvalue` to be at the start from
+     * `value`, and applies no validation.
+     *
+     * @example
+     *   eat('foo')({type: 'TextNode', value: 'foo'});
+     *
+     * @param {string} subvalue - Removed from `value`,
+     *   and passed to `update`.
+     * @return {Function} - Wrapper around `add`, which
+     *   also adds `position` to node.
+     */
+    function eat(subvalue) {
+        var pos = position();
+
+        /**
+         * Add the given arguments, add `position` to
+         * the returned node, and return the node.
+         *
+         * @return {Node}
+         */
+        function apply() {
+            return pos(add.apply(null, arguments));
+        }
+
+        value = value.substring(subvalue.length);
+
+        update(subvalue);
+
+        return apply;
+    }
+
+    /**
+     * Remove `subvalue` from `value`. Does not patch
+     * positional information.
+     *
+     * @param {string} subvalue - Value to eat.
+     * @return {Function}
+     */
+    function noPositionEat(subvalue) {
+        /**
+         * Add the given arguments and return the node.
+         *
+         * @return {Node}
+         */
+        function apply() {
+            return add.apply(null, arguments);
+        }
+
+        value = value.substring(subvalue.length);
+
+        return apply;
+    }
+
+    /*
+     * Eat mechanism to use.
+     */
+
+    var eater = parser.position ? eat : noPositionEat;
+
+    /**
+     * Continue matching.
+     */
+    function next() {
+        EXPRESSION_TOKEN.lastIndex = 0;
+
+        match = EXPRESSION_TOKEN.exec(value);
+    }
+
+    next();
+
+    while (match) {
+        parser['tokenize' + classify(match[0])](match[0], eater);
+
+        next();
+    }
+
+    return tokens;
+}
+
+/**
+ * Add mechanism used when text-tokenisers are called
+ * directly outside of the `tokenize` function.
+ *
+ * @param {NLCSTNode} node - Node to add.
+ * @param {NLCSTParentNode?} [parent] - Optional parent
+ *   node to insert into.
+ * @return {NLCSTNode} - `node`.
+ */
+function noopAdd(node, parent) {
+    if (parent) {
+        parent.children.push(node);
+    }
+
+    return node;
+}
+
+/**
+ * Eat and add mechanism without adding positional
+ * information, used when text-tokenisers are called
+ * directly outside of the `tokenize` function.
+ *
+ * @return {Function}
+ */
+function noopEat() {
+    return noopAdd;
+}
+
+/*
+ * == PARSE LATIN ============================================================
+ */
+
+/**
+ * Transform Latin-script natural language into
+ * an NLCST-tree.
+ *
+ * @constructor {ParseLatin}
+ */
+function ParseLatin(options) {
+    /*
+     * TODO: This should later be removed (when this
+     * change bubbles through to dependants).
+     */
+
+    if (!(this instanceof ParseLatin)) {
+        return new ParseLatin(options);
+    }
+
+    this.position = Boolean(options && options.position);
+}
+
+/*
+ * Quick access to the prototype.
+ */
+
+var parseLatinPrototype;
+
+parseLatinPrototype = ParseLatin.prototype;
+
+/*
+ * == TOKENIZE ===============================================================
+ */
+
+/**
+ * Transform a `value` into a list of `NLCSTNode`s.
+ *
+ * @see tokenize
+ */
+parseLatinPrototype.tokenize = function (value) {
+    return tokenize(this, value);
+};
+
+/*
+ * == TEXT NODES =============================================================
+ */
+
+/**
+ * Factory to create a `Text`.
+ *
+ * @param {string?} type
+ * @return {function(value): NLCSTText}
+ */
+function createTextFactory(type) {
+    type += 'Node';
+
+    /**
+     * Construct a `Text` from a bound `type`
+     *
+     * @param {value} value - Value of the node.
+     * @param {Function?} [eat] - Optional eat mechanism
+     *   to use.
+     * @param {NLCSTParentNode?} [parent] - Optional
+     *   parent to insert into.
+     * @return {NLCSTText}
+     */
+    return function (value, eat, parent) {
+        if (value === null || value === undefined) {
+            value = '';
+        }
+
+        return (eat || noopEat)(value)({
+            'type': type,
+            'value': String(value)
+        }, parent);
+    };
+}
+
+/**
+ * Create a `SymbolNode` with the given `value`.
+ *
+ * @param {string?} value
+ * @return {NLCSTSymbolNode}
+ */
+parseLatinPrototype.tokenizeSymbol = createTextFactory('Symbol');
+
+/**
+ * Create a `WhiteSpaceNode` with the given `value`.
+ *
+ * @param {string?} value
+ * @return {NLCSTWhiteSpaceNode}
+ */
+parseLatinPrototype.tokenizeWhiteSpace = createTextFactory('WhiteSpace');
+
+/**
+ * Create a `PunctuationNode` with the given `value`.
+ *
+ * @param {string?} value
+ * @return {NLCSTPunctuationNode}
+ */
+parseLatinPrototype.tokenizePunctuation = createTextFactory('Punctuation');
+
+/**
+ * Create a `SourceNode` with the given `value`.
+ *
+ * @param {string?} value
+ * @return {NLCSTSourceNode}
+ */
+parseLatinPrototype.tokenizeSource = createTextFactory('Source');
+
+/**
+ * Create a `TextNode` with the given `value`.
+ *
+ * @param {string?} value
+ * @return {NLCSTTextNode}
+ */
+parseLatinPrototype.tokenizeText = createTextFactory('Text');
+
+/*
+ * == PARENT NODES ===========================================================
+ *
+ * All these nodes are `pluggable`: they come with a
+ * `use` method which accepts a plugin
+ * (`function(NLCSTNode)`). Every time one of these
+ * methods are called, the plugin is invoked with the
+ * node, allowing for easy modification.
+ *
+ * In fact, the internal transformation from `tokenize`
+ * (a list of words, white space, punctuation, and
+ * symbols) to `tokenizeRoot` (an NLCST tree), is also
+ * implemented through this mechanism.
+ */
+
+/**
+ * Run transform plug-ins for `key` on `nodes`.
+ *
+ * @param {string} key
+ * @param {Array.<Node>} nodes
+ * @return {Array.<Node>} - `nodes`.
+ */
+function run(key, nodes) {
+    var wareKey,
+        plugins,
+        index;
+
+    wareKey = key + 'Plugins';
+
+    plugins = this[wareKey];
+
+    if (plugins) {
+        index = -1;
+
+        while (plugins[++index]) {
+            plugins[index](nodes);
+        }
+    }
+
+    return nodes;
+}
+
+/*
+ * Expose `run`.
+ */
+
+parseLatinPrototype.run = run;
+
+/**
+ * @param {Function} Constructor
+ * @param {string} key
+ * @param {function(*): undefined} callback
+ */
+function pluggable(Constructor, key, callback) {
+    /**
+     * Set a pluggable version of `callback`
+     * on `Constructor`.
+     */
+    Constructor.prototype[key] = function () {
+        return this.run(key, callback.apply(this, arguments));
+    };
+}
+
+/**
+ * Factory to inject `plugins`. Takes `callback` for
+ * the actual inserting.
+ *
+ * @param {function(Object, string, Array.<Function>)} callback
+ * @return {function(string, Array.<Function>)}
+ */
+function useFactory(callback) {
+    /*
+     * Validate if `plugins` can be inserted. Invokes
+     * the bound `callback` to do the actual inserting.
+     *
+     * @param {string} key - Method to inject on
+     * @param {Array.<Function>|Function} plugins - One
+     *   or more plugins.
+     */
+
+    return function (key, plugins) {
+        var self,
+            wareKey;
+
+        self = this;
+
+        /*
+         * Throw if the method is not pluggable.
+         */
+
+        if (!(key in self)) {
+            throw new Error(
+                'Illegal Invocation: Unsupported `key` for ' +
+                '`use(key, plugins)`. Make sure `key` is a ' +
+                'supported function'
+            );
+        }
+
+        /*
+         * Fail silently when no plugins are given.
+         */
+
+        if (!plugins) {
+            return;
+        }
+
+        wareKey = key + 'Plugins';
+
+        /*
+         * Make sure `plugins` is a list.
+         */
+
+        if (typeof plugins === 'function') {
+            plugins = [plugins];
+        } else {
+            plugins = plugins.concat();
+        }
+
+        /*
+         * Make sure `wareKey` exists.
+         */
+
+        if (!self[wareKey]) {
+            self[wareKey] = [];
+        }
+
+        /*
+         * Invoke callback with the ware key and plugins.
+         */
+
+        callback(self, wareKey, plugins);
+    };
+}
+
+/*
+ * Inject `plugins` to modifiy the result of the method
+ * at `key` on the operated on context.
+ *
+ * @param {string} key
+ * @param {Function|Array.<Function>} plugins
+ * @this {ParseLatin|Object}
+ */
+
+parseLatinPrototype.use = useFactory(function (context, key, plugins) {
+    context[key] = context[key].concat(plugins);
+});
+
+/*
+ * Inject `plugins` to modifiy the result of the method
+ * at `key` on the operated on context, before any other.
+ *
+ * @param {string} key
+ * @param {Function|Array.<Function>} plugins
+ * @this {ParseLatin|Object}
+ */
+
+parseLatinPrototype.useFirst = useFactory(function (context, key, plugins) {
+    context[key] = plugins.concat(context[key]);
+});
+
+/**
+ * Create a `WordNode` with its children set to a single
+ * `TextNode`, its value set to the given `value`.
+ *
+ * @see pluggable
+ *
+ * @param {string?} value
+ * @return {NLCSTWordNode}
+ */
+pluggable(ParseLatin, 'tokenizeWord', function (value, eat) {
+    var add,
+        parent;
+
+    add = (eat || noopEat)('');
+    parent = {
+        'type': 'WordNode',
+        'children': []
+    };
+
+    this.tokenizeText(value, eat, parent);
+
+    return add(parent);
+});
+
+/**
+ * Create a `SentenceNode` with its children set to
+ * `Node`s, their values set to the tokenized given
+ * `value`.
+ *
+ * Unless plugins add new nodes, the sentence is
+ * populated by `WordNode`s, `SymbolNode`s,
+ * `PunctuationNode`s, and `WhiteSpaceNode`s.
+ *
+ * @see pluggable
+ *
+ * @param {string?} value
+ * @return {NLCSTSentenceNode}
+ */
+pluggable(ParseLatin, 'tokenizeSentence', createParser({
+    'type': 'SentenceNode',
+    'tokenizer': 'tokenize'
+}));
+
+/**
+ * Create a `ParagraphNode` with its children set to
+ * `Node`s, their values set to the tokenized given
+ * `value`.
+ *
+ * Unless plugins add new nodes, the paragraph is
+ * populated by `SentenceNode`s and `WhiteSpaceNode`s.
+ *
+ * @see pluggable
+ *
+ * @param {string?} value
+ * @return {NLCSTParagraphNode}
+ */
+pluggable(ParseLatin, 'tokenizeParagraph', createParser({
+    'type': 'ParagraphNode',
+    'delimiter': expressions.terminalMarker,
+    'delimiterType': 'PunctuationNode',
+    'tokenizer': 'tokenizeSentence'
+}));
+
+/**
+ * Create a `RootNode` with its children set to `Node`s,
+ * their values set to the tokenized given `value`.
+ *
+ * Unless plugins add new nodes, the root is populated by
+ * `ParagraphNode`s and `WhiteSpaceNode`s.
+ *
+ * @see pluggable
+ *
+ * @param {string?} value
+ * @return {NLCSTRootNode}
+ */
+pluggable(ParseLatin, 'tokenizeRoot', createParser({
+    'type': 'RootNode',
+    'delimiter': expressions.newLine,
+    'delimiterType': 'WhiteSpaceNode',
+    'tokenizer': 'tokenizeParagraph'
+}));
+
+/**
+ * Easy access to the document parser.
+ *
+ * @see ParseLatin#tokenizeRoot
+ */
+parseLatinPrototype.parse = function (value) {
+    return this.tokenizeRoot(value);
+};
+
+/*
+ * == PLUGINS ================================================================
+ */
+
+parseLatinPrototype.use('tokenizeSentence', [
+    require('./plugin/merge-initial-word-symbol'),
+    require('./plugin/merge-final-word-symbol'),
+    require('./plugin/merge-inner-word-symbol'),
+    require('./plugin/merge-initialisms'),
+    require('./plugin/merge-words'),
+    require('./plugin/patch-position')
+]);
+
+parseLatinPrototype.use('tokenizeParagraph', [
+    require('./plugin/merge-non-word-sentences'),
+    require('./plugin/merge-affix-symbol'),
+    require('./plugin/merge-initial-lower-case-letter-sentences'),
+    require('./plugin/merge-prefix-exceptions'),
+    require('./plugin/merge-affix-exceptions'),
+    require('./plugin/merge-remaining-full-stops'),
+    require('./plugin/make-initial-white-space-siblings'),
+    require('./plugin/make-final-white-space-siblings'),
+    require('./plugin/break-implicit-sentences'),
+    require('./plugin/remove-empty-nodes'),
+    require('./plugin/patch-position')
+]);
+
+parseLatinPrototype.use('tokenizeRoot', [
+    require('./plugin/make-initial-white-space-siblings'),
+    require('./plugin/make-final-white-space-siblings'),
+    require('./plugin/remove-empty-nodes'),
+    require('./plugin/patch-position')
+]);
+
+/*
+ * == EXPORT =================================================================
+ */
+
+/*
+ * Expose `ParseLatin`.
+ */
+
+module.exports = ParseLatin;
+
+/*
+ * Expose `pluginFactory` on `ParseLatin` as `plugin`.
+ */
+
+ParseLatin.plugin = pluginFactory;
+
+/*
+ * Expose `modifierFactory` on `ParseLatin` as `modifier`.
+ */
+
+ParseLatin.modifier = modifierFactory;
+
+},{"./expressions":12,"./modifier":13,"./parser":15,"./plugin":16,"./plugin/break-implicit-sentences":17,"./plugin/make-final-white-space-siblings":18,"./plugin/make-initial-white-space-siblings":19,"./plugin/merge-affix-exceptions":20,"./plugin/merge-affix-symbol":21,"./plugin/merge-final-word-symbol":22,"./plugin/merge-initial-lower-case-letter-sentences":23,"./plugin/merge-initial-word-symbol":24,"./plugin/merge-initialisms":25,"./plugin/merge-inner-word-symbol":26,"./plugin/merge-non-word-sentences":27,"./plugin/merge-prefix-exceptions":28,"./plugin/merge-remaining-full-stops":29,"./plugin/merge-words":30,"./plugin/patch-position":31,"./plugin/remove-empty-nodes":32}],15:[function(require,module,exports){
+'use strict';
+
+var tokenizer;
+
+tokenizer = require('./tokenizer');
+
+/**
+ * Construct a parser based on `options`.
+ *
+ * @param {Object} options
+ * @return {function(string): NLCSTNode}
+ */
+function parserFactory(options) {
+    var type,
+        delimiter,
+        tokenizerProperty;
+
+    type = options.type;
+    tokenizerProperty = options.tokenizer;
+    delimiter = options.delimiter;
+
+    if (delimiter) {
+        delimiter = tokenizer(options.delimiterType, options.delimiter);
+    }
+
+    return function (value) {
+        var children;
+
+        children = this[tokenizerProperty](value);
+
+        return {
+            'type': type,
+            'children': delimiter ? delimiter(children) : children
+        };
+    };
+}
+
+module.exports = parserFactory;
+
+},{"./tokenizer":33}],16:[function(require,module,exports){
+'use strict';
+
+/**
+ * Turns `callback` into a ``plugin'' accepting a parent.
+ *
+ * @param {function(Object, number, Object)} callback
+ * @return {function(NLCSTParent)}
+ */
+function pluginFactory(callback) {
+    return function (parent) {
+        var index,
+            children;
+
+        index = -1;
+        children = parent.children;
+
+        while (children[++index]) {
+            callback(children[index], index, parent);
+        }
+    };
+}
+
+/*
+ * Expose `pluginFactory`.
+ */
+
+module.exports = pluginFactory;
+
+},{}],17:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier,
+    expressions;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+expressions = require('../expressions');
+
+/*
+ * Constants.
+ *
+ * - Two or more new line characters.
+ */
+
+var EXPRESSION_MULTI_NEW_LINE;
+
+EXPRESSION_MULTI_NEW_LINE = expressions.newLineMulti;
+
+/**
+ * Break a sentence if a white space with more
+ * than one new-line is found.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined}
+ */
+function breakImplicitSentences(child, index, parent) {
+    var children,
+        position,
+        length,
+        tail,
+        head,
+        end,
+        insertion,
+        node;
+
+    if (child.type !== 'SentenceNode') {
+        return;
+    }
+
+    children = child.children;
+
+    /*
+     * Ignore first and last child.
+     */
+
+    length = children.length - 1;
+    position = 0;
+
+    while (++position < length) {
+        node = children[position];
+
+        if (
+            node.type !== 'WhiteSpaceNode' ||
+            !EXPRESSION_MULTI_NEW_LINE.test(nlcstToString(node))
+        ) {
+            continue;
+        }
+
+        child.children = children.slice(0, position);
+
+        insertion = {
+            'type': 'SentenceNode',
+            'children': children.slice(position + 1)
+        };
+
+        tail = children[position - 1];
+        head = children[position + 1];
+
+        parent.children.splice(index + 1, 0, node, insertion);
+
+        if (child.position && tail.position && head.position) {
+            end = child.position.end;
+
+            child.position.end = tail.position.end;
+
+            insertion.position = {
+                'start': head.position.start,
+                'end': end
+            };
+        }
+
+        return index + 1;
+    }
+}
+
+/*
+ * Expose `breakImplicitSentences` as a plugin.
+ */
+
+module.exports = modifier(breakImplicitSentences);
+
+},{"../expressions":12,"../modifier":13,"nlcst-to-string":10}],18:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var modifier;
+
+modifier = require('../modifier');
+
+/**
+ * Move white space ending a paragraph up, so they are
+ * the siblings of paragraphs.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParent} parent
+ * @return {undefined|number}
+ */
+function makeFinalWhiteSpaceSiblings(child, index, parent) {
+    var children,
+        prev;
+
+    children = child.children;
+
+    if (
+        children &&
+        children.length !== 0 &&
+        children[children.length - 1].type === 'WhiteSpaceNode'
+    ) {
+        parent.children.splice(index + 1, 0, child.children.pop());
+        prev = children[children.length - 1];
+
+        if (prev && prev.position && child.position) {
+            child.position.end = prev.position.end;
+        }
+
+        /*
+         * Next, iterate over the current node again.
+         */
+
+        return index;
+    }
+}
+
+/*
+ * Expose `makeFinalWhiteSpaceSiblings` as a modifier.
+ */
+
+module.exports = modifier(makeFinalWhiteSpaceSiblings);
+
+},{"../modifier":13}],19:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var plugin;
+
+plugin = require('../plugin');
+
+/**
+ * Move white space starting a sentence up, so they are
+ * the siblings of sentences.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParent} parent
+ */
+function makeInitialWhiteSpaceSiblings(child, index, parent) {
+    var children,
+        next;
+
+    children = child.children;
+
+    if (
+        children &&
+        children.length !== 0 &&
+        children[0].type === 'WhiteSpaceNode'
+    ) {
+        parent.children.splice(index, 0, children.shift());
+        next = children[0];
+
+        if (next && next.position && child.position) {
+            child.position.start = next.position.start;
+        }
+    }
+}
+
+/*
+ * Expose `makeInitialWhiteSpaceSiblings` as a plugin.
+ */
+
+module.exports = plugin(makeInitialWhiteSpaceSiblings);
+
+},{"../plugin":16}],20:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+
+/**
+ * Merge a sentence into its previous sentence, when
+ * the sentence starts with a comma.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined|number}
+ */
+function mergeAffixExceptions(child, index, parent) {
+    var children,
+        node,
+        position,
+        previousChild,
+        value;
+
+    children = child.children;
+
+    if (!children || !children.length || index === 0) {
+        return;
+    }
+
+    position = -1;
+
+    while (children[++position]) {
+        node = children[position];
+
+        if (node.type === 'WordNode') {
+            return;
+        }
+
+        if (
+            node.type === 'SymbolNode' ||
+            node.type === 'PunctuationNode'
+        ) {
+            value = nlcstToString(node);
+
+            if (value !== ',' && value !== ';') {
+                return;
+            }
+
+            previousChild = parent.children[index - 1];
+
+            previousChild.children = previousChild.children.concat(children);
+
+            /*
+             * Update position.
+             */
+
+            if (previousChild.position && child.position) {
+                previousChild.position.end = child.position.end;
+            }
+
+            parent.children.splice(index, 1);
+
+            /*
+             * Next, iterate over the node *now* at the current
+             * position.
+             */
+
+            return index;
+        }
+    }
+}
+
+/*
+ * Expose `mergeAffixExceptions` as a modifier.
+ */
+
+module.exports = modifier(mergeAffixExceptions);
+
+},{"../modifier":13,"nlcst-to-string":10}],21:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier,
+    expressions;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+expressions = require('../expressions');
+
+/*
+ * Constants.
+ *
+ * - Closing or final punctuation, or terminal markers
+ *   that should still be included in the previous
+ *   sentence, even though they follow the sentence's
+ *   terminal marker.
+ */
+
+var EXPRESSION_AFFIX_SYMBOL;
+
+EXPRESSION_AFFIX_SYMBOL = expressions.affixSymbol;
+
+/**
+ * Move certain punctuation following a terminal
+ * marker (thus in the next sentence) to the
+ * previous sentence.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined|number}
+ */
+function mergeAffixSymbol(child, index, parent) {
+    var children,
+        prev,
+        first,
+        second;
+
+    children = child.children;
+
+    if (
+        children &&
+        children.length &&
+        index !== 0
+    ) {
+        first = children[0];
+        second = children[1];
+        prev = parent.children[index - 1];
+
+        if (
+            (
+                first.type === 'SymbolNode' ||
+                first.type === 'PunctuationNode'
+            ) &&
+            EXPRESSION_AFFIX_SYMBOL.test(nlcstToString(first))
+        ) {
+            prev.children.push(children.shift());
+
+            /*
+             * Update position.
+             */
+
+            if (first.position && prev.position) {
+                prev.position.end = first.position.end;
+            }
+
+            if (second && second.position && child.position) {
+                child.position.start = second.position.start;
+            }
+
+            /*
+             * Next, iterate over the previous node again.
+             */
+
+            return index - 1;
+        }
+    }
+}
+
+/*
+ * Expose `mergeAffixSymbol` as a modifier.
+ */
+
+module.exports = modifier(mergeAffixSymbol);
+
+},{"../expressions":12,"../modifier":13,"nlcst-to-string":10}],22:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+
+/**
+ * Merge certain punctuation marks into their
+ * preceding words.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTSentenceNode} parent
+ * @return {undefined|number}
+ */
+function mergeFinalWordSymbol(child, index, parent) {
+    var children,
+        prev,
+        next;
+
+    if (
+        index !== 0 &&
+        (
+            child.type === 'SymbolNode' ||
+            child.type === 'PunctuationNode'
+        ) &&
+        nlcstToString(child) === '-'
+    ) {
+        children = parent.children;
+
+        prev = children[index - 1];
+        next = children[index + 1];
+
+        if (
+            (
+                !next ||
+                next.type !== 'WordNode'
+            ) &&
+            (
+                prev &&
+                prev.type === 'WordNode'
+            )
+        ) {
+            /*
+             * Remove `child` from parent.
+             */
+
+            children.splice(index, 1);
+
+            /*
+             * Add the punctuation mark at the end of the
+             * previous node.
+             */
+
+            prev.children.push(child);
+
+            /*
+             * Update position.
+             */
+
+            if (prev.position && child.position) {
+                prev.position.end = child.position.end;
+            }
+
+            /*
+             * Next, iterate over the node *now* at the
+             * current position (which was the next node).
+             */
+
+            return index;
+        }
+    }
+}
+
+/*
+ * Expose `mergeFinalWordSymbol` as a modifier.
+ */
+
+module.exports = modifier(mergeFinalWordSymbol);
+
+},{"../modifier":13,"nlcst-to-string":10}],23:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier,
+    expressions;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+expressions = require('../expressions');
+
+/*
+ * Constants.
+ *
+ * - Initial lowercase letter.
+ */
+
+var EXPRESSION_LOWER_INITIAL;
+
+EXPRESSION_LOWER_INITIAL = expressions.lowerInitial;
+
+/**
+ * Merge a sentence into its previous sentence, when
+ * the sentence starts with a lower case letter.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined|number}
+ */
+function mergeInitialLowerCaseLetterSentences(child, index, parent) {
+    var siblings,
+        children,
+        position,
+        node,
+        prev;
+
+    children = child.children;
+
+    if (
+        children &&
+        children.length &&
+        index !== 0
+    ) {
+        position = -1;
+
+        while (children[++position]) {
+            node = children[position];
+
+            if (node.type === 'WordNode') {
+                if (!EXPRESSION_LOWER_INITIAL.test(nlcstToString(node))) {
+                    return;
+                }
+
+                siblings = parent.children;
+
+                prev = siblings[index - 1];
+
+                prev.children = prev.children.concat(children);
+
+                siblings.splice(index, 1);
+
+                /*
+                 * Update position.
+                 */
+
+                if (prev.position && child.position) {
+                    prev.position.end = child.position.end;
+                }
+
+                /*
+                 * Next, iterate over the node *now* at
+                 * the current position.
+                 */
+
+                return index;
+            }
+
+            if (
+                node.type === 'SymbolNode' ||
+                node.type === 'PunctuationNode'
+            ) {
+                return;
+            }
+        }
+    }
+}
+
+/*
+ * Expose `mergeInitialLowerCaseLetterSentences` as a modifier.
+ */
+
+module.exports = modifier(mergeInitialLowerCaseLetterSentences);
+
+},{"../expressions":12,"../modifier":13,"nlcst-to-string":10}],24:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+
+/**
+ * Merge certain punctuation marks into their
+ * following words.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTSentenceNode} parent
+ * @return {undefined|number}
+ */
+function mergeInitialWordSymbol(child, index, parent) {
+    var children,
+        next;
+
+    if (
+        (
+            child.type !== 'SymbolNode' &&
+            child.type !== 'PunctuationNode'
+        ) ||
+        nlcstToString(child) !== '&'
+    ) {
+        return;
+    }
+
+    children = parent.children;
+
+    next = children[index + 1];
+
+    /*
+     * If either a previous word, or no following word,
+     * exists, exit early.
+     */
+
+    if (
+        (
+            index !== 0 &&
+            children[index - 1].type === 'WordNode'
+        ) ||
+        !(
+            next &&
+            next.type === 'WordNode'
+        )
+    ) {
+        return;
+    }
+
+    /*
+     * Remove `child` from parent.
+     */
+
+    children.splice(index, 1);
+
+    /*
+     * Add the punctuation mark at the start of the
+     * next node.
+     */
+
+    next.children.unshift(child);
+
+    /*
+     * Update position.
+     */
+
+    if (next.position && child.position) {
+        next.position.start = child.position.start;
+    }
+
+    /*
+     * Next, iterate over the node at the previous
+     * position, as it's now adjacent to a following
+     * word.
+     */
+
+    return index - 1;
+}
+
+/*
+ * Expose `mergeInitialWordSymbol` as a modifier.
+ */
+
+module.exports = modifier(mergeInitialWordSymbol);
+
+},{"../modifier":13,"nlcst-to-string":10}],25:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier,
+    expressions;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+expressions = require('../expressions');
+
+/*
+ * Constants.
+ *
+ * - Numbers.
+ */
+
+var EXPRESSION_NUMERICAL;
+
+EXPRESSION_NUMERICAL = expressions.numerical;
+
+/**
+ * Merge initialisms.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTSentenceNode} parent
+ * @return {undefined|number}
+ */
+function mergeInitialisms(child, index, parent) {
+    var siblings,
+        prev,
+        children,
+        length,
+        position,
+        otherChild,
+        isAllDigits,
+        value;
+
+    if (
+        index !== 0 &&
+        nlcstToString(child) === '.'
+    ) {
+        siblings = parent.children;
+
+        prev = siblings[index - 1];
+        children = prev.children;
+
+        length = children && children.length;
+
+        if (
+            prev.type === 'WordNode' &&
+            length !== 1 &&
+            length % 2 !== 0
+        ) {
+            position = length;
+
+            isAllDigits = true;
+
+            while (children[--position]) {
+                otherChild = children[position];
+
+                value = nlcstToString(otherChild);
+
+                if (position % 2 === 0) {
+                    /*
+                     * Initialisms consist of one
+                     * character values.
+                     */
+
+                    if (value.length > 1) {
+                        return;
+                    }
+
+                    if (!EXPRESSION_NUMERICAL.test(value)) {
+                        isAllDigits = false;
+                    }
+                } else if (value !== '.') {
+                    if (position < length - 2) {
+                        break;
+                    } else {
+                        return;
+                    }
+                }
+            }
+
+            if (!isAllDigits) {
+                /*
+                 * Remove `child` from parent.
+                 */
+
+                siblings.splice(index, 1);
+
+                /*
+                 * Add child to the previous children.
+                 */
+
+                children.push(child);
+
+                /*
+                 * Update position.
+                 */
+
+                if (prev.position && child.position) {
+                    prev.position.end = child.position.end;
+                }
+
+                /*
+                 * Next, iterate over the node *now* at the current
+                 * position.
+                 */
+
+                return index;
+            }
+        }
+    }
+}
+
+/*
+ * Expose `mergeInitialisms` as a modifier.
+ */
+
+module.exports = modifier(mergeInitialisms);
+
+},{"../expressions":12,"../modifier":13,"nlcst-to-string":10}],26:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier,
+    expressions;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+expressions = require('../expressions');
+
+/*
+ * Constants.
+ *
+ * - Symbols part of surrounding words.
+ */
+
+var EXPRESSION_INNER_WORD_SYMBOL;
+
+EXPRESSION_INNER_WORD_SYMBOL = expressions.wordSymbolInner;
+
+/**
+ * Merge two words surrounding certain punctuation marks.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTSentenceNode} parent
+ * @return {undefined|number}
+ */
+function mergeInnerWordSymbol(child, index, parent) {
+    var siblings,
+        sibling,
+        prev,
+        last,
+        position,
+        tokens,
+        queue;
+
+    if (
+        index !== 0 &&
+        (
+            child.type === 'SymbolNode' ||
+            child.type === 'PunctuationNode'
+        )
+    ) {
+        siblings = parent.children;
+
+        prev = siblings[index - 1];
+
+        if (prev && prev.type === 'WordNode') {
+            position = index - 1;
+
+            tokens = [];
+            queue = [];
+
+            /*
+             * - If a token which is neither word nor
+             *   inner word symbol is found, the loop
+             *   is broken.
+             * - If an inner word symbol is found,
+             *   it's queued.
+             * - If a word is found, it's queued (and
+             *   the queue stored and emptied).
+             */
+
+            while (siblings[++position]) {
+                sibling = siblings[position];
+
+                if (sibling.type === 'WordNode') {
+                    tokens = tokens.concat(queue, sibling.children);
+
+                    queue = [];
+                } else if (
+                    (
+                        sibling.type === 'SymbolNode' ||
+                        sibling.type === 'PunctuationNode'
+                    ) &&
+                    EXPRESSION_INNER_WORD_SYMBOL.test(nlcstToString(sibling))
+                ) {
+                    queue.push(sibling);
+                } else {
+                    break;
+                }
+            }
+
+            if (tokens.length) {
+                /*
+                 * If there is a queue, remove its length
+                 * from `position`.
+                 */
+
+                if (queue.length) {
+                    position -= queue.length;
+                }
+
+                /*
+                 * Remove every (one or more) inner-word punctuation
+                 * marks and children of words.
+                 */
+
+                siblings.splice(index, position - index);
+
+                /*
+                 * Add all found tokens to `prev`s children.
+                 */
+
+                prev.children = prev.children.concat(tokens);
+
+                last = tokens[tokens.length - 1];
+
+                /*
+                 * Update position.
+                 */
+
+                if (prev.position && last.position) {
+                    prev.position.end = last.position.end;
+                }
+
+                /*
+                 * Next, iterate over the node *now* at the current
+                 * position.
+                 */
+
+                return index;
+            }
+        }
+    }
+}
+
+/*
+ * Expose `mergeInnerWordSymbol` as a modifier.
+ */
+
+module.exports = modifier(mergeInnerWordSymbol);
+
+},{"../expressions":12,"../modifier":13,"nlcst-to-string":10}],27:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var modifier;
+
+modifier = require('../modifier');
+
+/**
+ * Merge a sentence into the following sentence, when
+ * the sentence does not contain word tokens.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined|number}
+ */
+function mergeNonWordSentences(child, index, parent) {
+    var children,
+        position,
+        prev,
+        next;
+
+    children = child.children;
+    position = -1;
+
+    while (children[++position]) {
+        if (children[position].type === 'WordNode') {
+            return;
+        }
+    }
+
+    prev = parent.children[index - 1];
+
+    if (prev) {
+        prev.children = prev.children.concat(children);
+
+        /*
+         * Remove the child.
+         */
+
+        parent.children.splice(index, 1);
+
+        /*
+         * Patch position.
+         */
+
+        if (prev.position && child.position) {
+            prev.position.end = child.position.end;
+        }
+
+        /*
+         * Next, iterate over the node *now* at
+         * the current position (which was the
+         * next node).
+         */
+
+        return index;
+    }
+
+    next = parent.children[index + 1];
+
+    if (next) {
+        next.children = children.concat(next.children);
+
+        /*
+         * Patch position.
+         */
+
+        if (next.position && child.position) {
+            next.position.start = child.position.start;
+        }
+
+        /*
+         * Remove the child.
+         */
+
+        parent.children.splice(index, 1);
+    }
+}
+
+/*
+ * Expose `mergeNonWordSentences` as a modifier.
+ */
+
+module.exports = modifier(mergeNonWordSentences);
+
+},{"../modifier":13}],28:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    modifier;
+
+nlcstToString = require('nlcst-to-string');
+modifier = require('../modifier');
+
+/*
+ * Constants.
+ *
+ * - Blacklist of full stop characters that should not
+ *   be treated as terminal sentence markers: A
+ *   case-insensitive abbreviation.
+ */
+
+var EXPRESSION_ABBREVIATION_PREFIX;
+
+EXPRESSION_ABBREVIATION_PREFIX = new RegExp(
+    '^(' +
+        '[0-9]+|' +
+        '[a-z]|' +
+
+        /*
+         * Common Latin Abbreviations:
+         * Based on: http://en.wikipedia.org/wiki/List_of_Latin_abbreviations
+         * Where only the abbreviations written without joining full stops,
+         * but with a final full stop, were extracted.
+         *
+         * circa, capitulus, confer, compare, centum weight, eadem, (et) alii,
+         * et cetera, floruit, foliis, ibidem, idem, nemine && contradicente,
+         * opere && citato, (per) cent, (per) procurationem, (pro) tempore,
+         * sic erat scriptum, (et) sequentia, statim, videlicet.
+         */
+
+        'al|ca|cap|cca|cent|cf|cit|con|cp|cwt|ead|etc|ff|' +
+        'fl|ibid|id|nem|op|pro|seq|sic|stat|tem|viz' +
+    ')$'
+);
+
+/**
+ * Merge a sentence into its next sentence, when the
+ * sentence ends with a certain word.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined|number}
+ */
+function mergePrefixExceptions(child, index, parent) {
+    var children,
+        node,
+        next;
+
+    children = child.children;
+
+    if (
+        children &&
+        children.length &&
+        index !== parent.children.length - 1
+    ) {
+        node = children[children.length - 1];
+
+        if (
+            node &&
+            nlcstToString(node) === '.'
+        ) {
+            node = children[children.length - 2];
+
+            if (
+                node &&
+                node.type === 'WordNode' &&
+                EXPRESSION_ABBREVIATION_PREFIX.test(
+                    nlcstToString(node).toLowerCase()
+                )
+            ) {
+                next = parent.children[index + 1];
+
+                child.children = children.concat(next.children);
+
+                parent.children.splice(index + 1, 1);
+
+                /*
+                 * Update position.
+                 */
+
+                if (next.position && child.position) {
+                    child.position.end = next.position.end;
+                }
+
+                /*
+                 * Next, iterate over the current node again.
+                 */
+
+                return index - 1;
+            }
+        }
+    }
+}
+
+/*
+ * Expose `mergePrefixExceptions` as a modifier.
+ */
+
+module.exports = modifier(mergePrefixExceptions);
+
+},{"../modifier":13,"nlcst-to-string":10}],29:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var nlcstToString,
+    plugin,
+    expressions;
+
+nlcstToString = require('nlcst-to-string');
+plugin = require('../plugin');
+expressions = require('../expressions');
+
+/*
+ * Constants.
+ *
+ * - Blacklist of full stop characters that should not
+ *   be treated as terminal sentence markers: A
+ *   case-insensitive abbreviation.
+ */
+
+var EXPRESSION_TERMINAL_MARKER;
+
+EXPRESSION_TERMINAL_MARKER = expressions.terminalMarker;
+
+/**
+ * Merge non-terminal-marker full stops into
+ * the previous word (if available), or the next
+ * word (if available).
+ *
+ * @param {NLCSTNode} child
+ */
+function mergeRemainingFullStops(child) {
+    var children,
+        position,
+        grandchild,
+        prev,
+        next,
+        nextNext,
+        hasFoundDelimiter;
+
+    children = child.children;
+    position = children.length;
+
+    hasFoundDelimiter = false;
+
+    while (children[--position]) {
+        grandchild = children[position];
+
+        if (
+            grandchild.type !== 'SymbolNode' &&
+            grandchild.type !== 'PunctuationNode'
+        ) {
+            /*
+             * This is a sentence without terminal marker,
+             * so we 'fool' the code to make it think we
+             * have found one.
+             */
+
+            if (grandchild.type === 'WordNode') {
+                hasFoundDelimiter = true;
+            }
+
+            continue;
+        }
+
+        /*
+         * Exit when this token is not a terminal marker.
+         */
+
+        if (!EXPRESSION_TERMINAL_MARKER.test(nlcstToString(grandchild))) {
+            continue;
+        }
+
+        /*
+         * Ignore the first terminal marker found
+         * (starting at the end), as it should not
+         * be merged.
+         */
+
+        if (!hasFoundDelimiter) {
+            hasFoundDelimiter = true;
+
+            continue;
+        }
+
+        /*
+         * Only merge a single full stop.
+         */
+
+        if (nlcstToString(grandchild) !== '.') {
+            continue;
+        }
+
+        prev = children[position - 1];
+        next = children[position + 1];
+
+        if (prev && prev.type === 'WordNode') {
+            nextNext = children[position + 2];
+
+            /*
+             * Continue when the full stop is followed by
+             * a space and another full stop, such as:
+             * `{.} .`
+             */
+
+            if (
+                next &&
+                nextNext &&
+                next.type === 'WhiteSpaceNode' &&
+                nlcstToString(nextNext) === '.'
+            ) {
+                continue;
+            }
+
+            /*
+             * Remove `child` from parent.
+             */
+
+            children.splice(position, 1);
+
+            /*
+             * Add the punctuation mark at the end of the
+             * previous node.
+             */
+
+            prev.children.push(grandchild);
+
+            /*
+             * Update position.
+             */
+
+            if (grandchild.position && prev.position) {
+                prev.position.end = grandchild.position.end;
+            }
+
+            position--;
+        } else if (next && next.type === 'WordNode') {
+            /*
+             * Remove `child` from parent.
+             */
+
+            children.splice(position, 1);
+
+            /*
+             * Add the punctuation mark at the start of
+             * the next node.
+             */
+
+            next.children.unshift(grandchild);
+
+            if (grandchild.position && next.position) {
+                next.position.start = grandchild.position.start;
+            }
+        }
+    }
+}
+
+/*
+ * Expose `mergeRemainingFullStops` as a plugin.
+ */
+
+module.exports = plugin(mergeRemainingFullStops);
+
+},{"../expressions":12,"../plugin":16,"nlcst-to-string":10}],30:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var modifier = require('../modifier');
+
+/**
+ * Merge multiple words. This merges the children of
+ * adjacent words, something which should not occur
+ * naturally by parse-latin, but might happen when
+ * custom tokens were passed in.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTSentenceNode} parent
+ * @return {undefined|number}
+ */
+function mergeFinalWordSymbol(child, index, parent) {
+    var siblings = parent.children,
+        next;
+
+    if (child.type === 'WordNode') {
+        next = siblings[index + 1];
+
+        if (next && next.type === 'WordNode') {
+            /*
+             * Remove `next` from parent.
+             */
+
+            siblings.splice(index + 1, 1);
+
+            /*
+             * Add the punctuation mark at the end of the
+             * previous node.
+             */
+
+            child.children = child.children.concat(next.children);
+
+            /*
+             * Update position.
+             */
+
+            if (next.position && child.position) {
+                child.position.end = next.position.end;
+            }
+
+            /*
+             * Next, re-iterate the current node.
+             */
+
+            return index;
+        }
+    }
+}
+
+/*
+ * Expose `mergeFinalWordSymbol` as a modifier.
+ */
+
+module.exports = modifier(mergeFinalWordSymbol);
+
+},{"../modifier":13}],31:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var plugin = require('../plugin');
+
+/**
+ * Add a `position` object when it does not yet exist
+ * on `node`.
+ *
+ * @param {NLCSTNode} node - Node to patch.
+ */
+function patch(node) {
+    if (!node.position) {
+        node.position = {};
+    }
+}
+
+/**
+ * Patch the position on a parent node based on its first
+ * and last child.
+ *
+ * @param {NLCSTNode} child
+ */
+function patchPosition(child, index, node) {
+    var siblings = node.children;
+
+    if (!child.position) {
+        return;
+    }
+
+    if (
+        index === 0 &&
+        (!node.position || /* istanbul ignore next */ !node.position.start)
+    ) {
+        patch(node);
+        node.position.start = child.position.start;
+    }
+
+    if (
+        index === siblings.length - 1 &&
+        (!node.position || !node.position.end)
+    ) {
+        patch(node);
+        node.position.end = child.position.end;
+    }
+}
+
+/*
+ * Expose `patchPosition` as a plugin.
+ */
+
+module.exports = plugin(patchPosition);
+
+},{"../plugin":16}],32:[function(require,module,exports){
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var modifier;
+
+modifier = require('../modifier');
+
+/**
+ * Remove empty children.
+ *
+ * @param {NLCSTNode} child
+ * @param {number} index
+ * @param {NLCSTParagraphNode} parent
+ * @return {undefined|number}
+ */
+function removeEmptyNodes(child, index, parent) {
+    if ('children' in child && !child.children.length) {
+        parent.children.splice(index, 1);
+
+        /*
+         * Next, iterate over the node *now* at
+         * the current position (which was the
+         * next node).
+         */
+
+        return index;
+    }
+}
+
+/*
+ * Expose `removeEmptyNodes` as a modifier.
+ */
+
+module.exports = modifier(removeEmptyNodes);
+
+},{"../modifier":13}],33:[function(require,module,exports){
+'use strict';
+
+var nlcstToString;
+
+nlcstToString = require('nlcst-to-string');
+
+/**
+ * Factory to create a tokenizer based on a given
+ * `expression`.
+ *
+ * @param {string} childType
+ * @param {RegExp} expression
+ * @return {function(NLCSTParent): Array.<NLCSTChild>}
+ */
+function tokenizerFactory(childType, expression) {
+    /**
+     * A function which splits
+     *
+     * @param {NLCSTParent} node
+     * @return {Array.<NLCSTChild>}
+     */
+    return function (node) {
+        var children,
+            tokens,
+            type,
+            length,
+            index,
+            lastIndex,
+            start,
+            parent,
+            first,
+            last;
+
+        children = [];
+
+        tokens = node.children;
+        type = node.type;
+
+        length = tokens.length;
+
+        index = -1;
+
+        lastIndex = length - 1;
+
+        start = 0;
+
+        while (++index < length) {
+            if (
+                index === lastIndex ||
+                (
+                    tokens[index].type === childType &&
+                    expression.test(nlcstToString(tokens[index]))
+                )
+            ) {
+                first = tokens[start];
+                last = tokens[index];
+
+                parent = {
+                    'type': type,
+                    'children': tokens.slice(start, index + 1)
+                };
+
+                if (first.position && last.position) {
+                    parent.position = {
+                        'start': first.position.start,
+                        'end': last.position.end
+                    };
+                }
+
+                children.push(parent);
+
+                start = index + 1;
+            }
+        }
+
+        return children;
+    };
+}
+
+module.exports = tokenizerFactory;
+
+},{"nlcst-to-string":10}],34:[function(require,module,exports){
+'use strict';
+
+/**
+ * Cache `hasOwnProperty`.
+ */
+
+var has;
+
+has = Object.prototype.hasOwnProperty;
+
+/**
+ * `Array#forEach()` with the possibility to change
+ * the next position.
+ *
+ * @param {{length: number}} values
+ * @param {function(*, number, {length: number}): number|undefined} callback
+ * @param {*} context
+ */
+
+function iterate(values, callback, context) {
+    var index,
+        result;
+
+    if (!values) {
+        throw new Error(
+            'TypeError: Iterate requires that |this| ' +
+            'not be ' + values
+        );
+    }
+
+    if (!has.call(values, 'length')) {
+        throw new Error(
+            'TypeError: Iterate requires that |this| ' +
+            'has a `length`'
+        );
+    }
+
+    if (typeof callback !== 'function') {
+        throw new Error(
+            'TypeError: callback must be a function'
+        );
+    }
+
+    index = -1;
+
+    /**
+     * The length might change, so we do not cache it.
+     */
+
+    while (++index < values.length) {
+        /**
+         * Skip missing values.
+         */
+
+        if (!(index in values)) {
+            continue;
+        }
+
+        result = callback.call(context, values[index], index, values);
+
+        /**
+         * If `callback` returns a `number`, move `index` over to
+         * `number`.
+         */
+
+        if (typeof result === 'number') {
+            /**
+             * Make sure that negative numbers do not
+             * break the loop.
+             */
+
+            if (result < 0) {
+                index = 0;
+            }
+
+            index = result - 1;
+        }
+    }
+}
+
+/**
+ * Expose `iterate`.
+ */
+
+module.exports = iterate;
+
+},{}],35:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -698,7 +5076,7 @@ module.exports = unified({
     'Compiler': Compiler
 });
 
-},{"./lib/parse.js":9,"./lib/stringify.js":10,"unified":21}],7:[function(require,module,exports){
+},{"./lib/parse.js":38,"./lib/stringify.js":39,"unified":50}],36:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -743,7 +5121,7 @@ module.exports = {
     }
 };
 
-},{}],8:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /* This file is generated by `script/build-expressions.js` */
 module.exports = {
   'rules': {
@@ -818,7 +5196,7 @@ module.exports = {
   }
 };
 
-},{}],9:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -3508,7 +7886,7 @@ Parser.prototype.tokenizeFactory = tokenizeFactory;
 
 module.exports = Parser;
 
-},{"./defaults.js":7,"./expressions.js":8,"./utilities.js":11,"extend.js":14,"he":15,"repeat-string":18,"trim":20,"trim-trailing-lines":19}],10:[function(require,module,exports){
+},{"./defaults.js":36,"./expressions.js":37,"./utilities.js":40,"extend.js":43,"he":44,"repeat-string":47,"trim":49,"trim-trailing-lines":48}],39:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5280,7 +9658,7 @@ compilerPrototype.compile = function () {
 
 module.exports = Compiler;
 
-},{"./defaults.js":7,"./utilities.js":11,"ccount":12,"extend.js":14,"he":15,"longest-streak":16,"markdown-table":17,"repeat-string":18}],11:[function(require,module,exports){
+},{"./defaults.js":36,"./utilities.js":40,"ccount":41,"extend.js":43,"he":44,"longest-streak":45,"markdown-table":46,"repeat-string":47}],40:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5462,7 +9840,7 @@ exports.normalizeIdentifier = normalizeIdentifier;
 exports.clean = clean;
 exports.raise = raise;
 
-},{"collapse-white-space":13}],12:[function(require,module,exports){
+},{"collapse-white-space":42}],41:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -5513,7 +9891,7 @@ function ccount(value, character) {
 
 module.exports = ccount;
 
-},{}],13:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 'use strict';
 
 /*
@@ -5543,7 +9921,7 @@ function collapse(value) {
 
 module.exports = collapse;
 
-},{}],14:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 /**
  * Extend an object with another.
  *
@@ -5565,7 +9943,7 @@ module.exports = function(src) {
   return src;
 }
 
-},{}],15:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/he v0.5.0 by @mathias | MIT license */
 ;(function(root) {
@@ -5898,7 +10276,7 @@ module.exports = function(src) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],16:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 'use strict';
 
 /**
@@ -5951,7 +10329,7 @@ function longestStreak(value, character) {
 
 module.exports = longestStreak;
 
-},{}],17:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 
 /*
@@ -6237,7 +10615,7 @@ function markdownTable(table, options) {
 
 module.exports = markdownTable;
 
-},{}],18:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 /*!
  * repeat-string <https://github.com/jonschlinkert/repeat-string>
  *
@@ -6305,7 +10683,7 @@ function repeat(str, num) {
 var res = '';
 var cache;
 
-},{}],19:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 'use strict';
 
 /*
@@ -6343,7 +10721,7 @@ function trimTrailingLines(value) {
 
 module.exports = trimTrailingLines;
 
-},{}],20:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -6359,7 +10737,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],21:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -6640,7 +11018,7 @@ function unified(options) {
 
 module.exports = unified;
 
-},{"attach-ware":22,"bail":2,"unherit":23,"vfile":66,"ware":26}],22:[function(require,module,exports){
+},{"attach-ware":51,"bail":2,"unherit":52,"vfile":127,"ware":55}],51:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -6793,7 +11171,7 @@ function patch(Ware) {
 
 module.exports = patch;
 
-},{"unherit":23}],23:[function(require,module,exports){
+},{"unherit":52}],52:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -6880,7 +11258,7 @@ function unherit(Super) {
 
 module.exports = unherit;
 
-},{"clone":24,"inherits":25}],24:[function(require,module,exports){
+},{"clone":53,"inherits":54}],53:[function(require,module,exports){
 (function (Buffer){
 var clone = (function() {
 'use strict';
@@ -7044,7 +11422,7 @@ if (typeof module === 'object' && module.exports) {
 }
 
 }).call(this,require("buffer").Buffer)
-},{"buffer":undefined}],25:[function(require,module,exports){
+},{"buffer":3}],54:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -7069,7 +11447,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],26:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 /**
  * Module Dependencies
  */
@@ -7162,7 +11540,7 @@ Ware.prototype.run = function () {
   return this;
 };
 
-},{"wrap-fn":27}],27:[function(require,module,exports){
+},{"wrap-fn":56}],56:[function(require,module,exports){
 /**
  * Module Dependencies
  */
@@ -7289,7 +11667,7 @@ function once(fn) {
   };
 }
 
-},{"co":28}],28:[function(require,module,exports){
+},{"co":57}],57:[function(require,module,exports){
 
 /**
  * slice() reference.
@@ -7585,51 +11963,7 @@ function error(err) {
   });
 }
 
-},{}],29:[function(require,module,exports){
-'use strict';
-
-/**
- * Stringify an NLCST node.
- *
- * @param {NLCSTNode} nlcst
- * @return {string}
- */
-function nlcstToString(nlcst) {
-    var values,
-        length,
-        children;
-
-    if (typeof nlcst.value === 'string') {
-        return nlcst.value;
-    }
-
-    children = nlcst.children;
-    length = children.length;
-
-    /**
-     * Shortcut: This is pretty common, and a small performance win.
-     */
-
-    if (length === 1 && 'value' in children[0]) {
-        return children[0].value;
-    }
-
-    values = [];
-
-    while (length--) {
-        values[length] = nlcstToString(children[length]);
-    }
-
-    return values.join('');
-}
-
-/*
- * Expose `nlcstToString`.
- */
-
-module.exports = nlcstToString;
-
-},{}],30:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 'use strict';
 
 /*
@@ -8172,87 +12506,69 @@ ParseEnglish.modifier = Parser.modifier;
 
 ParseEnglish.plugin = Parser.plugin;
 
-},{"nlcst-to-string":29,"parse-latin":31}],31:[function(require,module,exports){
+},{"nlcst-to-string":59,"parse-latin":60}],59:[function(require,module,exports){
+arguments[4][10][0].apply(exports,arguments)
+},{"dup":10}],60:[function(require,module,exports){
+arguments[4][11][0].apply(exports,arguments)
+},{"./lib/parse-latin":63,"dup":11}],61:[function(require,module,exports){
+arguments[4][12][0].apply(exports,arguments)
+},{"dup":12}],62:[function(require,module,exports){
+arguments[4][13][0].apply(exports,arguments)
+},{"array-iterate":83,"dup":13}],63:[function(require,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"./expressions":61,"./modifier":62,"./parser":64,"./plugin":65,"./plugin/break-implicit-sentences":66,"./plugin/make-final-white-space-siblings":67,"./plugin/make-initial-white-space-siblings":68,"./plugin/merge-affix-exceptions":69,"./plugin/merge-affix-symbol":70,"./plugin/merge-final-word-symbol":71,"./plugin/merge-initial-lower-case-letter-sentences":72,"./plugin/merge-initial-word-symbol":73,"./plugin/merge-initialisms":74,"./plugin/merge-inner-word-symbol":75,"./plugin/merge-non-word-sentences":76,"./plugin/merge-prefix-exceptions":77,"./plugin/merge-remaining-full-stops":78,"./plugin/merge-words":79,"./plugin/patch-position":80,"./plugin/remove-empty-nodes":81,"dup":14}],64:[function(require,module,exports){
+arguments[4][15][0].apply(exports,arguments)
+},{"./tokenizer":82,"dup":15}],65:[function(require,module,exports){
+arguments[4][16][0].apply(exports,arguments)
+},{"dup":16}],66:[function(require,module,exports){
+arguments[4][17][0].apply(exports,arguments)
+},{"../expressions":61,"../modifier":62,"dup":17,"nlcst-to-string":59}],67:[function(require,module,exports){
+arguments[4][18][0].apply(exports,arguments)
+},{"../modifier":62,"dup":18}],68:[function(require,module,exports){
+arguments[4][19][0].apply(exports,arguments)
+},{"../plugin":65,"dup":19}],69:[function(require,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"../modifier":62,"dup":20,"nlcst-to-string":59}],70:[function(require,module,exports){
+arguments[4][21][0].apply(exports,arguments)
+},{"../expressions":61,"../modifier":62,"dup":21,"nlcst-to-string":59}],71:[function(require,module,exports){
+arguments[4][22][0].apply(exports,arguments)
+},{"../modifier":62,"dup":22,"nlcst-to-string":59}],72:[function(require,module,exports){
+arguments[4][23][0].apply(exports,arguments)
+},{"../expressions":61,"../modifier":62,"dup":23,"nlcst-to-string":59}],73:[function(require,module,exports){
+arguments[4][24][0].apply(exports,arguments)
+},{"../modifier":62,"dup":24,"nlcst-to-string":59}],74:[function(require,module,exports){
+arguments[4][25][0].apply(exports,arguments)
+},{"../expressions":61,"../modifier":62,"dup":25,"nlcst-to-string":59}],75:[function(require,module,exports){
+arguments[4][26][0].apply(exports,arguments)
+},{"../expressions":61,"../modifier":62,"dup":26,"nlcst-to-string":59}],76:[function(require,module,exports){
+arguments[4][27][0].apply(exports,arguments)
+},{"../modifier":62,"dup":27}],77:[function(require,module,exports){
+arguments[4][28][0].apply(exports,arguments)
+},{"../modifier":62,"dup":28,"nlcst-to-string":59}],78:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"../expressions":61,"../plugin":65,"dup":29,"nlcst-to-string":59}],79:[function(require,module,exports){
+arguments[4][30][0].apply(exports,arguments)
+},{"../modifier":62,"dup":30}],80:[function(require,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"../plugin":65,"dup":31}],81:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"../modifier":62,"dup":32}],82:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33,"nlcst-to-string":59}],83:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34}],84:[function(require,module,exports){
 'use strict';
 
-module.exports = require('./lib/parse-latin');
+module.exports = require('./lib/equality.js');
 
-},{"./lib/parse-latin":34}],32:[function(require,module,exports){
-module.exports = {
-    'affixSymbol': /^([\)\]\}\u0F3B\u0F3D\u169C\u2046\u207E\u208E\u2309\u230B\u232A\u2769\u276B\u276D\u276F\u2771\u2773\u2775\u27C6\u27E7\u27E9\u27EB\u27ED\u27EF\u2984\u2986\u2988\u298A\u298C\u298E\u2990\u2992\u2994\u2996\u2998\u29D9\u29DB\u29FD\u2E23\u2E25\u2E27\u2E29\u3009\u300B\u300D\u300F\u3011\u3015\u3017\u3019\u301B\u301E\u301F\uFD3E\uFE18\uFE36\uFE38\uFE3A\uFE3C\uFE3E\uFE40\uFE42\uFE44\uFE48\uFE5A\uFE5C\uFE5E\uFF09\uFF3D\uFF5D\uFF60\uFF63]|["'\xBB\u2019\u201D\u203A\u2E03\u2E05\u2E0A\u2E0D\u2E1D\u2E21]|[!\.\?\u2026\u203D])\1*$/,
-    'newLine': /^(\r?\n|\r)+$/,
-    'newLineMulti': /^(\r?\n|\r){2,}$/,
-    'terminalMarker': /^((?:[!\.\?\u2026\u203D])+)$/,
-    'wordSymbolInner': /^((?:[&'\-\.:=\?@\xAD\xB7\u2010\u2011\u2019\u2027])|(?:[\/_])+)$/,
-    'punctuation': /^(?:[!"'-\),-\/:;\?\[-\]_\{\}\xA1\xA7\xAB\xB6\xB7\xBB\xBF\u037E\u0387\u055A-\u055F\u0589\u058A\u05BE\u05C0\u05C3\u05C6\u05F3\u05F4\u0609\u060A\u060C\u060D\u061B\u061E\u061F\u066A-\u066D\u06D4\u0700-\u070D\u07F7-\u07F9\u0830-\u083E\u085E\u0964\u0965\u0970\u0AF0\u0DF4\u0E4F\u0E5A\u0E5B\u0F04-\u0F12\u0F14\u0F3A-\u0F3D\u0F85\u0FD0-\u0FD4\u0FD9\u0FDA\u104A-\u104F\u10FB\u1360-\u1368\u1400\u166D\u166E\u169B\u169C\u16EB-\u16ED\u1735\u1736\u17D4-\u17D6\u17D8-\u17DA\u1800-\u180A\u1944\u1945\u1A1E\u1A1F\u1AA0-\u1AA6\u1AA8-\u1AAD\u1B5A-\u1B60\u1BFC-\u1BFF\u1C3B-\u1C3F\u1C7E\u1C7F\u1CC0-\u1CC7\u1CD3\u2010-\u201F\u2022-\u2027\u2032-\u203A\u203C-\u2043\u2045-\u2051\u2053-\u205E\u207D\u207E\u208D\u208E\u2308-\u230B\u2329\u232A\u2768-\u2775\u27C5\u27C6\u27E6-\u27EF\u2983-\u2998\u29D8-\u29DB\u29FC\u29FD\u2CF9-\u2CFC\u2CFE\u2CFF\u2D70\u2E00-\u2E2E\u2E30-\u2E42\u3001-\u3003\u3008-\u3011\u3014-\u301F\u3030\u303D\u30A0\u30FB\uA4FE\uA4FF\uA60D-\uA60F\uA673\uA67E\uA6F2-\uA6F7\uA874-\uA877\uA8CE\uA8CF\uA8F8-\uA8FA\uA8FC\uA92E\uA92F\uA95F\uA9C1-\uA9CD\uA9DE\uA9DF\uAA5C-\uAA5F\uAADE\uAADF\uAAF0\uAAF1\uABEB\uFD3E\uFD3F\uFE10-\uFE19\uFE30-\uFE52\uFE54-\uFE61\uFE63\uFE68\uFE6A\uFE6B\uFF01-\uFF03\uFF05-\uFF0A\uFF0C-\uFF0F\uFF1A\uFF1B\uFF1F\uFF20\uFF3B-\uFF3D\uFF3F\uFF5B\uFF5D\uFF5F-\uFF65]|\uD800[\uDD00-\uDD02\uDF9F\uDFD0]|\uD801\uDD6F|\uD802[\uDC57\uDD1F\uDD3F\uDE50-\uDE58\uDE7F\uDEF0-\uDEF6\uDF39-\uDF3F\uDF99-\uDF9C]|\uD804[\uDC47-\uDC4D\uDCBB\uDCBC\uDCBE-\uDCC1\uDD40-\uDD43\uDD74\uDD75\uDDC5-\uDDC9\uDDCD\uDDDB\uDDDD-\uDDDF\uDE38-\uDE3D\uDEA9]|\uD805[\uDCC6\uDDC1-\uDDD7\uDE41-\uDE43\uDF3C-\uDF3E]|\uD809[\uDC70-\uDC74]|\uD81A[\uDE6E\uDE6F\uDEF5\uDF37-\uDF3B\uDF44]|\uD82F\uDC9F|\uD836[\uDE87-\uDE8B])+$/,
-    'numerical': /^(?:[0-9\xB2\xB3\xB9\xBC-\xBE\u0660-\u0669\u06F0-\u06F9\u07C0-\u07C9\u0966-\u096F\u09E6-\u09EF\u09F4-\u09F9\u0A66-\u0A6F\u0AE6-\u0AEF\u0B66-\u0B6F\u0B72-\u0B77\u0BE6-\u0BF2\u0C66-\u0C6F\u0C78-\u0C7E\u0CE6-\u0CEF\u0D66-\u0D75\u0DE6-\u0DEF\u0E50-\u0E59\u0ED0-\u0ED9\u0F20-\u0F33\u1040-\u1049\u1090-\u1099\u1369-\u137C\u16EE-\u16F0\u17E0-\u17E9\u17F0-\u17F9\u1810-\u1819\u1946-\u194F\u19D0-\u19DA\u1A80-\u1A89\u1A90-\u1A99\u1B50-\u1B59\u1BB0-\u1BB9\u1C40-\u1C49\u1C50-\u1C59\u2070\u2074-\u2079\u2080-\u2089\u2150-\u2182\u2185-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2CFD\u3007\u3021-\u3029\u3038-\u303A\u3192-\u3195\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\uA620-\uA629\uA6E6-\uA6EF\uA830-\uA835\uA8D0-\uA8D9\uA900-\uA909\uA9D0-\uA9D9\uA9F0-\uA9F9\uAA50-\uAA59\uABF0-\uABF9\uFF10-\uFF19]|\uD800[\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDEE1-\uDEFB\uDF20-\uDF23\uDF41\uDF4A\uDFD1-\uDFD5]|\uD801[\uDCA0-\uDCA9]|\uD802[\uDC58-\uDC5F\uDC79-\uDC7F\uDCA7-\uDCAF\uDCFB-\uDCFF\uDD16-\uDD1B\uDDBC\uDDBD\uDDC0-\uDDCF\uDDD2-\uDDFF\uDE40-\uDE47\uDE7D\uDE7E\uDE9D-\uDE9F\uDEEB-\uDEEF\uDF58-\uDF5F\uDF78-\uDF7F\uDFA9-\uDFAF]|\uD803[\uDCFA-\uDCFF\uDE60-\uDE7E]|\uD804[\uDC52-\uDC6F\uDCF0-\uDCF9\uDD36-\uDD3F\uDDD0-\uDDD9\uDDE1-\uDDF4\uDEF0-\uDEF9]|\uD805[\uDCD0-\uDCD9\uDE50-\uDE59\uDEC0-\uDEC9\uDF30-\uDF3B]|\uD806[\uDCE0-\uDCF2]|\uD809[\uDC00-\uDC6E]|\uD81A[\uDE60-\uDE69\uDF50-\uDF59\uDF5B-\uDF61]|\uD834[\uDF60-\uDF71]|\uD835[\uDFCE-\uDFFF]|\uD83A[\uDCC7-\uDCCF]|\uD83C[\uDD00-\uDD0C])+$/,
-    'lowerInitial': /^(?:[a-z\xB5\xDF-\xF6\xF8-\xFF\u0101\u0103\u0105\u0107\u0109\u010B\u010D\u010F\u0111\u0113\u0115\u0117\u0119\u011B\u011D\u011F\u0121\u0123\u0125\u0127\u0129\u012B\u012D\u012F\u0131\u0133\u0135\u0137\u0138\u013A\u013C\u013E\u0140\u0142\u0144\u0146\u0148\u0149\u014B\u014D\u014F\u0151\u0153\u0155\u0157\u0159\u015B\u015D\u015F\u0161\u0163\u0165\u0167\u0169\u016B\u016D\u016F\u0171\u0173\u0175\u0177\u017A\u017C\u017E-\u0180\u0183\u0185\u0188\u018C\u018D\u0192\u0195\u0199-\u019B\u019E\u01A1\u01A3\u01A5\u01A8\u01AA\u01AB\u01AD\u01B0\u01B4\u01B6\u01B9\u01BA\u01BD-\u01BF\u01C6\u01C9\u01CC\u01CE\u01D0\u01D2\u01D4\u01D6\u01D8\u01DA\u01DC\u01DD\u01DF\u01E1\u01E3\u01E5\u01E7\u01E9\u01EB\u01ED\u01EF\u01F0\u01F3\u01F5\u01F9\u01FB\u01FD\u01FF\u0201\u0203\u0205\u0207\u0209\u020B\u020D\u020F\u0211\u0213\u0215\u0217\u0219\u021B\u021D\u021F\u0221\u0223\u0225\u0227\u0229\u022B\u022D\u022F\u0231\u0233-\u0239\u023C\u023F\u0240\u0242\u0247\u0249\u024B\u024D\u024F-\u0293\u0295-\u02AF\u0371\u0373\u0377\u037B-\u037D\u0390\u03AC-\u03CE\u03D0\u03D1\u03D5-\u03D7\u03D9\u03DB\u03DD\u03DF\u03E1\u03E3\u03E5\u03E7\u03E9\u03EB\u03ED\u03EF-\u03F3\u03F5\u03F8\u03FB\u03FC\u0430-\u045F\u0461\u0463\u0465\u0467\u0469\u046B\u046D\u046F\u0471\u0473\u0475\u0477\u0479\u047B\u047D\u047F\u0481\u048B\u048D\u048F\u0491\u0493\u0495\u0497\u0499\u049B\u049D\u049F\u04A1\u04A3\u04A5\u04A7\u04A9\u04AB\u04AD\u04AF\u04B1\u04B3\u04B5\u04B7\u04B9\u04BB\u04BD\u04BF\u04C2\u04C4\u04C6\u04C8\u04CA\u04CC\u04CE\u04CF\u04D1\u04D3\u04D5\u04D7\u04D9\u04DB\u04DD\u04DF\u04E1\u04E3\u04E5\u04E7\u04E9\u04EB\u04ED\u04EF\u04F1\u04F3\u04F5\u04F7\u04F9\u04FB\u04FD\u04FF\u0501\u0503\u0505\u0507\u0509\u050B\u050D\u050F\u0511\u0513\u0515\u0517\u0519\u051B\u051D\u051F\u0521\u0523\u0525\u0527\u0529\u052B\u052D\u052F\u0561-\u0587\u13F8-\u13FD\u1D00-\u1D2B\u1D6B-\u1D77\u1D79-\u1D9A\u1E01\u1E03\u1E05\u1E07\u1E09\u1E0B\u1E0D\u1E0F\u1E11\u1E13\u1E15\u1E17\u1E19\u1E1B\u1E1D\u1E1F\u1E21\u1E23\u1E25\u1E27\u1E29\u1E2B\u1E2D\u1E2F\u1E31\u1E33\u1E35\u1E37\u1E39\u1E3B\u1E3D\u1E3F\u1E41\u1E43\u1E45\u1E47\u1E49\u1E4B\u1E4D\u1E4F\u1E51\u1E53\u1E55\u1E57\u1E59\u1E5B\u1E5D\u1E5F\u1E61\u1E63\u1E65\u1E67\u1E69\u1E6B\u1E6D\u1E6F\u1E71\u1E73\u1E75\u1E77\u1E79\u1E7B\u1E7D\u1E7F\u1E81\u1E83\u1E85\u1E87\u1E89\u1E8B\u1E8D\u1E8F\u1E91\u1E93\u1E95-\u1E9D\u1E9F\u1EA1\u1EA3\u1EA5\u1EA7\u1EA9\u1EAB\u1EAD\u1EAF\u1EB1\u1EB3\u1EB5\u1EB7\u1EB9\u1EBB\u1EBD\u1EBF\u1EC1\u1EC3\u1EC5\u1EC7\u1EC9\u1ECB\u1ECD\u1ECF\u1ED1\u1ED3\u1ED5\u1ED7\u1ED9\u1EDB\u1EDD\u1EDF\u1EE1\u1EE3\u1EE5\u1EE7\u1EE9\u1EEB\u1EED\u1EEF\u1EF1\u1EF3\u1EF5\u1EF7\u1EF9\u1EFB\u1EFD\u1EFF-\u1F07\u1F10-\u1F15\u1F20-\u1F27\u1F30-\u1F37\u1F40-\u1F45\u1F50-\u1F57\u1F60-\u1F67\u1F70-\u1F7D\u1F80-\u1F87\u1F90-\u1F97\u1FA0-\u1FA7\u1FB0-\u1FB4\u1FB6\u1FB7\u1FBE\u1FC2-\u1FC4\u1FC6\u1FC7\u1FD0-\u1FD3\u1FD6\u1FD7\u1FE0-\u1FE7\u1FF2-\u1FF4\u1FF6\u1FF7\u210A\u210E\u210F\u2113\u212F\u2134\u2139\u213C\u213D\u2146-\u2149\u214E\u2184\u2C30-\u2C5E\u2C61\u2C65\u2C66\u2C68\u2C6A\u2C6C\u2C71\u2C73\u2C74\u2C76-\u2C7B\u2C81\u2C83\u2C85\u2C87\u2C89\u2C8B\u2C8D\u2C8F\u2C91\u2C93\u2C95\u2C97\u2C99\u2C9B\u2C9D\u2C9F\u2CA1\u2CA3\u2CA5\u2CA7\u2CA9\u2CAB\u2CAD\u2CAF\u2CB1\u2CB3\u2CB5\u2CB7\u2CB9\u2CBB\u2CBD\u2CBF\u2CC1\u2CC3\u2CC5\u2CC7\u2CC9\u2CCB\u2CCD\u2CCF\u2CD1\u2CD3\u2CD5\u2CD7\u2CD9\u2CDB\u2CDD\u2CDF\u2CE1\u2CE3\u2CE4\u2CEC\u2CEE\u2CF3\u2D00-\u2D25\u2D27\u2D2D\uA641\uA643\uA645\uA647\uA649\uA64B\uA64D\uA64F\uA651\uA653\uA655\uA657\uA659\uA65B\uA65D\uA65F\uA661\uA663\uA665\uA667\uA669\uA66B\uA66D\uA681\uA683\uA685\uA687\uA689\uA68B\uA68D\uA68F\uA691\uA693\uA695\uA697\uA699\uA69B\uA723\uA725\uA727\uA729\uA72B\uA72D\uA72F-\uA731\uA733\uA735\uA737\uA739\uA73B\uA73D\uA73F\uA741\uA743\uA745\uA747\uA749\uA74B\uA74D\uA74F\uA751\uA753\uA755\uA757\uA759\uA75B\uA75D\uA75F\uA761\uA763\uA765\uA767\uA769\uA76B\uA76D\uA76F\uA771-\uA778\uA77A\uA77C\uA77F\uA781\uA783\uA785\uA787\uA78C\uA78E\uA791\uA793-\uA795\uA797\uA799\uA79B\uA79D\uA79F\uA7A1\uA7A3\uA7A5\uA7A7\uA7A9\uA7B5\uA7B7\uA7FA\uAB30-\uAB5A\uAB60-\uAB65\uAB70-\uABBF\uFB00-\uFB06\uFB13-\uFB17\uFF41-\uFF5A]|\uD801[\uDC28-\uDC4F]|\uD803[\uDCC0-\uDCF2]|\uD806[\uDCC0-\uDCDF]|\uD835[\uDC1A-\uDC33\uDC4E-\uDC54\uDC56-\uDC67\uDC82-\uDC9B\uDCB6-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDCCF\uDCEA-\uDD03\uDD1E-\uDD37\uDD52-\uDD6B\uDD86-\uDD9F\uDDBA-\uDDD3\uDDEE-\uDE07\uDE22-\uDE3B\uDE56-\uDE6F\uDE8A-\uDEA5\uDEC2-\uDEDA\uDEDC-\uDEE1\uDEFC-\uDF14\uDF16-\uDF1B\uDF36-\uDF4E\uDF50-\uDF55\uDF70-\uDF88\uDF8A-\uDF8F\uDFAA-\uDFC2\uDFC4-\uDFC9\uDFCB])/,
-    'token': /(?:[0-9A-Za-z\xAA\xB2\xB3\xB5\xB9\xBA\xBC-\xBE\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B4\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09F4-\u09F9\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71-\u0B77\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BF2\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C78-\u0C7E\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D5F-\u0D63\u0D66-\u0D75\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F33\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u137C\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u17F0-\u17F9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABE\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2070\u2071\u2074-\u2079\u207F-\u2089\u2090-\u209C\u20D0-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2150-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2CFD\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u3192-\u3195\u31A0-\u31BA\u31F0-\u31FF\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA672\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AD\uA7B0-\uA7B7\uA7F7-\uA827\uA830-\uA835\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0-\uDEFB\uDF00-\uDF23\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC58-\uDC76\uDC79-\uDC9E\uDCA7-\uDCAF\uDCE0-\uDCF2\uDCF4\uDCF5\uDCFB-\uDD1B\uDD20-\uDD39\uDD80-\uDDB7\uDDBC-\uDDCF\uDDD2-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F-\uDE47\uDE60-\uDE7E\uDE80-\uDE9F\uDEC0-\uDEC7\uDEC9-\uDEE6\uDEEB-\uDEEF\uDF00-\uDF35\uDF40-\uDF55\uDF58-\uDF72\uDF78-\uDF91\uDFA9-\uDFAF]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDCFA-\uDCFF\uDE60-\uDE7E]|\uD804[\uDC00-\uDC46\uDC52-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDCA-\uDDCC\uDDD0-\uDDDA\uDDDC\uDDE1-\uDDF4\uDE00-\uDE11\uDE13-\uDE37\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9\uDF00-\uDF19\uDF1D-\uDF2B\uDF30-\uDF3B]|\uD806[\uDCA0-\uDCF2\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF5B-\uDF61\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44\uDF60-\uDF71]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD83A[\uDC00-\uDCC4\uDCC7-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD83C[\uDD00-\uDD0C]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF])+|(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+|(?:[\uD800-\uDFFF])+|([\s\S])\1*/g,
-    'word': /^(?:[0-9A-Za-z\xAA\xB2\xB3\xB5\xB9\xBA\xBC-\xBE\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u052F\u0531-\u0556\u0559\u0561-\u0587\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05F0-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u0800-\u082D\u0840-\u085B\u08A0-\u08B4\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09F4-\u09F9\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B56\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71-\u0B77\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BF2\u0C00-\u0C03\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C78-\u0C7E\u0C81-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D01-\u0D03\u0D05-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D57\u0D5F-\u0D63\u0D66-\u0D75\u0D7A-\u0D7F\u0D82\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E87\u0E88\u0E8A\u0E8D\u0E94-\u0E97\u0E99-\u0E9F\u0EA1-\u0EA3\u0EA5\u0EA7\u0EAA\u0EAB\u0EAD-\u0EB9\u0EBB-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F33\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u137C\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u17F0-\u17F9\u180B-\u180D\u1810-\u1819\u1820-\u1877\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABE\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1CD0-\u1CD2\u1CD4-\u1CF6\u1CF8\u1CF9\u1D00-\u1DF5\u1DFC-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2070\u2071\u2074-\u2079\u207F-\u2089\u2090-\u209C\u20D0-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2119-\u211D\u2124\u2126\u2128\u212A-\u212D\u212F-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2150-\u2189\u2460-\u249B\u24EA-\u24FF\u2776-\u2793\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2CFD\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u2E2F\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099\u309A\u309D-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312D\u3131-\u318E\u3192-\u3195\u31A0-\u31BA\u31F0-\u31FF\u3220-\u3229\u3248-\u324F\u3251-\u325F\u3280-\u3289\u32B1-\u32BF\u3400-\u4DB5\u4E00-\u9FD5\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA672\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7AD\uA7B0-\uA7B7\uA7F7-\uA827\uA830-\uA835\uA840-\uA873\uA880-\uA8C4\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD\uA900-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB65\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD07-\uDD33\uDD40-\uDD78\uDD8A\uDD8B\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0-\uDEFB\uDF00-\uDF23\uDF30-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC58-\uDC76\uDC79-\uDC9E\uDCA7-\uDCAF\uDCE0-\uDCF2\uDCF4\uDCF5\uDCFB-\uDD1B\uDD20-\uDD39\uDD80-\uDDB7\uDDBC-\uDDCF\uDDD2-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE33\uDE38-\uDE3A\uDE3F-\uDE47\uDE60-\uDE7E\uDE80-\uDE9F\uDEC0-\uDEC7\uDEC9-\uDEE6\uDEEB-\uDEEF\uDF00-\uDF35\uDF40-\uDF55\uDF58-\uDF72\uDF78-\uDF91\uDFA9-\uDFAF]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDCFA-\uDCFF\uDE60-\uDE7E]|\uD804[\uDC00-\uDC46\uDC52-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDCA-\uDDCC\uDDD0-\uDDDA\uDDDC\uDDE1-\uDDF4\uDE00-\uDE11\uDE13-\uDE37\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3C-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB7\uDEC0-\uDEC9\uDF00-\uDF19\uDF1D-\uDF2B\uDF30-\uDF3B]|\uD806[\uDCA0-\uDCF2\uDCFF\uDEC0-\uDEF8]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF5B-\uDF61\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDF00-\uDF44\uDF50-\uDF7E\uDF8F-\uDF9F]|\uD82C[\uDC00\uDC01]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44\uDF60-\uDF71]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD83A[\uDC00-\uDCC4\uDCC7-\uDCD6]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD83C[\uDD00-\uDD0C]|\uD869[\uDC00-\uDED6\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1]|\uD87E[\uDC00-\uDE1D]|\uDB40[\uDD00-\uDDEF])+$/,
-    'whiteSpace': /^(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+$/
-};
-
-},{}],33:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var iterate;
-
-iterate = require('array-iterate');
-
+},{"./lib/equality.js":85}],85:[function(require,module,exports){
 /**
- * Pass the context as the third argument to `callback`.
- *
- * @param {function(Object, number, Object): number|undefined} callback
- * @return {function(Object, number)}
- */
-function wrapperFactory(callback) {
-    return function (value, index) {
-        return callback(value, index, this);
-    };
-}
-
-/**
- * Turns `callback` into a ``iterator'' accepting a parent.
- *
- * see ``array-iterate'' for more info.
- *
- * @param {function(Object, number, Object): number|undefined} callback
- * @return {function(NLCSTParent)}
- */
-function iteratorFactory(callback) {
-    return function (parent) {
-        return iterate(parent.children, callback, parent);
-    };
-}
-
-/**
- * Turns `callback` into a ``iterator'' accepting a parent.
- *
- * see ``array-iterate'' for more info.
- *
- * @param {function(Object, number, Object): number|undefined} callback
- * @return {function(Object)}
- */
-function modifierFactory(callback) {
-    return iteratorFactory(wrapperFactory(callback));
-}
-
-/*
- * Expose `modifierFactory`.
- */
-
-module.exports = modifierFactory;
-
-},{"array-iterate":54}],34:[function(require,module,exports){
-/*!
- * parse-latin
- *
- * Licensed under MIT.
- * Copyright (c) 2014 Titus Wormer <tituswormer@gmail.com>
+ * @author Titus Wormer
+ * @copyright 2014-2015 Titus Wormer
+ * @license MIT
+ * @module retext:equality
+ * @fileoverview Warn about possible insensitive, inconsiderate language
+ *   with Retext.
  */
 
 'use strict';
@@ -8261,2460 +12577,4272 @@ module.exports = modifierFactory;
  * Dependencies.
  */
 
-var createParser,
-    expressions,
-    pluginFactory,
-    modifierFactory;
-
-createParser = require('./parser');
-expressions = require('./expressions');
-pluginFactory = require('./plugin');
-modifierFactory = require('./modifier');
+var keys = require('object-keys');
+var visit = require('unist-util-visit');
+var nlcstToString = require('nlcst-to-string');
+var patterns = require('./patterns.json');
 
 /*
- * == CLASSIFY ===============================================================
+ * Internal mapping.
  */
 
-/*
- * Constants.
- */
+var byId = {};
+var byWord = {};
 
-var EXPRESSION_TOKEN,
-    EXPRESSION_WORD,
-    EXPRESSION_PUNCTUATION,
-    EXPRESSION_WHITE_SPACE;
+(function () {
+    var index = -1;
+    var length = patterns.length;
+    var pattern;
+    var inconsiderate;
+    var id;
+    var phrase;
+    var firstWord;
 
-/*
- * Match all tokens:
- * - One or more number, alphabetic, or
- *   combining characters;
- * - One or more white space characters;
- * - One or more astral plane characters;
- * - One or more of the same character;
- */
+    while (++index < length) {
+        pattern = patterns[index];
+        inconsiderate = pattern.inconsiderate;
+        id = pattern.id;
 
-EXPRESSION_TOKEN = expressions.token;
+        byId[id] = pattern;
 
-/*
- * Match a word.
- */
+        for (phrase in inconsiderate) {
+            firstWord = phrase.split(' ')[0].toLowerCase();
 
-EXPRESSION_WORD = expressions.word;
-
-/*
- * Match a string containing ONLY punctuation.
- */
-
-EXPRESSION_PUNCTUATION = expressions.punctuation;
-
-/*
- * Match a string containing ONLY white space.
- */
-
-EXPRESSION_WHITE_SPACE = expressions.whiteSpace;
-
-/**
- * Classify a token.
- *
- * @param {string?} value
- * @return {string} - value's type.
- */
-function classify(value) {
-    if (EXPRESSION_WHITE_SPACE.test(value)) {
-        return 'WhiteSpace';
-    }
-
-    if (EXPRESSION_WORD.test(value)) {
-        return 'Word';
-    }
-
-    if (EXPRESSION_PUNCTUATION.test(value)) {
-        return 'Punctuation';
-    }
-
-    return 'Symbol';
-}
-
-/**
- * Transform a `value` into a list of `NLCSTNode`s.
- *
- * @param {ParseLatin} parser
- * @param {string?} value
- * @return {Array.<NLCSTNode>}
- */
-function tokenize(parser, value) {
-    var tokens,
-        offset,
-        line,
-        column,
-        match;
-
-    if (value === null || value === undefined) {
-        value = '';
-    } else if (value instanceof String) {
-        value = value.toString();
-    }
-
-    if (typeof value !== 'string') {
-        /**
-         * Return the given nodes if this is either an
-         * empty array, or an array with a node as a first
-         * child.
-         */
-
-        if ('length' in value && (!value[0] || value[0].type)) {
-            return value;
-        }
-
-        throw new Error(
-            'Illegal invocation: \'' + value + '\'' +
-            ' is not a valid argument for \'ParseLatin\''
-        );
-    }
-
-    tokens = [];
-
-    if (!value) {
-        return tokens;
-    }
-
-    offset = 0;
-    line = 1;
-    column = 1;
-
-    /**
-     * Get the current position.
-     *
-     * @example
-     *   position = now(); // {line: 1, column: 1}
-     *
-     * @return {Object}
-     */
-    function now() {
-        return {
-            'line': line,
-            'column': column,
-            'offset': offset
-        };
-    }
-
-    /**
-     * Store position information for a node.
-     *
-     * @example
-     *   start = now();
-     *   updatePosition('foo');
-     *   location = new Position(start);
-     *   // {start: {line: 1, column: 1}, end: {line: 1, column: 3}}
-     *
-     * @param {Object} start
-     */
-    function Position(start) {
-        this.start = start;
-        this.end = now();
-    }
-
-    /**
-     * Mark position and patch `node.position`.
-     *
-     * @example
-     *   var update = position();
-     *   updatePosition('foo');
-     *   update({});
-     *   // {
-     *   //   position: {
-     *   //     start: {line: 1, column: 1}
-     *   //     end: {line: 1, column: 3}
-     *   //   }
-     *   // }
-     *
-     * @returns {function(Node): Node}
-     */
-    function position() {
-        var before = now();
-
-        /**
-         * Add the position to a node.
-         *
-         * @example
-         *   update({type: 'text', value: 'foo'});
-         *
-         * @param {Node} node - Node to attach position
-         *   on.
-         * @return {Node} - `node`.
-         */
-        function patch(node) {
-            node.position = new Position(before);
-
-            return node;
-        }
-
-        return patch;
-    }
-
-    /**
-     * Update line and column based on `value`.
-     *
-     * @example
-     *   update('foo');
-     *
-     * @param {string} subvalue
-     */
-    function update(subvalue) {
-        var subvalueLength = subvalue.length,
-            character = -1,
-            lastIndex = -1;
-
-        offset += subvalueLength;
-
-        while (++character < subvalueLength) {
-            if (subvalue.charAt(character) === '\n') {
-                lastIndex = character;
-                line++;
+            if (firstWord in byWord) {
+                byWord[firstWord].push(id);
+            } else {
+                byWord[firstWord] = [id];
             }
         }
+    }
+})();
 
-        if (lastIndex === -1) {
-            column = column + subvalueLength;
-        } else {
-            column = subvalueLength - lastIndex;
+/**
+ * Get the first key at which `value` lives in `context`.
+ *
+ * @todo Externalise.
+ * @param {Object} object - Context to search in.
+ * @param {*} value - Value to search for.
+ * @return {string?} - First key at which `value` lives,
+ *   when applicable.
+ */
+function byValue(object, value) {
+    var key;
+
+    for (key in object) {
+        if (object[key] === value) {
+            return key;
         }
     }
 
-    /**
-     * Add mechanism.
-     *
-     * @param {NLCSTNode} node - Node to add.
-     * @param {NLCSTParentNode?} [parent] - Optional parent
-     *   node to insert into.
-     * @return {NLCSTNode} - `node`.
-     */
-    function add(node, parent) {
-        if (parent) {
-            parent.children.push(node);
-        } else {
-            tokens.push(node);
-        }
-
-        return node;
-    }
-
-    /**
-     * Remove `subvalue` from `value`.
-     * Expects `subvalue` to be at the start from
-     * `value`, and applies no validation.
-     *
-     * @example
-     *   eat('foo')({type: 'TextNode', value: 'foo'});
-     *
-     * @param {string} subvalue - Removed from `value`,
-     *   and passed to `update`.
-     * @return {Function} - Wrapper around `add`, which
-     *   also adds `position` to node.
-     */
-    function eat(subvalue) {
-        var pos = position();
-
-        /**
-         * Add the given arguments, add `position` to
-         * the returned node, and return the node.
-         *
-         * @return {Node}
-         */
-        function apply() {
-            return pos(add.apply(null, arguments));
-        }
-
-        value = value.substring(subvalue.length);
-
-        update(subvalue);
-
-        return apply;
-    }
-
-    /**
-     * Remove `subvalue` from `value`. Does not patch
-     * positional information.
-     *
-     * @param {string} subvalue - Value to eat.
-     * @return {Function}
-     */
-    function noPositionEat(subvalue) {
-        /**
-         * Add the given arguments and return the node.
-         *
-         * @return {Node}
-         */
-        function apply() {
-            return add.apply(null, arguments);
-        }
-
-        value = value.substring(subvalue.length);
-
-        return apply;
-    }
-
-    /*
-     * Eat mechanism to use.
-     */
-
-    var eater = parser.position ? eat : noPositionEat;
-
-    /**
-     * Continue matching.
-     */
-    function next() {
-        EXPRESSION_TOKEN.lastIndex = 0;
-
-        match = EXPRESSION_TOKEN.exec(value);
-    }
-
-    next();
-
-    while (match) {
-        parser['tokenize' + classify(match[0])](match[0], eater);
-
-        next();
-    }
-
-    return tokens;
+    /* istanbul ignore next */
+    return null;
 }
 
 /**
- * Add mechanism used when text-tokenisers are called
- * directly outside of the `tokenize` function.
+ * Get a string value from a node.
  *
- * @param {NLCSTNode} node - Node to add.
- * @param {NLCSTParentNode?} [parent] - Optional parent
- *   node to insert into.
- * @return {NLCSTNode} - `node`.
+ * @param {NLCSTNode} node - NLCST node.
+ * @return {string}
  */
-function noopAdd(node, parent) {
-    if (parent) {
-        parent.children.push(node);
-    }
-
-    return node;
+function toString(node) {
+    return nlcstToString(node).replace(/['’-]/g, '');
 }
 
 /**
- * Eat and add mechanism without adding positional
- * information, used when text-tokenisers are called
- * directly outside of the `tokenize` function.
+ * Get the value of multiple nodes
  *
- * @return {Function}
+ * @param {Array.<NLCSTNode>} node - NLCST nodes.
+ * @return {string}
  */
-function noopEat() {
-    return noopAdd;
-}
-
-/*
- * == PARSE LATIN ============================================================
- */
-
-/**
- * Transform Latin-script natural language into
- * an NLCST-tree.
- *
- * @constructor {ParseLatin}
- */
-function ParseLatin(options) {
-    /*
-     * TODO: This should later be removed (when this
-     * change bubbles through to dependants).
-     */
-
-    if (!(this instanceof ParseLatin)) {
-        return new ParseLatin(options);
-    }
-
-    this.position = Boolean(options && options.position);
-}
-
-/*
- * Quick access to the prototype.
- */
-
-var parseLatinPrototype;
-
-parseLatinPrototype = ParseLatin.prototype;
-
-/*
- * == TOKENIZE ===============================================================
- */
-
-/**
- * Transform a `value` into a list of `NLCSTNode`s.
- *
- * @see tokenize
- */
-parseLatinPrototype.tokenize = function (value) {
-    return tokenize(this, value);
-};
-
-/*
- * == TEXT NODES =============================================================
- */
-
-/**
- * Factory to create a `Text`.
- *
- * @param {string?} type
- * @return {function(value): NLCSTText}
- */
-function createTextFactory(type) {
-    type += 'Node';
-
-    /**
-     * Construct a `Text` from a bound `type`
-     *
-     * @param {value} value - Value of the node.
-     * @param {Function?} [eat] - Optional eat mechanism
-     *   to use.
-     * @param {NLCSTParentNode?} [parent] - Optional
-     *   parent to insert into.
-     * @return {NLCSTText}
-     */
-    return function (value, eat, parent) {
-        if (value === null || value === undefined) {
-            value = '';
-        }
-
-        return (eat || noopEat)(value)({
-            'type': type,
-            'value': String(value)
-        }, parent);
-    };
+function valueOf(node) {
+    return nlcstToString({
+        'children': node
+    });
 }
 
 /**
- * Create a `SymbolNode` with the given `value`.
+ * Check `expression` in `parent` at `position`,
+ * where `expression` is list of words.
  *
- * @param {string?} value
- * @return {NLCSTSymbolNode}
+ * @param {Array} phrase - List of words.
+ * @param {NLCSTNode} parent - Parent node.
+ * @param {number} position - Position in `parent` to
+ *   check.
+ * @return {Array.<NLCSTNode>?} - When matched to
+ *   skip, because one word matched.
  */
-parseLatinPrototype.tokenizeSymbol = createTextFactory('Symbol');
+function matches(phrase, parent, position) {
+    var siblings = parent.children;
+    var node = siblings[position];
+    var queue = [node];
+    var index = -1;
+    var length;
 
-/**
- * Create a `WhiteSpaceNode` with the given `value`.
- *
- * @param {string?} value
- * @return {NLCSTWhiteSpaceNode}
- */
-parseLatinPrototype.tokenizeWhiteSpace = createTextFactory('WhiteSpace');
+    phrase = phrase.split(' ');
+    length = phrase.length;
 
-/**
- * Create a `PunctuationNode` with the given `value`.
- *
- * @param {string?} value
- * @return {NLCSTPunctuationNode}
- */
-parseLatinPrototype.tokenizePunctuation = createTextFactory('Punctuation');
-
-/**
- * Create a `SourceNode` with the given `value`.
- *
- * @param {string?} value
- * @return {NLCSTSourceNode}
- */
-parseLatinPrototype.tokenizeSource = createTextFactory('Source');
-
-/**
- * Create a `TextNode` with the given `value`.
- *
- * @param {string?} value
- * @return {NLCSTTextNode}
- */
-parseLatinPrototype.tokenizeText = createTextFactory('Text');
-
-/*
- * == PARENT NODES ===========================================================
- *
- * All these nodes are `pluggable`: they come with a
- * `use` method which accepts a plugin
- * (`function(NLCSTNode)`). Every time one of these
- * methods are called, the plugin is invoked with the
- * node, allowing for easy modification.
- *
- * In fact, the internal transformation from `tokenize`
- * (a list of words, white space, punctuation, and
- * symbols) to `tokenizeRoot` (an NLCST tree), is also
- * implemented through this mechanism.
- */
-
-/**
- * Run transform plug-ins for `key` on `nodes`.
- *
- * @param {string} key
- * @param {Array.<Node>} nodes
- * @return {Array.<Node>} - `nodes`.
- */
-function run(key, nodes) {
-    var wareKey,
-        plugins,
-        index;
-
-    wareKey = key + 'Plugins';
-
-    plugins = this[wareKey];
-
-    if (plugins) {
-        index = -1;
-
-        while (plugins[++index]) {
-            plugins[index](nodes);
-        }
-    }
-
-    return nodes;
-}
-
-/*
- * Expose `run`.
- */
-
-parseLatinPrototype.run = run;
-
-/**
- * @param {Function} Constructor
- * @param {string} key
- * @param {function(*): undefined} callback
- */
-function pluggable(Constructor, key, callback) {
-    /**
-     * Set a pluggable version of `callback`
-     * on `Constructor`.
-     */
-    Constructor.prototype[key] = function () {
-        return this.run(key, callback.apply(this, arguments));
-    };
-}
-
-/**
- * Factory to inject `plugins`. Takes `callback` for
- * the actual inserting.
- *
- * @param {function(Object, string, Array.<Function>)} callback
- * @return {function(string, Array.<Function>)}
- */
-function useFactory(callback) {
-    /*
-     * Validate if `plugins` can be inserted. Invokes
-     * the bound `callback` to do the actual inserting.
-     *
-     * @param {string} key - Method to inject on
-     * @param {Array.<Function>|Function} plugins - One
-     *   or more plugins.
-     */
-
-    return function (key, plugins) {
-        var self,
-            wareKey;
-
-        self = this;
-
+    while (++index < length) {
         /*
-         * Throw if the method is not pluggable.
+         * Check if this node matches.
          */
 
-        if (!(key in self)) {
-            throw new Error(
-                'Illegal Invocation: Unsupported `key` for ' +
-                '`use(key, plugins)`. Make sure `key` is a ' +
-                'supported function'
-            );
+        if (!node || phrase[index] !== toString(node).toLowerCase()) {
+            return null;
         }
 
         /*
-         * Fail silently when no plugins are given.
+         * Exit if this is the last node.
          */
 
-        if (!plugins) {
-            return;
-        }
-
-        wareKey = key + 'Plugins';
-
-        /*
-         * Make sure `plugins` is a list.
-         */
-
-        if (typeof plugins === 'function') {
-            plugins = [plugins];
-        } else {
-            plugins = plugins.concat();
+        if (index === length - 1) {
+            break;
         }
 
         /*
-         * Make sure `wareKey` exists.
+         * Find the next word.
          */
 
-        if (!self[wareKey]) {
-            self[wareKey] = [];
-        }
-
-        /*
-         * Invoke callback with the ware key and plugins.
-         */
-
-        callback(self, wareKey, plugins);
-    };
-}
-
-/*
- * Inject `plugins` to modifiy the result of the method
- * at `key` on the operated on context.
- *
- * @param {string} key
- * @param {Function|Array.<Function>} plugins
- * @this {ParseLatin|Object}
- */
-
-parseLatinPrototype.use = useFactory(function (context, key, plugins) {
-    context[key] = context[key].concat(plugins);
-});
-
-/*
- * Inject `plugins` to modifiy the result of the method
- * at `key` on the operated on context, before any other.
- *
- * @param {string} key
- * @param {Function|Array.<Function>} plugins
- * @this {ParseLatin|Object}
- */
-
-parseLatinPrototype.useFirst = useFactory(function (context, key, plugins) {
-    context[key] = plugins.concat(context[key]);
-});
-
-/**
- * Create a `WordNode` with its children set to a single
- * `TextNode`, its value set to the given `value`.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTWordNode}
- */
-pluggable(ParseLatin, 'tokenizeWord', function (value, eat) {
-    var add,
-        parent;
-
-    add = (eat || noopEat)('');
-    parent = {
-        'type': 'WordNode',
-        'children': []
-    };
-
-    this.tokenizeText(value, eat, parent);
-
-    return add(parent);
-});
-
-/**
- * Create a `SentenceNode` with its children set to
- * `Node`s, their values set to the tokenized given
- * `value`.
- *
- * Unless plugins add new nodes, the sentence is
- * populated by `WordNode`s, `SymbolNode`s,
- * `PunctuationNode`s, and `WhiteSpaceNode`s.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTSentenceNode}
- */
-pluggable(ParseLatin, 'tokenizeSentence', createParser({
-    'type': 'SentenceNode',
-    'tokenizer': 'tokenize'
-}));
-
-/**
- * Create a `ParagraphNode` with its children set to
- * `Node`s, their values set to the tokenized given
- * `value`.
- *
- * Unless plugins add new nodes, the paragraph is
- * populated by `SentenceNode`s and `WhiteSpaceNode`s.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTParagraphNode}
- */
-pluggable(ParseLatin, 'tokenizeParagraph', createParser({
-    'type': 'ParagraphNode',
-    'delimiter': expressions.terminalMarker,
-    'delimiterType': 'PunctuationNode',
-    'tokenizer': 'tokenizeSentence'
-}));
-
-/**
- * Create a `RootNode` with its children set to `Node`s,
- * their values set to the tokenized given `value`.
- *
- * Unless plugins add new nodes, the root is populated by
- * `ParagraphNode`s and `WhiteSpaceNode`s.
- *
- * @see pluggable
- *
- * @param {string?} value
- * @return {NLCSTRootNode}
- */
-pluggable(ParseLatin, 'tokenizeRoot', createParser({
-    'type': 'RootNode',
-    'delimiter': expressions.newLine,
-    'delimiterType': 'WhiteSpaceNode',
-    'tokenizer': 'tokenizeParagraph'
-}));
-
-/**
- * Easy access to the document parser.
- *
- * @see ParseLatin#tokenizeRoot
- */
-parseLatinPrototype.parse = function (value) {
-    return this.tokenizeRoot(value);
-};
-
-/*
- * == PLUGINS ================================================================
- */
-
-parseLatinPrototype.use('tokenizeSentence', [
-    require('./plugin/merge-initial-word-symbol'),
-    require('./plugin/merge-final-word-symbol'),
-    require('./plugin/merge-inner-word-symbol'),
-    require('./plugin/merge-initialisms'),
-    require('./plugin/merge-words'),
-    require('./plugin/patch-position')
-]);
-
-parseLatinPrototype.use('tokenizeParagraph', [
-    require('./plugin/merge-non-word-sentences'),
-    require('./plugin/merge-affix-symbol'),
-    require('./plugin/merge-initial-lower-case-letter-sentences'),
-    require('./plugin/merge-prefix-exceptions'),
-    require('./plugin/merge-affix-exceptions'),
-    require('./plugin/merge-remaining-full-stops'),
-    require('./plugin/make-initial-white-space-siblings'),
-    require('./plugin/make-final-white-space-siblings'),
-    require('./plugin/break-implicit-sentences'),
-    require('./plugin/remove-empty-nodes'),
-    require('./plugin/patch-position')
-]);
-
-parseLatinPrototype.use('tokenizeRoot', [
-    require('./plugin/make-initial-white-space-siblings'),
-    require('./plugin/make-final-white-space-siblings'),
-    require('./plugin/remove-empty-nodes'),
-    require('./plugin/patch-position')
-]);
-
-/*
- * == EXPORT =================================================================
- */
-
-/*
- * Expose `ParseLatin`.
- */
-
-module.exports = ParseLatin;
-
-/*
- * Expose `pluginFactory` on `ParseLatin` as `plugin`.
- */
-
-ParseLatin.plugin = pluginFactory;
-
-/*
- * Expose `modifierFactory` on `ParseLatin` as `modifier`.
- */
-
-ParseLatin.modifier = modifierFactory;
-
-},{"./expressions":32,"./modifier":33,"./parser":35,"./plugin":36,"./plugin/break-implicit-sentences":37,"./plugin/make-final-white-space-siblings":38,"./plugin/make-initial-white-space-siblings":39,"./plugin/merge-affix-exceptions":40,"./plugin/merge-affix-symbol":41,"./plugin/merge-final-word-symbol":42,"./plugin/merge-initial-lower-case-letter-sentences":43,"./plugin/merge-initial-word-symbol":44,"./plugin/merge-initialisms":45,"./plugin/merge-inner-word-symbol":46,"./plugin/merge-non-word-sentences":47,"./plugin/merge-prefix-exceptions":48,"./plugin/merge-remaining-full-stops":49,"./plugin/merge-words":50,"./plugin/patch-position":51,"./plugin/remove-empty-nodes":52}],35:[function(require,module,exports){
-'use strict';
-
-var tokenizer;
-
-tokenizer = require('./tokenizer');
-
-/**
- * Construct a parser based on `options`.
- *
- * @param {Object} options
- * @return {function(string): NLCSTNode}
- */
-function parserFactory(options) {
-    var type,
-        delimiter,
-        tokenizerProperty;
-
-    type = options.type;
-    tokenizerProperty = options.tokenizer;
-    delimiter = options.delimiter;
-
-    if (delimiter) {
-        delimiter = tokenizer(options.delimiterType, options.delimiter);
-    }
-
-    return function (value) {
-        var children;
-
-        children = this[tokenizerProperty](value);
-
-        return {
-            'type': type,
-            'children': delimiter ? delimiter(children) : children
-        };
-    };
-}
-
-module.exports = parserFactory;
-
-},{"./tokenizer":53}],36:[function(require,module,exports){
-'use strict';
-
-/**
- * Turns `callback` into a ``plugin'' accepting a parent.
- *
- * @param {function(Object, number, Object)} callback
- * @return {function(NLCSTParent)}
- */
-function pluginFactory(callback) {
-    return function (parent) {
-        var index,
-            children;
-
-        index = -1;
-        children = parent.children;
-
-        while (children[++index]) {
-            callback(children[index], index, parent);
-        }
-    };
-}
-
-/*
- * Expose `pluginFactory`.
- */
-
-module.exports = pluginFactory;
-
-},{}],37:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier,
-    expressions;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-expressions = require('../expressions');
-
-/*
- * Constants.
- *
- * - Two or more new line characters.
- */
-
-var EXPRESSION_MULTI_NEW_LINE;
-
-EXPRESSION_MULTI_NEW_LINE = expressions.newLineMulti;
-
-/**
- * Break a sentence if a white space with more
- * than one new-line is found.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined}
- */
-function breakImplicitSentences(child, index, parent) {
-    var children,
-        position,
-        length,
-        tail,
-        head,
-        end,
-        insertion,
-        node;
-
-    if (child.type !== 'SentenceNode') {
-        return;
-    }
-
-    children = child.children;
-
-    length = children.length;
-
-    position = -1;
-
-    while (++position < length) {
-        node = children[position];
-
-        if (
-            node.type !== 'WhiteSpaceNode' ||
-            !EXPRESSION_MULTI_NEW_LINE.test(nlcstToString(node))
-        ) {
-            continue;
-        }
-
-        child.children = children.slice(0, position);
-
-        insertion = {
-            'type': 'SentenceNode',
-            'children': children.slice(position + 1)
-        };
-
-        tail = children[position - 1];
-        head = children[position + 1];
-
-        parent.children.splice(index + 1, 0, node, insertion);
-
-        if (child.position && tail.position && head.position) {
-            end = child.position.end;
-
-            child.position.end = tail.position.end;
-
-            insertion.position = {
-                'start': head.position.start,
-                'end': end
-            };
-        }
-
-        return index + 1;
-    }
-}
-
-/*
- * Expose `breakImplicitSentences` as a plugin.
- */
-
-module.exports = modifier(breakImplicitSentences);
-
-},{"../expressions":32,"../modifier":33,"nlcst-to-string":29}],38:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var modifier;
-
-modifier = require('../modifier');
-
-/**
- * Move white space ending a paragraph up, so they are
- * the siblings of paragraphs.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParent} parent
- * @return {undefined|number}
- */
-function makeFinalWhiteSpaceSiblings(child, index, parent) {
-    var children,
-        prev;
-
-    children = child.children;
-
-    if (
-        children &&
-        children.length !== 0 &&
-        children[children.length - 1].type === 'WhiteSpaceNode'
-    ) {
-        parent.children.splice(index + 1, 0, child.children.pop());
-        prev = children[children.length - 1];
-
-        if (prev && prev.position && child.position) {
-            child.position.end = prev.position.end;
-        }
-
-        /*
-         * Next, iterate over the current node again.
-         */
-
-        return index;
-    }
-}
-
-/*
- * Expose `makeFinalWhiteSpaceSiblings` as a modifier.
- */
-
-module.exports = modifier(makeFinalWhiteSpaceSiblings);
-
-},{"../modifier":33}],39:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var plugin;
-
-plugin = require('../plugin');
-
-/**
- * Move white space starting a sentence up, so they are
- * the siblings of sentences.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParent} parent
- */
-function makeInitialWhiteSpaceSiblings(child, index, parent) {
-    var children,
-        next;
-
-    children = child.children;
-
-    if (
-        children &&
-        children.length !== 0 &&
-        children[0].type === 'WhiteSpaceNode'
-    ) {
-        parent.children.splice(index, 0, children.shift());
-        next = children[0];
-
-        if (next && next.position && child.position) {
-            child.position.start = next.position.start;
-        }
-    }
-}
-
-/*
- * Expose `makeInitialWhiteSpaceSiblings` as a plugin.
- */
-
-module.exports = plugin(makeInitialWhiteSpaceSiblings);
-
-},{"../plugin":36}],40:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-
-/**
- * Merge a sentence into its previous sentence, when
- * the sentence starts with a comma.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined|number}
- */
-function mergeAffixExceptions(child, index, parent) {
-    var children,
-        node,
-        position,
-        previousChild,
-        value;
-
-    children = child.children;
-
-    if (!children || !children.length || index === 0) {
-        return;
-    }
-
-    position = -1;
-
-    while (children[++position]) {
-        node = children[position];
-
-        if (node.type === 'WordNode') {
-            return;
-        }
-
-        if (
-            node.type === 'SymbolNode' ||
-            node.type === 'PunctuationNode'
-        ) {
-            value = nlcstToString(node);
-
-            if (value !== ',' && value !== ';') {
-                return;
-            }
-
-            previousChild = parent.children[index - 1];
-
-            previousChild.children = previousChild.children.concat(children);
-
-            /*
-             * Update position.
-             */
-
-            if (previousChild.position && child.position) {
-                previousChild.position.end = child.position.end;
-            }
-
-            parent.children.splice(index, 1);
-
-            /*
-             * Next, iterate over the node *now* at the current
-             * position.
-             */
-
-            return index;
-        }
-    }
-}
-
-/*
- * Expose `mergeAffixExceptions` as a modifier.
- */
-
-module.exports = modifier(mergeAffixExceptions);
-
-},{"../modifier":33,"nlcst-to-string":29}],41:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier,
-    expressions;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-expressions = require('../expressions');
-
-/*
- * Constants.
- *
- * - Closing or final punctuation, or terminal markers
- *   that should still be included in the previous
- *   sentence, even though they follow the sentence's
- *   terminal marker.
- */
-
-var EXPRESSION_AFFIX_SYMBOL;
-
-EXPRESSION_AFFIX_SYMBOL = expressions.affixSymbol;
-
-/**
- * Move certain punctuation following a terminal
- * marker (thus in the next sentence) to the
- * previous sentence.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined|number}
- */
-function mergeAffixSymbol(child, index, parent) {
-    var children,
-        prev,
-        first,
-        second;
-
-    children = child.children;
-
-    if (
-        children &&
-        children.length &&
-        index !== 0
-    ) {
-        first = children[0];
-        second = children[1];
-        prev = parent.children[index - 1];
-
-        if (
-            (
-                first.type === 'SymbolNode' ||
-                first.type === 'PunctuationNode'
-            ) &&
-            EXPRESSION_AFFIX_SYMBOL.test(nlcstToString(first))
-        ) {
-            prev.children.push(children.shift());
-
-            /*
-             * Update position.
-             */
-
-            if (first.position && prev.position) {
-                prev.position.end = first.position.end;
-            }
-
-            if (second && second.position && child.position) {
-                child.position.start = second.position.start;
-            }
-
-            /*
-             * Next, iterate over the previous node again.
-             */
-
-            return index - 1;
-        }
-    }
-}
-
-/*
- * Expose `mergeAffixSymbol` as a modifier.
- */
-
-module.exports = modifier(mergeAffixSymbol);
-
-},{"../expressions":32,"../modifier":33,"nlcst-to-string":29}],42:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-
-/**
- * Merge certain punctuation marks into their
- * preceding words.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTSentenceNode} parent
- * @return {undefined|number}
- */
-function mergeFinalWordSymbol(child, index, parent) {
-    var children,
-        prev,
-        next;
-
-    if (
-        index !== 0 &&
-        (
-            child.type === 'SymbolNode' ||
-            child.type === 'PunctuationNode'
-        ) &&
-        nlcstToString(child) === '-'
-    ) {
-        children = parent.children;
-
-        prev = children[index - 1];
-        next = children[index + 1];
-
-        if (
-            (
-                !next ||
-                next.type !== 'WordNode'
-            ) &&
-            (
-                prev &&
-                prev.type === 'WordNode'
-            )
-        ) {
-            /*
-             * Remove `child` from parent.
-             */
-
-            children.splice(index, 1);
-
-            /*
-             * Add the punctuation mark at the end of the
-             * previous node.
-             */
-
-            prev.children.push(child);
-
-            /*
-             * Update position.
-             */
-
-            if (prev.position && child.position) {
-                prev.position.end = child.position.end;
-            }
-
-            /*
-             * Next, iterate over the node *now* at the
-             * current position (which was the next node).
-             */
-
-            return index;
-        }
-    }
-}
-
-/*
- * Expose `mergeFinalWordSymbol` as a modifier.
- */
-
-module.exports = modifier(mergeFinalWordSymbol);
-
-},{"../modifier":33,"nlcst-to-string":29}],43:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier,
-    expressions;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-expressions = require('../expressions');
-
-/*
- * Constants.
- *
- * - Initial lowercase letter.
- */
-
-var EXPRESSION_LOWER_INITIAL;
-
-EXPRESSION_LOWER_INITIAL = expressions.lowerInitial;
-
-/**
- * Merge a sentence into its previous sentence, when
- * the sentence starts with a lower case letter.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined|number}
- */
-function mergeInitialLowerCaseLetterSentences(child, index, parent) {
-    var siblings,
-        children,
-        position,
-        node,
-        prev;
-
-    children = child.children;
-
-    if (
-        children &&
-        children.length &&
-        index !== 0
-    ) {
-        position = -1;
-
-        while (children[++position]) {
-            node = children[position];
+        while (++position < siblings.length) {
+            node = siblings[position];
+            queue.push(node);
 
             if (node.type === 'WordNode') {
-                if (!EXPRESSION_LOWER_INITIAL.test(nlcstToString(node))) {
-                    return;
-                }
-
-                siblings = parent.children;
-
-                prev = siblings[index - 1];
-
-                prev.children = prev.children.concat(children);
-
-                siblings.splice(index, 1);
-
-                /*
-                 * Update position.
-                 */
-
-                if (prev.position && child.position) {
-                    prev.position.end = child.position.end;
-                }
-
-                /*
-                 * Next, iterate over the node *now* at
-                 * the current position.
-                 */
-
-                return index;
+                break;
             }
 
-            if (
-                node.type === 'SymbolNode' ||
-                node.type === 'PunctuationNode'
-            ) {
-                return;
-            }
-        }
-    }
-}
-
-/*
- * Expose `mergeInitialLowerCaseLetterSentences` as a modifier.
- */
-
-module.exports = modifier(mergeInitialLowerCaseLetterSentences);
-
-},{"../expressions":32,"../modifier":33,"nlcst-to-string":29}],44:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-
-/**
- * Merge certain punctuation marks into their
- * following words.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTSentenceNode} parent
- * @return {undefined|number}
- */
-function mergeInitialWordSymbol(child, index, parent) {
-    var children,
-        next;
-
-    if (
-        (
-            child.type !== 'SymbolNode' &&
-            child.type !== 'PunctuationNode'
-        ) ||
-        nlcstToString(child) !== '&'
-    ) {
-        return;
-    }
-
-    children = parent.children;
-
-    next = children[index + 1];
-
-    /*
-     * If either a previous word, or no following word,
-     * exists, exit early.
-     */
-
-    if (
-        (
-            index !== 0 &&
-            children[index - 1].type === 'WordNode'
-        ) ||
-        !(
-            next &&
-            next.type === 'WordNode'
-        )
-    ) {
-        return;
-    }
-
-    /*
-     * Remove `child` from parent.
-     */
-
-    children.splice(index, 1);
-
-    /*
-     * Add the punctuation mark at the start of the
-     * next node.
-     */
-
-    next.children.unshift(child);
-
-    /*
-     * Update position.
-     */
-
-    if (next.position && child.position) {
-        next.position.start = child.position.start;
-    }
-
-    /*
-     * Next, iterate over the node at the previous
-     * position, as it's now adjacent to a following
-     * word.
-     */
-
-    return index - 1;
-}
-
-/*
- * Expose `mergeInitialWordSymbol` as a modifier.
- */
-
-module.exports = modifier(mergeInitialWordSymbol);
-
-},{"../modifier":33,"nlcst-to-string":29}],45:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier,
-    expressions;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-expressions = require('../expressions');
-
-/*
- * Constants.
- *
- * - Numbers.
- */
-
-var EXPRESSION_NUMERICAL;
-
-EXPRESSION_NUMERICAL = expressions.numerical;
-
-/**
- * Merge initialisms.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTSentenceNode} parent
- * @return {undefined|number}
- */
-function mergeInitialisms(child, index, parent) {
-    var siblings,
-        prev,
-        children,
-        length,
-        position,
-        otherChild,
-        isAllDigits,
-        value;
-
-    if (
-        index !== 0 &&
-        nlcstToString(child) === '.'
-    ) {
-        siblings = parent.children;
-
-        prev = siblings[index - 1];
-        children = prev.children;
-
-        length = children && children.length;
-
-        if (
-            prev.type === 'WordNode' &&
-            length !== 1 &&
-            length % 2 !== 0
-        ) {
-            position = length;
-
-            isAllDigits = true;
-
-            while (children[--position]) {
-                otherChild = children[position];
-
-                value = nlcstToString(otherChild);
-
-                if (position % 2 === 0) {
-                    /*
-                     * Initialisms consist of one
-                     * character values.
-                     */
-
-                    if (value.length > 1) {
-                        return;
-                    }
-
-                    if (!EXPRESSION_NUMERICAL.test(value)) {
-                        isAllDigits = false;
-                    }
-                } else if (value !== '.') {
-                    if (position < length - 2) {
-                        break;
-                    } else {
-                        return;
-                    }
-                }
-            }
-
-            if (!isAllDigits) {
-                /*
-                 * Remove `child` from parent.
-                 */
-
-                siblings.splice(index, 1);
-
-                /*
-                 * Add child to the previous children.
-                 */
-
-                children.push(child);
-
-                /*
-                 * Update position.
-                 */
-
-                if (prev.position && child.position) {
-                    prev.position.end = child.position.end;
-                }
-
-                /*
-                 * Next, iterate over the node *now* at the current
-                 * position.
-                 */
-
-                return index;
-            }
-        }
-    }
-}
-
-/*
- * Expose `mergeInitialisms` as a modifier.
- */
-
-module.exports = modifier(mergeInitialisms);
-
-},{"../expressions":32,"../modifier":33,"nlcst-to-string":29}],46:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier,
-    expressions;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-expressions = require('../expressions');
-
-/*
- * Constants.
- *
- * - Symbols part of surrounding words.
- */
-
-var EXPRESSION_INNER_WORD_SYMBOL;
-
-EXPRESSION_INNER_WORD_SYMBOL = expressions.wordSymbolInner;
-
-/**
- * Merge two words surrounding certain punctuation marks.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTSentenceNode} parent
- * @return {undefined|number}
- */
-function mergeInnerWordSymbol(child, index, parent) {
-    var siblings,
-        sibling,
-        prev,
-        last,
-        position,
-        tokens,
-        queue;
-
-    if (
-        index !== 0 &&
-        (
-            child.type === 'SymbolNode' ||
-            child.type === 'PunctuationNode'
-        )
-    ) {
-        siblings = parent.children;
-
-        prev = siblings[index - 1];
-
-        if (prev && prev.type === 'WordNode') {
-            position = index - 1;
-
-            tokens = [];
-            queue = [];
-
-            /*
-             * - If a token which is neither word nor
-             *   inner word symbol is found, the loop
-             *   is broken.
-             * - If an inner word symbol is found,
-             *   it's queued.
-             * - If a word is found, it's queued (and
-             *   the queue stored and emptied).
-             */
-
-            while (siblings[++position]) {
-                sibling = siblings[position];
-
-                if (sibling.type === 'WordNode') {
-                    tokens = tokens.concat(queue, sibling.children);
-
-                    queue = [];
-                } else if (
-                    (
-                        sibling.type === 'SymbolNode' ||
-                        sibling.type === 'PunctuationNode'
-                    ) &&
-                    EXPRESSION_INNER_WORD_SYMBOL.test(nlcstToString(sibling))
-                ) {
-                    queue.push(sibling);
-                } else {
-                    break;
-                }
-            }
-
-            if (tokens.length) {
-                /*
-                 * If there is a queue, remove its length
-                 * from `position`.
-                 */
-
-                if (queue.length) {
-                    position -= queue.length;
-                }
-
-                /*
-                 * Remove every (one or more) inner-word punctuation
-                 * marks and children of words.
-                 */
-
-                siblings.splice(index, position - index);
-
-                /*
-                 * Add all found tokens to `prev`s children.
-                 */
-
-                prev.children = prev.children.concat(tokens);
-
-                last = tokens[tokens.length - 1];
-
-                /*
-                 * Update position.
-                 */
-
-                if (prev.position && last.position) {
-                    prev.position.end = last.position.end;
-                }
-
-                /*
-                 * Next, iterate over the node *now* at the current
-                 * position.
-                 */
-
-                return index;
-            }
-        }
-    }
-}
-
-/*
- * Expose `mergeInnerWordSymbol` as a modifier.
- */
-
-module.exports = modifier(mergeInnerWordSymbol);
-
-},{"../expressions":32,"../modifier":33,"nlcst-to-string":29}],47:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var modifier;
-
-modifier = require('../modifier');
-
-/**
- * Merge a sentence into the following sentence, when
- * the sentence does not contain word tokens.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined|number}
- */
-function mergeNonWordSentences(child, index, parent) {
-    var children,
-        position,
-        prev,
-        next;
-
-    children = child.children;
-    position = -1;
-
-    while (children[++position]) {
-        if (children[position].type === 'WordNode') {
-            return;
-        }
-    }
-
-    prev = parent.children[index - 1];
-
-    if (prev) {
-        prev.children = prev.children.concat(children);
-
-        /*
-         * Remove the child.
-         */
-
-        parent.children.splice(index, 1);
-
-        /*
-         * Patch position.
-         */
-
-        if (prev.position && child.position) {
-            prev.position.end = child.position.end;
-        }
-
-        /*
-         * Next, iterate over the node *now* at
-         * the current position (which was the
-         * next node).
-         */
-
-        return index;
-    }
-
-    next = parent.children[index + 1];
-
-    if (next) {
-        next.children = children.concat(next.children);
-
-        /*
-         * Patch position.
-         */
-
-        if (next.position && child.position) {
-            next.position.start = child.position.start;
-        }
-
-        /*
-         * Remove the child.
-         */
-
-        parent.children.splice(index, 1);
-    }
-}
-
-/*
- * Expose `mergeNonWordSentences` as a modifier.
- */
-
-module.exports = modifier(mergeNonWordSentences);
-
-},{"../modifier":33}],48:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    modifier;
-
-nlcstToString = require('nlcst-to-string');
-modifier = require('../modifier');
-
-/*
- * Constants.
- *
- * - Blacklist of full stop characters that should not
- *   be treated as terminal sentence markers: A
- *   case-insensitive abbreviation.
- */
-
-var EXPRESSION_ABBREVIATION_PREFIX;
-
-EXPRESSION_ABBREVIATION_PREFIX = new RegExp(
-    '^(' +
-        '[0-9]+|' +
-        '[a-z]|' +
-
-        /*
-         * Common Latin Abbreviations:
-         * Based on: http://en.wikipedia.org/wiki/List_of_Latin_abbreviations
-         * Where only the abbreviations written without joining full stops,
-         * but with a final full stop, were extracted.
-         *
-         * circa, capitulus, confer, compare, centum weight, eadem, (et) alii,
-         * et cetera, floruit, foliis, ibidem, idem, nemine && contradicente,
-         * opere && citato, (per) cent, (per) procurationem, (pro) tempore,
-         * sic erat scriptum, (et) sequentia, statim, videlicet.
-         */
-
-        'al|ca|cap|cca|cent|cf|cit|con|cp|cwt|ead|etc|ff|' +
-        'fl|ibid|id|nem|op|pro|seq|sic|stat|tem|viz' +
-    ')$'
-);
-
-/**
- * Merge a sentence into its next sentence, when the
- * sentence ends with a certain word.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined|number}
- */
-function mergePrefixExceptions(child, index, parent) {
-    var children,
-        node,
-        next;
-
-    children = child.children;
-
-    if (
-        children &&
-        children.length &&
-        index !== parent.children.length - 1
-    ) {
-        node = children[children.length - 1];
-
-        if (
-            node &&
-            nlcstToString(node) === '.'
-        ) {
-            node = children[children.length - 2];
-
-            if (
-                node &&
-                node.type === 'WordNode' &&
-                EXPRESSION_ABBREVIATION_PREFIX.test(
-                    nlcstToString(node).toLowerCase()
-                )
-            ) {
-                next = parent.children[index + 1];
-
-                child.children = children.concat(next.children);
-
-                parent.children.splice(index + 1, 1);
-
-                /*
-                 * Update position.
-                 */
-
-                if (next.position && child.position) {
-                    child.position.end = next.position.end;
-                }
-
-                /*
-                 * Next, iterate over the current node again.
-                 */
-
-                return index - 1;
-            }
-        }
-    }
-}
-
-/*
- * Expose `mergePrefixExceptions` as a modifier.
- */
-
-module.exports = modifier(mergePrefixExceptions);
-
-},{"../modifier":33,"nlcst-to-string":29}],49:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var nlcstToString,
-    plugin,
-    expressions;
-
-nlcstToString = require('nlcst-to-string');
-plugin = require('../plugin');
-expressions = require('../expressions');
-
-/*
- * Constants.
- *
- * - Blacklist of full stop characters that should not
- *   be treated as terminal sentence markers: A
- *   case-insensitive abbreviation.
- */
-
-var EXPRESSION_TERMINAL_MARKER;
-
-EXPRESSION_TERMINAL_MARKER = expressions.terminalMarker;
-
-/**
- * Merge non-terminal-marker full stops into
- * the previous word (if available), or the next
- * word (if available).
- *
- * @param {NLCSTNode} child
- */
-function mergeRemainingFullStops(child) {
-    var children,
-        position,
-        grandchild,
-        prev,
-        next,
-        nextNext,
-        hasFoundDelimiter;
-
-    children = child.children;
-    position = children.length;
-
-    hasFoundDelimiter = false;
-
-    while (children[--position]) {
-        grandchild = children[position];
-
-        if (
-            grandchild.type !== 'SymbolNode' &&
-            grandchild.type !== 'PunctuationNode'
-        ) {
-            /*
-             * This is a sentence without terminal marker,
-             * so we 'fool' the code to make it think we
-             * have found one.
-             */
-
-            if (grandchild.type === 'WordNode') {
-                hasFoundDelimiter = true;
-            }
-
-            continue;
-        }
-
-        /*
-         * Exit when this token is not a terminal marker.
-         */
-
-        if (!EXPRESSION_TERMINAL_MARKER.test(nlcstToString(grandchild))) {
-            continue;
-        }
-
-        /*
-         * Ignore the first terminal marker found
-         * (starting at the end), as it should not
-         * be merged.
-         */
-
-        if (!hasFoundDelimiter) {
-            hasFoundDelimiter = true;
-
-            continue;
-        }
-
-        /*
-         * Only merge a single full stop.
-         */
-
-        if (nlcstToString(grandchild) !== '.') {
-            continue;
-        }
-
-        prev = children[position - 1];
-        next = children[position + 1];
-
-        if (prev && prev.type === 'WordNode') {
-            nextNext = children[position + 2];
-
-            /*
-             * Continue when the full stop is followed by
-             * a space and another full stop, such as:
-             * `{.} .`
-             */
-
-            if (
-                next &&
-                nextNext &&
-                next.type === 'WhiteSpaceNode' &&
-                nlcstToString(nextNext) === '.'
-            ) {
+            if (node.type === 'WhiteSpaceNode') {
                 continue;
             }
 
-            /*
-             * Remove `child` from parent.
-             */
+            return null;
+        }
+    }
 
-            children.splice(position, 1);
+    return queue;
+}
 
-            /*
-             * Add the punctuation mark at the end of the
-             * previous node.
-             */
+/**
+ * Check `expression` in `parent` at `position`.
+ *
+ * @param {Object} expression - Violation expression.
+ * @param {NLCSTNode} parent - Parent node.
+ * @param {number} position - Position in `parent` to
+ *   check.
+ * @return {Object?} - Result.
+ */
+function check(expression, parent, position) {
+    var values = expression.inconsiderate;
+    var phrase;
+    var result;
 
-            prev.children.push(grandchild);
+    for (phrase in values) {
+        result = matches(phrase, parent, position);
 
-            /*
-             * Update position.
-             */
+        if (result) {
+            return {
+                'end': position + result.length - 1,
+                'category': values[phrase]
+            };
+        }
+    }
 
-            if (grandchild.position && prev.position) {
-                prev.position.end = grandchild.position.end;
+    return null;
+}
+
+/**
+ * Create a human readable warning message for `violation`
+ * and suggest `suggestion`.
+ *
+ * @example
+ *   message('one', 'two');
+ *   // '`one` may be insensitive, use `two` instead'
+ *
+ *   message(['one', 'two'], 'three');
+ *   // '`one`, `two` may be insensitive, use `three` instead'
+ *
+ *   message(['one', 'two'], 'three', '/');
+ *   // '`one` / `two` may be insensitive, use `three` instead'
+ *
+ * @param {*} violation - One or more violations.
+ * @param {*} suggestion - One or more suggestions.
+ * @param {string} [joiner] - Joiner to use.
+ * @return {string} - Human readable warning.
+ */
+function message(violation, suggestion, joiner) {
+    return quote(violation, joiner) +
+        ' may be insensitive, use ' +
+        quote(suggestion, joiner) +
+        ' instead';
+}
+
+/**
+ * Quote text meant as literal.
+ *
+ * @example
+ *   quote('one');
+ *   // '`one`'
+ *
+ * @example
+ *   quote(['one', 'two']);
+ *   // '`one`, `two`'
+ *
+ * @example
+ *   quote(['one', 'two'], '/');
+ *   // '`one` / `two`'
+ *
+ * @param {string|Array.<string>} value - One or more
+ *   violations.
+ * @param {string} [joiner] - Joiner to use.
+ * @return {string} - Quoted, joined `value`.
+ */
+function quote(value, joiner) {
+    joiner = !joiner || joiner === ',' ? '`, `' : '` ' + joiner + ' `';
+
+    return '`' + (value.join ? value.join(joiner) : value) + '`';
+}
+
+/**
+ * Check whether the first character of a given value is
+ * upper-case. Supports a string, or a list of strings.
+ * Defers to the standard library for what defines
+ * a “upper case” letter.
+ *
+ * @example
+ *   isCapitalized('one'); // false
+ *   isCapitalized('One'); // true
+ *
+ * @example
+ *   isCapitalized(['one', 'Two']); // false
+ *   isCapitalized(['One', 'two']); // true
+ *
+ * @param {string|Array.<string>} value - One, or a list
+ *   of strings.
+ * @return {boolean} - Whether the first character is
+ *   upper-case.
+ */
+function isCapitalized(value) {
+    var character = (value.charAt ? value : value[0]).charAt(0);
+
+    return character.toUpperCase() === character;
+}
+
+/**
+ * Capitalize a list of values.
+ *
+ * @example
+ *   capitalize(['one', 'two']); // ['One', 'Two']
+ *
+ * @param {Array.<string>} value - List of values.
+ * @return {Array.<string>} - Capitalized values.
+ */
+function capitalize(value) {
+    var result = [];
+    var index = -1;
+    var length;
+
+    length = value.length;
+
+    while (++index < length) {
+        result[index] = value[index].charAt(0).toUpperCase() +
+            value[index].slice(1);
+    }
+
+    return result;
+}
+
+/**
+ * Warn on `file` about `violation` (at `node`) with
+ * `suggestion`s.
+ *
+ * @param {File} file - Virtual file.
+ * @param {string|Array.<string>} violation - One or more
+ *   violations.
+ * @param {string|Array.<string>} suggestion - One or more
+ *   suggestions.
+ * @param {NLCSTNode} node - Node which violates.
+ */
+function warn(file, violation, suggestion, node, joiner) {
+    if (!('join' in suggestion)) {
+        suggestion = keys(suggestion);
+    }
+
+    if (isCapitalized(violation)) {
+        suggestion = capitalize(suggestion);
+    }
+
+    file.warn(message(violation, suggestion, joiner), node);
+}
+
+/**
+ * Test `epxression` on the node at `position` in
+ * `parent`.
+ *
+ * @param {File} file - Virtual file.
+ * @param {Object} expression - An expression mapping
+ *   offenses to fixes.
+ * @param {number} position - Index in `parent`
+ * @param {Node} parent - Parent node.
+ */
+function test(file, expression, position, parent) {
+    var result = check(expression, parent, position);
+
+    if (result) {
+        return {
+            'id': expression.id,
+            'type': result.category,
+            'parent': parent,
+            'start': position,
+            'end': result.end
+        };
+    }
+
+    return null;
+}
+
+/**
+ * Handle matches for a `simple` pattern.  Simple-patterns
+ * need no extra logic, every match is triggered as a
+ * warning.
+ *
+ * @param {Array.<Object>} matches - List of matches
+ *   matching `pattern` in a context.
+ * @param {Object} pattern - Simple-pattern object.
+ * @param {VFile} file - Virtual file.
+ */
+function simple(matches, pattern, file) {
+    var length = matches.length;
+    var index = -1;
+    var match;
+    var siblings;
+
+    while (++index < length) {
+        match = matches[index];
+        siblings = match.parent.children;
+
+        warn(file, valueOf(
+            siblings.slice(match.start, match.end + 1)
+        ), pattern.considerate, siblings[match.start]);
+    }
+}
+
+/**
+ * Handle matches for an `and` pattern.  And-patterns
+ * trigger a warning when every category is present.
+ *
+ * For example, when `master` and `slave` occur in a
+ * context together, they trigger a warning.
+ *
+ * @param {Array.<Object>} matches - List of matches
+ *   matching `pattern` in a context.
+ * @param {Object} pattern - And-pattern object.
+ * @param {VFile} file - Virtual file.
+ */
+function and(matches, pattern, file) {
+    var categories = pattern.categories.concat();
+    var length = matches.length;
+    var index = -1;
+    var phrases = [];
+    var suggestions = [];
+    var match;
+    var position;
+    var siblings;
+    var first;
+
+    while (++index < length) {
+        match = matches[index];
+        siblings = match.parent.children;
+        position = categories.indexOf(match.type);
+
+        if (position !== -1) {
+            categories.splice(position, 1);
+            phrases.push(valueOf(siblings.slice(match.start, match.end + 1)));
+            suggestions.push(byValue(pattern.considerate, match.type));
+
+            if (!first) {
+                first = siblings[match.start];
             }
 
-            position--;
-        } else if (next && next.type === 'WordNode') {
-            /*
-             * Remove `child` from parent.
-             */
-
-            children.splice(position, 1);
-
-            /*
-             * Add the punctuation mark at the start of
-             * the next node.
-             */
-
-            next.children.unshift(grandchild);
-
-            if (grandchild.position && next.position) {
-                next.position.start = grandchild.position.start;
+            if (categories.length === 0) {
+                warn(file, phrases, suggestions, first, '/');
             }
         }
     }
 }
 
-/*
- * Expose `mergeRemainingFullStops` as a plugin.
- */
-
-module.exports = plugin(mergeRemainingFullStops);
-
-},{"../expressions":32,"../plugin":36,"nlcst-to-string":29}],50:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var modifier = require('../modifier');
-
 /**
- * Merge multiple words. This merges the children of
- * adjacent words, something which should not occur
- * naturally by parse-latin, but might happen when
- * custom tokens were passed in.
+ * Handle matches for an `or` pattern.  Or-patterns
+ * trigger a warning unless every category is present.
  *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTSentenceNode} parent
- * @return {undefined|number}
- */
-function mergeFinalWordSymbol(child, index, parent) {
-    var siblings = parent.children,
-        next;
-
-    if (child.type === 'WordNode') {
-        next = siblings[index + 1];
-
-        if (next && next.type === 'WordNode') {
-            /*
-             * Remove `next` from parent.
-             */
-
-            siblings.splice(index + 1, 1);
-
-            /*
-             * Add the punctuation mark at the end of the
-             * previous node.
-             */
-
-            child.children = child.children.concat(next.children);
-
-            /*
-             * Update position.
-             */
-
-            if (next.position && child.position) {
-                child.position.end = next.position.end;
-            }
-
-            /*
-             * Next, re-iterate the current node.
-             */
-
-            return index;
-        }
-    }
-}
-
-/*
- * Expose `mergeFinalWordSymbol` as a modifier.
- */
-
-module.exports = modifier(mergeFinalWordSymbol);
-
-},{"../modifier":33}],51:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var plugin = require('../plugin');
-
-/**
- * Add a `position` object when it does not yet exist
- * on `node`.
+ * For example, when `him` and `her` occur adjacent
+ * to each other, they are not warned about. But when
+ * they occur alone, they are.
  *
- * @param {NLCSTNode} node - Node to patch.
+ * @param {Array.<Object>} matches - List of matches
+ *   matching `pattern` in a context.
+ * @param {Object} pattern - Or-pattern object.
+ * @param {VFile} file - Virtual file.
  */
-function patch(node) {
-    if (!node.position) {
-        node.position = {};
-    }
-}
+function or(matches, pattern, file) {
+    var length = matches.length;
+    var index = -1;
+    var match;
+    var next;
+    var siblings;
+    var sibling;
+    var start;
+    var end;
 
-/**
- * Patch the position on a parent node based on its first
- * and last child.
- *
- * @param {NLCSTNode} child
- */
-function patchPosition(child, index, node) {
-    var siblings = node.children;
+    while (++index < length) {
+        match = matches[index];
+        siblings = match.parent.children;
+        next = matches[index + 1];
 
-    if (!child.position) {
-        return;
-    }
+        if (
+            next &&
+            next.parent === match.parent &&
+            next.type !== match.type
+        ) {
+            start = match.end;
+            end = next.start;
 
-    if (
-        index === 0 &&
-        (!node.position || /* istanbul ignore next */ !node.position.start)
-    ) {
-        patch(node);
-        node.position.start = child.position.start;
-    }
+            while (++start < end) {
+                sibling = siblings[start];
 
-    if (
-        index === siblings.length - 1 &&
-        (!node.position || !node.position.end)
-    ) {
-        patch(node);
-        node.position.end = child.position.end;
-    }
-}
-
-/*
- * Expose `patchPosition` as a plugin.
- */
-
-module.exports = plugin(patchPosition);
-
-},{"../plugin":36}],52:[function(require,module,exports){
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var modifier;
-
-modifier = require('../modifier');
-
-/**
- * Remove empty children.
- *
- * @param {NLCSTNode} child
- * @param {number} index
- * @param {NLCSTParagraphNode} parent
- * @return {undefined|number}
- */
-function removeEmptyNodes(child, index, parent) {
-    if ('children' in child && !child.children.length) {
-        parent.children.splice(index, 1);
-
-        /*
-         * Next, iterate over the node *now* at
-         * the current position (which was the
-         * next node).
-         */
-
-        return index;
-    }
-}
-
-/*
- * Expose `removeEmptyNodes` as a modifier.
- */
-
-module.exports = modifier(removeEmptyNodes);
-
-},{"../modifier":33}],53:[function(require,module,exports){
-'use strict';
-
-var nlcstToString;
-
-nlcstToString = require('nlcst-to-string');
-
-/**
- * Factory to create a tokenizer based on a given
- * `expression`.
- *
- * @param {string} childType
- * @param {RegExp} expression
- * @return {function(NLCSTParent): Array.<NLCSTChild>}
- */
-function tokenizerFactory(childType, expression) {
-    /**
-     * A function which splits
-     *
-     * @param {NLCSTParent} node
-     * @return {Array.<NLCSTChild>}
-     */
-    return function (node) {
-        var children,
-            tokens,
-            type,
-            length,
-            index,
-            lastIndex,
-            start,
-            parent,
-            first,
-            last;
-
-        children = [];
-
-        tokens = node.children;
-        type = node.type;
-
-        length = tokens.length;
-
-        index = -1;
-
-        lastIndex = length - 1;
-
-        start = 0;
-
-        while (++index < length) {
-            if (
-                index === lastIndex ||
-                (
-                    tokens[index].type === childType &&
-                    expression.test(nlcstToString(tokens[index]))
-                )
-            ) {
-                first = tokens[start];
-                last = tokens[index];
-
-                parent = {
-                    'type': type,
-                    'children': tokens.slice(start, index + 1)
-                };
-
-                if (first.position && last.position) {
-                    parent.position = {
-                        'start': first.position.start,
-                        'end': last.position.end
-                    };
+                if (
+                    sibling.type === 'WhiteSpaceNode' ||
+                    (
+                        sibling.type === 'WordNode' &&
+                        /(and|or)/.test(toString(sibling))
+                    )
+                ) {
+                    continue;
                 }
 
-                children.push(parent);
+                break;
+            }
 
-                start = index + 1;
+            /*
+             * If we didn't break...
+             */
+
+            if (start === end) {
+                index++;
+                continue;
             }
         }
 
-        return children;
+        warn(file, valueOf(
+            siblings.slice(match.start, match.end + 1)
+        ), pattern.considerate, siblings[match.start]);
+    }
+}
+
+/*
+ * Dictionary of handled patterns.
+ */
+
+var handlers = {};
+
+handlers.and = and;
+handlers.or = or;
+handlers.simple = simple;
+
+/**
+ * Factory to create a visitor which warns on `file`.
+ *
+ * @param {File} file - Virtual file.
+ * @return {Function} - Paragraph visitor.
+ */
+function factory(file) {
+    /**
+     * Search `node` for violations.
+     *
+     * @param {NLCSTParagraphNode} node - Paragraph.
+     */
+    return function (node) {
+        var matches = {};
+        var id;
+        var pattern;
+
+        /*
+         * Find offending words.
+         */
+
+        visit(node, 'WordNode', function (child, position, parent) {
+            var patterns = byWord[toString(child).toLowerCase()];
+            var length = patterns ? patterns.length : 0;
+            var index = -1;
+            var result;
+
+            while (++index < length) {
+                result = test(file, byId[patterns[index]], position, parent);
+
+                if (result) {
+                    if (result.id in matches) {
+                        matches[result.id].push(result);
+                    } else {
+                        matches[result.id] = [result];
+                    }
+                }
+            }
+        });
+
+        /*
+         * Ignore or trigger offending words based on
+         * their pattern.
+         */
+
+        for (id in matches) {
+            pattern = byId[id];
+            handlers[pattern.type](matches[id], pattern, file);
+        }
     };
 }
 
-module.exports = tokenizerFactory;
-
-},{"nlcst-to-string":29}],54:[function(require,module,exports){
-'use strict';
-
 /**
- * Cache `hasOwnProperty`.
- */
-
-var has;
-
-has = Object.prototype.hasOwnProperty;
-
-/**
- * `Array#forEach()` with the possibility to change
- * the next position.
+ * Transformer.
  *
- * @param {{length: number}} values
- * @param {function(*, number, {length: number}): number|undefined} callback
- * @param {*} context
+ * @param {NLCSTNode} cst - Syntax tree.
  */
-
-function iterate(values, callback, context) {
-    var index,
-        result;
-
-    if (!values) {
-        throw new Error(
-            'TypeError: Iterate requires that |this| ' +
-            'not be ' + values
-        );
-    }
-
-    if (!has.call(values, 'length')) {
-        throw new Error(
-            'TypeError: Iterate requires that |this| ' +
-            'has a `length`'
-        );
-    }
-
-    if (typeof callback !== 'function') {
-        throw new Error(
-            'TypeError: callback must be a function'
-        );
-    }
-
-    index = -1;
-
-    /**
-     * The length might change, so we do not cache it.
-     */
-
-    while (++index < values.length) {
-        /**
-         * Skip missing values.
-         */
-
-        if (!(index in values)) {
-            continue;
-        }
-
-        result = callback.call(context, values[index], index, values);
-
-        /**
-         * If `callback` returns a `number`, move `index` over to
-         * `number`.
-         */
-
-        if (typeof result === 'number') {
-            /**
-             * Make sure that negative numbers do not
-             * break the loop.
-             */
-
-            if (result < 0) {
-                index = 0;
-            }
-
-            index = result - 1;
-        }
-    }
+function transformer(cst, file) {
+    visit(cst, 'ParagraphNode', factory(file));
 }
 
 /**
- * Expose `iterate`.
+ * Attacher.
+ *
+ * @return {Function} - `transformer`.
+ */
+function attacher() {
+    return transformer;
+}
+
+/*
+ * Expose.
  */
 
-module.exports = iterate;
+module.exports = attacher;
 
-},{}],55:[function(require,module,exports){
+},{"./patterns.json":86,"nlcst-to-string":87,"object-keys":88,"unist-util-visit":90}],86:[function(require,module,exports){
+module.exports=[
+  {
+    "type": "or",
+    "considerate": {
+      "their": "a",
+      "theirs": "a"
+    },
+    "inconsiderate": {
+      "her": "female",
+      "hers": "female",
+      "him": "male",
+      "his": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 0
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "they": "a",
+      "it": "a"
+    },
+    "inconsiderate": {
+      "she": "female",
+      "he": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 1
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "themselves": "a",
+      "theirself": "a",
+      "self": "a"
+    },
+    "inconsiderate": {
+      "herself": "female",
+      "himself": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 2
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "kid": "a",
+      "child": "a"
+    },
+    "inconsiderate": {
+      "girl": "female",
+      "boy": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 3
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "people": "a",
+      "persons": "a",
+      "folks": "a"
+    },
+    "inconsiderate": {
+      "women": "female",
+      "girls": "female",
+      "gals": "female",
+      "ladies": "female",
+      "men": "male",
+      "guys": "male",
+      "dudes": "male",
+      "gents": "male",
+      "gentlemen": "male",
+      "mankind": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 4
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "person": "a",
+      "friend": "a",
+      "pal": "a",
+      "folk": "a",
+      "individual": "a"
+    },
+    "inconsiderate": {
+      "woman": "female",
+      "gal": "female",
+      "lady": "female",
+      "babe": "female",
+      "bimbo": "female",
+      "chick": "female",
+      "man": "male",
+      "guy": "male",
+      "lad": "male",
+      "fellow": "male",
+      "dude": "male",
+      "bro": "male",
+      "gentleman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 5
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "native land": "a"
+    },
+    "inconsiderate": {
+      "motherland": "female",
+      "fatherland": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 6
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "native tongue": "a",
+      "native language": "a"
+    },
+    "inconsiderate": {
+      "mother tongue": "female",
+      "father tongue": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 7
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "first-year students": "a",
+      "freshers": "a"
+    },
+    "inconsiderate": {
+      "freshwomen": "female",
+      "freshmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 8
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "garbage collector": "a",
+      "waste collector": "a",
+      "trash collector": "a"
+    },
+    "inconsiderate": {
+      "garbagewoman": "female",
+      "garbageman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 9
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "garbage collectors": "a",
+      "waste collectors": "a",
+      "trash collectors": "a"
+    },
+    "inconsiderate": {
+      "garbagewomen": "female",
+      "garbagemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 10
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "chair": "a",
+      "chairperson": "a",
+      "coordinator": "a"
+    },
+    "inconsiderate": {
+      "chairwoman": "female",
+      "chairman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 11
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "committee member": "a"
+    },
+    "inconsiderate": {
+      "committee woman": "female",
+      "committee man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 12
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cowhand": "a"
+    },
+    "inconsiderate": {
+      "cowgirl": "female",
+      "cowboy": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 13
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cowhands": "a"
+    },
+    "inconsiderate": {
+      "cowgirls": "female",
+      "cowboys": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 14
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cattle rancher": "a"
+    },
+    "inconsiderate": {
+      "cattlewoman": "female",
+      "cattleman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 15
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cattle ranchers": "a"
+    },
+    "inconsiderate": {
+      "cattlewomen": "female",
+      "cattlemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 16
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "chairs": "a",
+      "chairpersons": "a",
+      "coordinators": "a"
+    },
+    "inconsiderate": {
+      "chairwomen": "female",
+      "chairmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 17
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "mail carrier": "a",
+      "letter carrier": "a",
+      "postal worker": "a"
+    },
+    "inconsiderate": {
+      "postwoman": "female",
+      "mailwoman": "female",
+      "postman": "male",
+      "mailman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 18
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "mail carriers": "a",
+      "letter carriers": "a",
+      "postal workers": "a"
+    },
+    "inconsiderate": {
+      "postwomen": "female",
+      "mailwomen": "female",
+      "postmen": "male",
+      "mailmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 19
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "officer": "a",
+      "police officer": "a"
+    },
+    "inconsiderate": {
+      "policewoman": "female",
+      "policeman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 20
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "officers": "a",
+      "police officers": "a"
+    },
+    "inconsiderate": {
+      "policewomen": "female",
+      "policemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 21
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "flight attendant": "a"
+    },
+    "inconsiderate": {
+      "stewardess": "female",
+      "steward": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 22
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "flight attendants": "a"
+    },
+    "inconsiderate": {
+      "stewardesses": "female",
+      "stewards": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 23
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "member of congress": "a",
+      "congress person": "a",
+      "legislator": "a",
+      "representative": "a"
+    },
+    "inconsiderate": {
+      "congresswoman": "female",
+      "congressman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 24
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "member of congresss": "a",
+      "congress persons": "a",
+      "legislators": "a",
+      "representatives": "a"
+    },
+    "inconsiderate": {
+      "congresswomen": "female",
+      "congressmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 25
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "fire fighter": "a"
+    },
+    "inconsiderate": {
+      "firewoman": "female",
+      "fireman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 26
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "fire fighters": "a"
+    },
+    "inconsiderate": {
+      "firewomen": "female",
+      "firemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 27
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "fisher": "a",
+      "crew member": "a"
+    },
+    "inconsiderate": {
+      "fisherwoman": "female",
+      "fisherman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 28
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "fishers": "a"
+    },
+    "inconsiderate": {
+      "fisherwomen": "female",
+      "fishermen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 29
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "kinship": "a",
+      "community": "a"
+    },
+    "inconsiderate": {
+      "sisterhood": "female",
+      "brotherhood": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 30
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "common person": "a",
+      "average person": "a"
+    },
+    "inconsiderate": {
+      "common girl": "female",
+      "common man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 31
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "business executive": "a",
+      "entrepreneur": "a",
+      "business person": "a",
+      "professional": "a"
+    },
+    "inconsiderate": {
+      "businesswoman": "female",
+      "salarywoman": "female",
+      "businessman": "male",
+      "salaryman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 32
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "business executives": "a",
+      "entrepreneurs": "a"
+    },
+    "inconsiderate": {
+      "businesswomen": "female",
+      "salarywomen": "female",
+      "career girl": "female",
+      "career woman": "female",
+      "businessmen": "male",
+      "salarymen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 33
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cleaner": "a"
+    },
+    "inconsiderate": {
+      "cleaning lady": "female",
+      "cleaning girl": "female",
+      "cleaning woman": "female",
+      "janitress": "female",
+      "cleaning man": "male",
+      "cleaning boy": "male",
+      "janitor": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 34
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cleaners": "a"
+    },
+    "inconsiderate": {
+      "cleaning ladies": "female",
+      "cleaning girls": "female",
+      "janitresses": "female",
+      "cleaning men": "male",
+      "janitors": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 35
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "courier": "a",
+      "messenger": "a"
+    },
+    "inconsiderate": {
+      "delivery girl": "female",
+      "delivery boy": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 36
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "supervisor": "a",
+      "shift boss": "a"
+    },
+    "inconsiderate": {
+      "forewoman": "female",
+      "foreman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 37
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "lead": "a",
+      "front": "a",
+      "figurehead": "a"
+    },
+    "inconsiderate": {
+      "frontwoman, front woman": "female",
+      "frontman, front man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 38
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "figureheads": "a"
+    },
+    "inconsiderate": {
+      "front women, frontwomen": "female",
+      "front men, frontmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 39
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "supervisors": "a",
+      "shift bosses": "a"
+    },
+    "inconsiderate": {
+      "forewomen": "female",
+      "foremen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 40
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "insurance agent": "a"
+    },
+    "inconsiderate": {
+      "insurance woman": "female",
+      "insurance man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 41
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "insurance agents": "a"
+    },
+    "inconsiderate": {
+      "insurance women": "female",
+      "insurance men": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 42
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "proprietor": "a",
+      "building manager": "a"
+    },
+    "inconsiderate": {
+      "landlady": "female",
+      "landlord": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 43
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "proprietors": "a",
+      "building managers": "a"
+    },
+    "inconsiderate": {
+      "landladies": "female",
+      "landlords": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 44
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "graduate": "a"
+    },
+    "inconsiderate": {
+      "alumna": "female",
+      "alumnus": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 45
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "graduates": "a"
+    },
+    "inconsiderate": {
+      "alumnae": "female",
+      "alumni": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 46
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "anchor": "a",
+      "journalist": "a"
+    },
+    "inconsiderate": {
+      "newswoman": "female",
+      "newspaperwoman": "female",
+      "anchorwoman": "female",
+      "newsman": "male",
+      "newspaperman": "male",
+      "anchorman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 47
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "anchors": "a",
+      "journalists": "a"
+    },
+    "inconsiderate": {
+      "newswomen": "female",
+      "newspaperwomen": "female",
+      "anchorwomen": "female",
+      "newsmen": "male",
+      "newspapermen": "male",
+      "anchormen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 48
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "repairer": "a",
+      "technician": "a"
+    },
+    "inconsiderate": {
+      "repairwoman": "female",
+      "repairman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 49
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "technicians": "a"
+    },
+    "inconsiderate": {
+      "repairwomen": "female",
+      "repairmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 50
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "salesperson": "a",
+      "sales clerk": "a",
+      "sales rep": "a",
+      "sales agent": "a",
+      "seller": "a"
+    },
+    "inconsiderate": {
+      "saleswoman": "female",
+      "sales woman": "female",
+      "saleslady": "female",
+      "salesman": "male",
+      "sales man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 51
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "sales clerks": "a",
+      "sales reps": "a",
+      "sales agents": "a",
+      "sellers": "a"
+    },
+    "inconsiderate": {
+      "saleswomen": "female",
+      "sales women": "female",
+      "salesladies": "female",
+      "salesmen": "male",
+      "sales men": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 52
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "soldier": "a",
+      "service representative": "a"
+    },
+    "inconsiderate": {
+      "servicewoman": "female",
+      "serviceman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 53
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "soldiers": "a",
+      "service representatives": "a"
+    },
+    "inconsiderate": {
+      "servicewomen": "female",
+      "servicemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 54
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "server": "a"
+    },
+    "inconsiderate": {
+      "waitress": "female",
+      "waiter": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 55
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "servers": "a"
+    },
+    "inconsiderate": {
+      "waitresses": "female",
+      "waiters": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 56
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "worker": "a",
+      "wage earner": "a",
+      "taxpayer": "a"
+    },
+    "inconsiderate": {
+      "workwoman": "female",
+      "working woman": "female",
+      "workman": "male",
+      "working man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 57
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "workers": "a"
+    },
+    "inconsiderate": {
+      "workwomen": "female",
+      "workmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 58
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "performer": "a",
+      "star": "a",
+      "artist": "a"
+    },
+    "inconsiderate": {
+      "actress": "female",
+      "actor": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 59
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "performers": "a",
+      "stars": "a",
+      "artists": "a"
+    },
+    "inconsiderate": {
+      "actresses": "female",
+      "actors": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 60
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "pilot": "a",
+      "aviator": "a",
+      "airstaff": "a"
+    },
+    "inconsiderate": {
+      "aircrewwoman": "female",
+      "aircrew woman": "female",
+      "aircrewman": "male",
+      "airman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 61
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "pilots": "a",
+      "aviators": "a",
+      "airstaff": "a"
+    },
+    "inconsiderate": {
+      "aircrewwomen": "female",
+      "aircrew women": "female",
+      "aircrewmen": "male",
+      "airmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 62
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cabinet member": "a"
+    },
+    "inconsiderate": {
+      "alderwoman": "female",
+      "alderman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 63
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "cabinet": "a",
+      "cabinet members": "a"
+    },
+    "inconsiderate": {
+      "alderwomen": "female",
+      "aldermen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 64
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "assembly person": "a",
+      "assembly worker": "a"
+    },
+    "inconsiderate": {
+      "assemblywoman": "female",
+      "assemblyman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 65
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "relative": "a"
+    },
+    "inconsiderate": {
+      "kinswoman": "female",
+      "aunt": "female",
+      "kinsman": "male",
+      "uncle": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 66
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "relatives": "a"
+    },
+    "inconsiderate": {
+      "kinswomen": "female",
+      "aunts": "female",
+      "kinsmen": "male",
+      "uncles": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 67
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "klansperson": "a"
+    },
+    "inconsiderate": {
+      "klanswoman": "female",
+      "klansman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 68
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "clansperson": "a",
+      "clan member": "a"
+    },
+    "inconsiderate": {
+      "clanswoman": "female",
+      "clansman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 69
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "klan": "a",
+      "klanspersons": "a"
+    },
+    "inconsiderate": {
+      "klanswomen": "female",
+      "klansmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 70
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "boogey": "a"
+    },
+    "inconsiderate": {
+      "boogeywoman": "female",
+      "boogeyman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 71
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "boogie": "a"
+    },
+    "inconsiderate": {
+      "boogiewoman": "female",
+      "boogieman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 72
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "bogey": "a"
+    },
+    "inconsiderate": {
+      "bogeywoman": "female",
+      "bogeyman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 73
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "bogie": "a"
+    },
+    "inconsiderate": {
+      "bogiewoman": "female",
+      "bogieman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 74
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "boogies": "a"
+    },
+    "inconsiderate": {
+      "boogiewomen": "female",
+      "boogiemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 75
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "bogies": "a"
+    },
+    "inconsiderate": {
+      "bogiewomen": "female",
+      "bogiemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 76
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "bonder": "a"
+    },
+    "inconsiderate": {
+      "bondswoman": "female",
+      "bondsman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 77
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "bonders": "a"
+    },
+    "inconsiderate": {
+      "bondswomen": "female",
+      "bondsmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 78
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "partner": "a",
+      "significant other": "a",
+      "spouse": "a"
+    },
+    "inconsiderate": {
+      "wife": "female",
+      "husband": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 79
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "partners": "a",
+      "significant others": "a",
+      "spouses": "a"
+    },
+    "inconsiderate": {
+      "wives": "female",
+      "husbands": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 80
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "partner": "a",
+      "friend": "a",
+      "significant other": "a"
+    },
+    "inconsiderate": {
+      "girlfriend": "female",
+      "boyfriend": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 81
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "partners": "a",
+      "friends": "a",
+      "significant others": "a"
+    },
+    "inconsiderate": {
+      "girlfriends": "female",
+      "boyfriends": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 82
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "childhood": "a"
+    },
+    "inconsiderate": {
+      "girlhood": "female",
+      "boyhood": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 83
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "childish": "a"
+    },
+    "inconsiderate": {
+      "girly": "female",
+      "girlish": "female",
+      "boyish": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 84
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "traveler": "a"
+    },
+    "inconsiderate": {
+      "journeywoman": "female",
+      "journeyman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 85
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "travelers": "a"
+    },
+    "inconsiderate": {
+      "journeywomen": "female",
+      "journeymen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 86
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "godparent": "a",
+      "elder": "a",
+      "patron": "a"
+    },
+    "inconsiderate": {
+      "godmother": "female",
+      "patroness": "female",
+      "godfather": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 87
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "grandchild": "a"
+    },
+    "inconsiderate": {
+      "granddaughter": "female",
+      "grandson": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 88
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "grandchildred": "a"
+    },
+    "inconsiderate": {
+      "granddaughters": "female",
+      "grandsons": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 89
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "ancestor": "a"
+    },
+    "inconsiderate": {
+      "foremother": "female",
+      "forefather": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 90
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "ancestors": "a"
+    },
+    "inconsiderate": {
+      "foremothers": "female",
+      "forefathers": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 91
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "grandparent": "a",
+      "ancestor": "a"
+    },
+    "inconsiderate": {
+      "granny": "female",
+      "grandma": "female",
+      "grandmother": "female",
+      "grandpappy": "male",
+      "granddaddy": "male",
+      "gramps": "male",
+      "grandpa": "male",
+      "grandfather": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 92
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "grandparents": "a",
+      "ancestors": "a"
+    },
+    "inconsiderate": {
+      "grandmothers": "female",
+      "grandfathers": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 93
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "spouse": "a"
+    },
+    "inconsiderate": {
+      "bride": "female",
+      "groom": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 94
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "sibling": "a"
+    },
+    "inconsiderate": {
+      "sister": "female",
+      "brother": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 95
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "siblings": "a"
+    },
+    "inconsiderate": {
+      "sisters": "female",
+      "brothers": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 96
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "camera operator": "a",
+      "camera person": "a"
+    },
+    "inconsiderate": {
+      "camerawoman": "female",
+      "cameraman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 97
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "camera operators": "a"
+    },
+    "inconsiderate": {
+      "camerawomen": "female",
+      "cameramen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 98
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "troglodyte": "a",
+      "hominidae": "a"
+    },
+    "inconsiderate": {
+      "cavewoman": "female",
+      "caveman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 99
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "troglodytae": "a",
+      "troglodyti": "a",
+      "troglodytes": "a",
+      "hominids": "a"
+    },
+    "inconsiderate": {
+      "cavewomen": "female",
+      "cavemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 100
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "clergyperson": "a",
+      "clergy": "a",
+      "cleric": "a"
+    },
+    "inconsiderate": {
+      "clergywomen": "female",
+      "clergyman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 101
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "clergies": "a",
+      "clerics": "a"
+    },
+    "inconsiderate": {
+      "clergywomen": "female",
+      "clergymen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 102
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "council member": "a"
+    },
+    "inconsiderate": {
+      "councilwoman": "female",
+      "councilman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 103
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "council members": "a"
+    },
+    "inconsiderate": {
+      "councilwomen": "female",
+      "councilmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 104
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "country person": "a"
+    },
+    "inconsiderate": {
+      "countrywoman": "female",
+      "countryman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 105
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "country folk": "a"
+    },
+    "inconsiderate": {
+      "countrywomen": "female",
+      "countrymen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 106
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "artisan": "a",
+      "craftsperson": "a",
+      "skilled worker": "a"
+    },
+    "inconsiderate": {
+      "handywoman": "female",
+      "craftswoman": "female",
+      "handyman": "male",
+      "craftsman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 107
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "presenter": "a"
+    },
+    "inconsiderate": {
+      "hostess": "female",
+      "host": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 108
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "presenters": "a"
+    },
+    "inconsiderate": {
+      "hostesses": "female",
+      "hosts": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 109
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "artisans": "a",
+      "craftspersons": "a",
+      "skilled workers": "a"
+    },
+    "inconsiderate": {
+      "handywomen": "female",
+      "craftswomen": "female",
+      "handymen": "male",
+      "craftsmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 110
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "guillotine": "a"
+    },
+    "inconsiderate": {
+      "hangwoman": "female",
+      "hangman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 111
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "guillotines": "a"
+    },
+    "inconsiderate": {
+      "hangwomen": "female",
+      "hangmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 112
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "sidekick": "a"
+    },
+    "inconsiderate": {
+      "henchwoman": "female",
+      "henchman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 113
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "sidekicks": "a"
+    },
+    "inconsiderate": {
+      "henchwomen": "female",
+      "henchmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 114
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "role-model": "a"
+    },
+    "inconsiderate": {
+      "heroine": "female",
+      "hero": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 115
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "role-models": "a"
+    },
+    "inconsiderate": {
+      "heroines": "female",
+      "heroes": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 116
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "parental": "a",
+      "warm": "a",
+      "intimate": "a"
+    },
+    "inconsiderate": {
+      "maternal": "female",
+      "paternal": "male",
+      "fraternal": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 117
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "parental": "a"
+    },
+    "inconsiderate": {
+      "maternity": "female",
+      "paternity": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 118
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "parents": "a"
+    },
+    "inconsiderate": {
+      "mamas": "female",
+      "mothers": "female",
+      "moms": "female",
+      "mums": "female",
+      "mommas": "female",
+      "mommies": "female",
+      "papas": "male",
+      "fathers": "male",
+      "dads": "male",
+      "daddies": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 119
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "parent": "a"
+    },
+    "inconsiderate": {
+      "mama": "female",
+      "mother": "female",
+      "mom": "female",
+      "mum": "female",
+      "momma": "female",
+      "mommy": "female",
+      "papa": "male",
+      "father": "male",
+      "dad": "male",
+      "pop": "male",
+      "daddy": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 120
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "child": "a"
+    },
+    "inconsiderate": {
+      "daughter": "female",
+      "son": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 121
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "children": "a"
+    },
+    "inconsiderate": {
+      "daughters": "female",
+      "sons": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 122
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "convierge": "a"
+    },
+    "inconsiderate": {
+      "doorwoman": "female",
+      "doorman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 123
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "convierges": "a"
+    },
+    "inconsiderate": {
+      "doorwomen": "female",
+      "doormen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 124
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "humanly": "a",
+      "mature": "a"
+    },
+    "inconsiderate": {
+      "feminin": "female",
+      "dudely": "male",
+      "manly": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 125
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "human": "a"
+    },
+    "inconsiderate": {
+      "female": "female",
+      "male": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 126
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "humans": "a"
+    },
+    "inconsiderate": {
+      "females": "female",
+      "males": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 127
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "ruler": "a"
+    },
+    "inconsiderate": {
+      "empress": "female",
+      "queen": "female",
+      "emperor": "male",
+      "king": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 128
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "rulers": "a"
+    },
+    "inconsiderate": {
+      "empresses": "female",
+      "queens": "female",
+      "emperors": "male",
+      "kings": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 129
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "jumbo": "a",
+      "gigantic": "a"
+    },
+    "inconsiderate": {
+      "queen-size": "female",
+      "king-size": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 130
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "power behind the throne": "a"
+    },
+    "inconsiderate": {
+      "queenmaker": "female",
+      "kingmaker": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 131
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "civilian": "a"
+    },
+    "inconsiderate": {
+      "laywoman": "female",
+      "layman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 132
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "civilians": "a"
+    },
+    "inconsiderate": {
+      "laywomen": "female",
+      "laymen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 133
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "official": "a",
+      "owner": "a",
+      "expert": "a",
+      "superior": "a",
+      "chief": "a",
+      "ruler": "a"
+    },
+    "inconsiderate": {
+      "dame": "female",
+      "lord": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 134
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "officials": "a",
+      "masters": "a",
+      "chiefs": "a",
+      "rulers": "a"
+    },
+    "inconsiderate": {
+      "dames": "female",
+      "lords": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 135
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "adulthood": "a",
+      "personhood": "a"
+    },
+    "inconsiderate": {
+      "girlhood": "female",
+      "masculinity": "male",
+      "manhood": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 136
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "humanity": "a"
+    },
+    "inconsiderate": {
+      "femininity": "female",
+      "manliness": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 137
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "shooter": "a"
+    },
+    "inconsiderate": {
+      "markswoman": "female",
+      "marksman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 138
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "shooters": "a"
+    },
+    "inconsiderate": {
+      "markswomen": "female",
+      "marksmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 139
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "intermediary": "a",
+      "go-between": "a"
+    },
+    "inconsiderate": {
+      "middlewoman": "female",
+      "middleman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 140
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "intermediaries": "a",
+      "go-betweens": "a"
+    },
+    "inconsiderate": {
+      "middlewomen": "female",
+      "middlemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 141
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "milk person": "a"
+    },
+    "inconsiderate": {
+      "milkwoman": "female",
+      "milkman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 142
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "milk people": "a"
+    },
+    "inconsiderate": {
+      "milkwomen": "female",
+      "milkmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 143
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "nibling": "a",
+      "sibling’s child": "a"
+    },
+    "inconsiderate": {
+      "niece": "female",
+      "nephew": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 144
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "niblings": "a",
+      "sibling’s children": "a"
+    },
+    "inconsiderate": {
+      "nieces": "female",
+      "nephews": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 145
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "noble": "a"
+    },
+    "inconsiderate": {
+      "noblewoman": "female",
+      "nobleman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 146
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "nobles": "a"
+    },
+    "inconsiderate": {
+      "noblewomen": "female",
+      "noblemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 147
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "notary": "a",
+      "consumer advocate": "a",
+      "trouble shooter": "a"
+    },
+    "inconsiderate": {
+      "ombudswoman": "female",
+      "ombudsman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 148
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "notaries": "a"
+    },
+    "inconsiderate": {
+      "ombudswomen": "female",
+      "ombudsmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 149
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "heir": "a"
+    },
+    "inconsiderate": {
+      "princess": "female",
+      "prince": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 150
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "heirs": "a"
+    },
+    "inconsiderate": {
+      "princesses": "female",
+      "princes": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 151
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "fairy": "a"
+    },
+    "inconsiderate": {
+      "sandwoman": "female",
+      "sandman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 152
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "fairies": "a"
+    },
+    "inconsiderate": {
+      "sandwomen": "female",
+      "sandmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 153
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "promoter": "a"
+    },
+    "inconsiderate": {
+      "showwoman": "female",
+      "showman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 154
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "promoters": "a"
+    },
+    "inconsiderate": {
+      "showwomen": "female",
+      "show women": "female",
+      "showmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 155
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "astronaut": "a"
+    },
+    "inconsiderate": {
+      "spacewoman": "female",
+      "spaceman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 156
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "astronauts": "a"
+    },
+    "inconsiderate": {
+      "spacewomen": "female",
+      "spacemen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 157
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "speaker": "a",
+      "spokesperson": "a",
+      "representative": "a"
+    },
+    "inconsiderate": {
+      "spokeswoman": "female",
+      "spokesman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 158
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "speakers": "a",
+      "spokespersons": "a"
+    },
+    "inconsiderate": {
+      "spokeswomen": "female",
+      "spokesmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 159
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "athlete": "a",
+      "sports person": "a"
+    },
+    "inconsiderate": {
+      "sportswoman": "female",
+      "sportsman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 160
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "athletes": "a",
+      "sports persons": "a"
+    },
+    "inconsiderate": {
+      "sportswomen": "female",
+      "sportsmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 161
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "senator": "a"
+    },
+    "inconsiderate": {
+      "stateswoman": "female",
+      "statesman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 162
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "step-sibling": "a"
+    },
+    "inconsiderate": {
+      "stepsister": "female",
+      "stepbrother": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 163
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "step-siblings": "a"
+    },
+    "inconsiderate": {
+      "stepsisters": "female",
+      "stepbrothers": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 164
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "step-parent": "a"
+    },
+    "inconsiderate": {
+      "stepmom": "female",
+      "stepmother": "female",
+      "stepdad": "male",
+      "stepfather": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 165
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "step-parents": "a"
+    },
+    "inconsiderate": {
+      "stepmothers": "female",
+      "stepfathers": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 166
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "titan": "a"
+    },
+    "inconsiderate": {
+      "superwoman": "female",
+      "superman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 167
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "titans": "a"
+    },
+    "inconsiderate": {
+      "superwomen": "female",
+      "supermen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 168
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "inhumane": "a"
+    },
+    "inconsiderate": {
+      "unwomanly": "female",
+      "unwomenly": "female",
+      "unmanly": "male",
+      "unmenly": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 169
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "watcher": "a"
+    },
+    "inconsiderate": {
+      "watchwoman": "female",
+      "watchman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 170
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "watchers": "a"
+    },
+    "inconsiderate": {
+      "watchwomen": "female",
+      "watchmen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 171
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "weather forecaster": "a",
+      "meteorologist": "a"
+    },
+    "inconsiderate": {
+      "weatherwoman": "female",
+      "weatherman": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 172
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "weather forecasters": "a",
+      "meteorologists": "a"
+    },
+    "inconsiderate": {
+      "weatherwomen": "female",
+      "weathermen": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 173
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "bereaved": "a"
+    },
+    "inconsiderate": {
+      "widow": "female",
+      "widows": "female",
+      "widower": "male",
+      "widowers": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 174
+  },
+  {
+    "type": "or",
+    "considerate": {
+      "own person": "a"
+    },
+    "inconsiderate": {
+      "own woman": "female",
+      "own man": "male"
+    },
+    "categories": [
+      "female",
+      "male"
+    ],
+    "id": 175
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "french": "a"
+    },
+    "inconsiderate": {
+      "frenchmen": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 176
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "courteous": "a",
+      "cultured": "a"
+    },
+    "inconsiderate": {
+      "ladylike": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 177
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "resolutely": "a",
+      "bravely": "a"
+    },
+    "inconsiderate": {
+      "like a man": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 178
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "birth name": "a"
+    },
+    "inconsiderate": {
+      "maiden name": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 179
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "first voyage": "a"
+    },
+    "inconsiderate": {
+      "maiden voyage": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 180
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "strong enough": "a"
+    },
+    "inconsiderate": {
+      "man enough": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 181
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "upstaging": "a",
+      "competitiveness": "a"
+    },
+    "inconsiderate": {
+      "oneupmanship": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 182
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "ms.": "a"
+    },
+    "inconsiderate": {
+      "miss.": "female",
+      "mrs.": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 183
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "manufactured": "a",
+      "artificial": "a",
+      "synthetic": "a",
+      "machine-made": "a"
+    },
+    "inconsiderate": {
+      "manmade": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 184
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "dynamo": "a"
+    },
+    "inconsiderate": {
+      "man of action": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 185
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "scholar": "a",
+      "writer": "a",
+      "literary figure": "a"
+    },
+    "inconsiderate": {
+      "man of letters": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 186
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "sophisticate": "a"
+    },
+    "inconsiderate": {
+      "man of the world": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 187
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "camaraderie": "a"
+    },
+    "inconsiderate": {
+      "fellowship": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 188
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "first-year student": "a",
+      "fresher": "a"
+    },
+    "inconsiderate": {
+      "freshman": "male",
+      "freshwoman": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 189
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "quality construction": "a",
+      "expertise": "a"
+    },
+    "inconsiderate": {
+      "workmanship": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 190
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "homemaker": "a",
+      "homeworker": "a"
+    },
+    "inconsiderate": {
+      "housewife": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 191
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "homemakers": "a",
+      "homeworkers": "a"
+    },
+    "inconsiderate": {
+      "housewifes": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 192
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "loving": "a",
+      "warm": "a",
+      "nurturing": "a"
+    },
+    "inconsiderate": {
+      "motherly": "female"
+    },
+    "categories": [
+      "female"
+    ],
+    "id": 193
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "human resources": "a"
+    },
+    "inconsiderate": {
+      "manpower": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 194
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "emcee": "a",
+      "moderator": "a",
+      "convenor": "a"
+    },
+    "inconsiderate": {
+      "master of ceremonies": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 195
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "skilled": "a",
+      "authoritative": "a",
+      "commanding": "a"
+    },
+    "inconsiderate": {
+      "masterful": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 196
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "genius": "a",
+      "creator": "a",
+      "instigator": "a",
+      "oversee": "a",
+      "launch": "a",
+      "originate": "a"
+    },
+    "inconsiderate": {
+      "mastermind": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 197
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "work of genius": "a",
+      "chef d’oeuvre": "a"
+    },
+    "inconsiderate": {
+      "masterpiece": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 198
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "vision": "a",
+      "comprehensive plan": "a"
+    },
+    "inconsiderate": {
+      "masterplan": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 199
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "trump card": "a",
+      "stroke of genius": "a"
+    },
+    "inconsiderate": {
+      "masterstroke": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 200
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "sociopath": "a"
+    },
+    "inconsiderate": {
+      "madman": "male",
+      "mad man": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 201
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "sociopaths": "a"
+    },
+    "inconsiderate": {
+      "madmen": "male",
+      "mad men": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 202
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "humankind": "a"
+    },
+    "inconsiderate": {
+      "mankind": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 203
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "staff hours": "a",
+      "hours of work": "a"
+    },
+    "inconsiderate": {
+      "manhour": "male",
+      "man hour": "male"
+    },
+    "categories": [
+      "male"
+    ],
+    "id": 204
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with learning disabilities": "a"
+    },
+    "inconsiderate": {
+      "learning disabled": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 205
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with disabilities": "a"
+    },
+    "inconsiderate": {
+      "disabled": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 206
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with mental illness": "a"
+    },
+    "inconsiderate": {
+      "mentally ill": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 207
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with physical handicaps": "a"
+    },
+    "inconsiderate": {
+      "handicapped": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 208
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with schizophrenia": "a"
+    },
+    "inconsiderate": {
+      "schizophrenic": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 209
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with an amputation": "a"
+    },
+    "inconsiderate": {
+      "amputee": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 210
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with a limp": "a"
+    },
+    "inconsiderate": {
+      "cripple": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 211
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with Down’s Syndrome": "a"
+    },
+    "inconsiderate": {
+      "mongoloid": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 212
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person with symptoms of mental illness": "a"
+    },
+    "inconsiderate": {
+      "crazy": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 213
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "individual who has had a stroke": "a"
+    },
+    "inconsiderate": {
+      "stroke victim": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 214
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person who has multiple sclerosis": "a"
+    },
+    "inconsiderate": {
+      "suffering from multiple sclerosis": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 215
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "with family support needs": "a"
+    },
+    "inconsiderate": {
+      "family burden": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 216
+  },
+  {
+    "type": "and",
+    "considerate": {
+      "primary": "a",
+      "primaries": "a",
+      "replica": "b",
+      "replicas": "b"
+    },
+    "inconsiderate": {
+      "master": "a",
+      "masters": "a",
+      "slave": "b",
+      "slaves": "b"
+    },
+    "categories": [
+      "a",
+      "b"
+    ],
+    "id": 217
+  }
+]
+
+},{}],87:[function(require,module,exports){
+arguments[4][10][0].apply(exports,arguments)
+},{"dup":10}],88:[function(require,module,exports){
+'use strict';
+
+// modified from https://github.com/es-shims/es5-shim
+var has = Object.prototype.hasOwnProperty;
+var toStr = Object.prototype.toString;
+var slice = Array.prototype.slice;
+var isArgs = require('./isArguments');
+var hasDontEnumBug = !({ 'toString': null }).propertyIsEnumerable('toString');
+var hasProtoEnumBug = function () {}.propertyIsEnumerable('prototype');
+var dontEnums = [
+	'toString',
+	'toLocaleString',
+	'valueOf',
+	'hasOwnProperty',
+	'isPrototypeOf',
+	'propertyIsEnumerable',
+	'constructor'
+];
+var equalsConstructorPrototype = function (o) {
+	var ctor = o.constructor;
+	return ctor && ctor.prototype === o;
+};
+var blacklistedKeys = {
+	$window: true,
+	$console: true,
+	$parent: true,
+	$self: true,
+	$frames: true,
+	$webkitIndexedDB: true,
+	$webkitStorageInfo: true
+};
+var hasAutomationEqualityBug = (function () {
+	/* global window */
+	if (typeof window === 'undefined') { return false; }
+	for (var k in window) {
+		if (!blacklistedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+			try {
+				equalsConstructorPrototype(window[k]);
+			} catch (e) {
+				return true;
+			}
+		}
+	}
+	return false;
+}());
+var equalsConstructorPrototypeIfNotBuggy = function (o) {
+	/* global window */
+	if (typeof window === 'undefined' && !hasAutomationEqualityBug) {
+		return equalsConstructorPrototype(o);
+	}
+	try {
+		return equalsConstructorPrototype(o);
+	} catch (e) {
+		return false;
+	}
+};
+
+var keysShim = function keys(object) {
+	var isObject = object !== null && typeof object === 'object';
+	var isFunction = toStr.call(object) === '[object Function]';
+	var isArguments = isArgs(object);
+	var isString = isObject && toStr.call(object) === '[object String]';
+	var theKeys = [];
+
+	if (!isObject && !isFunction && !isArguments) {
+		throw new TypeError('Object.keys called on a non-object');
+	}
+
+	var skipProto = hasProtoEnumBug && isFunction;
+	if (isString && object.length > 0 && !has.call(object, 0)) {
+		for (var i = 0; i < object.length; ++i) {
+			theKeys.push(String(i));
+		}
+	}
+
+	if (isArguments && object.length > 0) {
+		for (var j = 0; j < object.length; ++j) {
+			theKeys.push(String(j));
+		}
+	} else {
+		for (var name in object) {
+			if (!(skipProto && name === 'prototype') && has.call(object, name)) {
+				theKeys.push(String(name));
+			}
+		}
+	}
+
+	if (hasDontEnumBug) {
+		var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
+
+		for (var k = 0; k < dontEnums.length; ++k) {
+			if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
+				theKeys.push(dontEnums[k]);
+			}
+		}
+	}
+	return theKeys;
+};
+
+keysShim.shim = function shimObjectKeys() {
+	if (!Object.keys) {
+		Object.keys = keysShim;
+	} else {
+		var keysWorksWithArguments = (function () {
+			// Safari 5.0 bug
+			return (Object.keys(arguments) || '').length === 2;
+		}(1, 2));
+		if (!keysWorksWithArguments) {
+			var originalKeys = Object.keys;
+			Object.keys = function keys(object) {
+				if (isArgs(object)) {
+					return originalKeys(slice.call(object));
+				} else {
+					return originalKeys(object);
+				}
+			};
+		}
+	}
+	return Object.keys || keysShim;
+};
+
+module.exports = keysShim;
+
+},{"./isArguments":89}],89:[function(require,module,exports){
+'use strict';
+
+var toStr = Object.prototype.toString;
+
+module.exports = function isArguments(value) {
+	var str = toStr.call(value);
+	var isArgs = str === '[object Arguments]';
+	if (!isArgs) {
+		isArgs = str !== '[object Array]' &&
+			value !== null &&
+			typeof value === 'object' &&
+			typeof value.length === 'number' &&
+			value.length >= 0 &&
+			toStr.call(value.callee) === '[object Function]';
+	}
+	return isArgs;
+};
+
+},{}],90:[function(require,module,exports){
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer. All rights reserved.
+ * @module unist:util:visit
+ * @fileoverview Utility to recursively walk over unist nodes.
+ */
+
+'use strict';
+
+/**
+ * Walk forwards.
+ *
+ * @param {Array.<*>} values - Things to iterate over,
+ *   forwards.
+ * @param {function(*, number): boolean} callback - Function
+ *   to invoke.
+ * @return {boolean} - False if iteration stopped.
+ */
+function forwards(values, callback) {
+    var index = -1;
+    var length = values.length;
+
+    while (++index < length) {
+        if (callback(values[index], index) === false) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Walk backwards.
+ *
+ * @param {Array.<*>} values - Things to iterate over,
+ *   backwards.
+ * @param {function(*, number): boolean} callback - Function
+ *   to invoke.
+ * @return {boolean} - False if iteration stopped.
+ */
+function backwards(values, callback) {
+    var index = values.length;
+    var length = -1;
+
+    while (--index > length) {
+        if (callback(values[index], index) === false) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Visit.
+ *
+ * @param {Node} tree - Root node
+ * @param {string} [type] - Node type.
+ * @param {function(node): boolean?} callback - Invoked
+ *   with each found node.  Can return `false` to stop.
+ * @param {boolean} [reverse] - By default, `visit` will
+ *   walk forwards, when `reverse` is `true`, `visit`
+ *   walks backwards.
+ */
+function visit(tree, type, callback, reverse) {
+    var iterate;
+    var one;
+    var all;
+
+    if (typeof type === 'function') {
+        reverse = callback;
+        callback = type;
+        type = null;
+    }
+
+    iterate = reverse ? backwards : forwards;
+
+    /**
+     * Visit `children` in `parent`.
+     */
+    all = function (children, parent) {
+        return iterate(children, function (child, index) {
+            return child && one(child, index, parent);
+        });
+    };
+
+    /**
+     * Visit a single node.
+     */
+    one = function (node, index, parent) {
+        var result;
+
+        index = index || (parent ? 0 : null);
+
+        if (!type || node.type === type) {
+            result = callback(node, index, parent || null);
+        }
+
+        if (node.children && result !== false) {
+            return all(node.children, node);
+        }
+
+        return result;
+    };
+
+    one(tree);
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = visit;
+
+},{}],91:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer.
@@ -10745,7 +16873,7 @@ module.exports = unified({
     'Compiler': Compiler
 });
 
-},{"./lib/compile.js":56,"./lib/parse.js":57,"unified":58}],56:[function(require,module,exports){
+},{"./lib/compile.js":92,"./lib/parse.js":93,"unified":119}],92:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -10842,7 +16970,7 @@ Compiler.prototype.compile = compile;
 
 module.exports = Compiler;
 
-},{"nlcst-to-string":29}],57:[function(require,module,exports){
+},{"nlcst-to-string":94}],93:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -10932,23 +17060,73 @@ Parser.prototype.parse = parse;
 
 module.exports = Parser;
 
-},{"parse-latin":31}],58:[function(require,module,exports){
+},{"parse-latin":95}],94:[function(require,module,exports){
+arguments[4][10][0].apply(exports,arguments)
+},{"dup":10}],95:[function(require,module,exports){
+arguments[4][11][0].apply(exports,arguments)
+},{"./lib/parse-latin":98,"dup":11}],96:[function(require,module,exports){
+arguments[4][12][0].apply(exports,arguments)
+},{"dup":12}],97:[function(require,module,exports){
+arguments[4][13][0].apply(exports,arguments)
+},{"array-iterate":118,"dup":13}],98:[function(require,module,exports){
+arguments[4][14][0].apply(exports,arguments)
+},{"./expressions":96,"./modifier":97,"./parser":99,"./plugin":100,"./plugin/break-implicit-sentences":101,"./plugin/make-final-white-space-siblings":102,"./plugin/make-initial-white-space-siblings":103,"./plugin/merge-affix-exceptions":104,"./plugin/merge-affix-symbol":105,"./plugin/merge-final-word-symbol":106,"./plugin/merge-initial-lower-case-letter-sentences":107,"./plugin/merge-initial-word-symbol":108,"./plugin/merge-initialisms":109,"./plugin/merge-inner-word-symbol":110,"./plugin/merge-non-word-sentences":111,"./plugin/merge-prefix-exceptions":112,"./plugin/merge-remaining-full-stops":113,"./plugin/merge-words":114,"./plugin/patch-position":115,"./plugin/remove-empty-nodes":116,"dup":14}],99:[function(require,module,exports){
+arguments[4][15][0].apply(exports,arguments)
+},{"./tokenizer":117,"dup":15}],100:[function(require,module,exports){
+arguments[4][16][0].apply(exports,arguments)
+},{"dup":16}],101:[function(require,module,exports){
+arguments[4][17][0].apply(exports,arguments)
+},{"../expressions":96,"../modifier":97,"dup":17,"nlcst-to-string":94}],102:[function(require,module,exports){
+arguments[4][18][0].apply(exports,arguments)
+},{"../modifier":97,"dup":18}],103:[function(require,module,exports){
+arguments[4][19][0].apply(exports,arguments)
+},{"../plugin":100,"dup":19}],104:[function(require,module,exports){
+arguments[4][20][0].apply(exports,arguments)
+},{"../modifier":97,"dup":20,"nlcst-to-string":94}],105:[function(require,module,exports){
 arguments[4][21][0].apply(exports,arguments)
-},{"attach-ware":59,"bail":2,"dup":21,"unherit":60,"vfile":66,"ware":63}],59:[function(require,module,exports){
+},{"../expressions":96,"../modifier":97,"dup":21,"nlcst-to-string":94}],106:[function(require,module,exports){
 arguments[4][22][0].apply(exports,arguments)
-},{"dup":22,"unherit":60}],60:[function(require,module,exports){
+},{"../modifier":97,"dup":22,"nlcst-to-string":94}],107:[function(require,module,exports){
 arguments[4][23][0].apply(exports,arguments)
-},{"clone":61,"dup":23,"inherits":62}],61:[function(require,module,exports){
+},{"../expressions":96,"../modifier":97,"dup":23,"nlcst-to-string":94}],108:[function(require,module,exports){
 arguments[4][24][0].apply(exports,arguments)
-},{"buffer":undefined,"dup":24}],62:[function(require,module,exports){
+},{"../modifier":97,"dup":24,"nlcst-to-string":94}],109:[function(require,module,exports){
 arguments[4][25][0].apply(exports,arguments)
-},{"dup":25}],63:[function(require,module,exports){
+},{"../expressions":96,"../modifier":97,"dup":25,"nlcst-to-string":94}],110:[function(require,module,exports){
 arguments[4][26][0].apply(exports,arguments)
-},{"dup":26,"wrap-fn":64}],64:[function(require,module,exports){
+},{"../expressions":96,"../modifier":97,"dup":26,"nlcst-to-string":94}],111:[function(require,module,exports){
 arguments[4][27][0].apply(exports,arguments)
-},{"co":65,"dup":27}],65:[function(require,module,exports){
+},{"../modifier":97,"dup":27}],112:[function(require,module,exports){
 arguments[4][28][0].apply(exports,arguments)
-},{"dup":28}],66:[function(require,module,exports){
+},{"../modifier":97,"dup":28,"nlcst-to-string":94}],113:[function(require,module,exports){
+arguments[4][29][0].apply(exports,arguments)
+},{"../expressions":96,"../plugin":100,"dup":29,"nlcst-to-string":94}],114:[function(require,module,exports){
+arguments[4][30][0].apply(exports,arguments)
+},{"../modifier":97,"dup":30}],115:[function(require,module,exports){
+arguments[4][31][0].apply(exports,arguments)
+},{"../plugin":100,"dup":31}],116:[function(require,module,exports){
+arguments[4][32][0].apply(exports,arguments)
+},{"../modifier":97,"dup":32}],117:[function(require,module,exports){
+arguments[4][33][0].apply(exports,arguments)
+},{"dup":33,"nlcst-to-string":94}],118:[function(require,module,exports){
+arguments[4][34][0].apply(exports,arguments)
+},{"dup":34}],119:[function(require,module,exports){
+arguments[4][50][0].apply(exports,arguments)
+},{"attach-ware":120,"bail":2,"dup":50,"unherit":121,"vfile":127,"ware":124}],120:[function(require,module,exports){
+arguments[4][51][0].apply(exports,arguments)
+},{"dup":51,"unherit":121}],121:[function(require,module,exports){
+arguments[4][52][0].apply(exports,arguments)
+},{"clone":122,"dup":52,"inherits":123}],122:[function(require,module,exports){
+arguments[4][53][0].apply(exports,arguments)
+},{"buffer":3,"dup":53}],123:[function(require,module,exports){
+arguments[4][54][0].apply(exports,arguments)
+},{"dup":54}],124:[function(require,module,exports){
+arguments[4][55][0].apply(exports,arguments)
+},{"dup":55,"wrap-fn":125}],125:[function(require,module,exports){
+arguments[4][56][0].apply(exports,arguments)
+},{"co":126,"dup":56}],126:[function(require,module,exports){
+arguments[4][57][0].apply(exports,arguments)
+},{"dup":57}],127:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -11464,3592 +17642,6 @@ vFilePrototype.namespace = namespace;
  */
 
 module.exports = VFile;
-
-},{}],67:[function(require,module,exports){
-'use strict';
-
-module.exports = require('./lib/equality.js');
-
-},{"./lib/equality.js":68}],68:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2014-2015 Titus Wormer
- * @license MIT
- * @module retext:equality
- * @fileoverview Warn about possible insensitive, inconsiderate language
- *   with Retext.
- */
-
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var visit = require('unist-util-visit');
-var nlcstToString = require('nlcst-to-string');
-var patterns = require('./patterns.json');
-
-/**
- * Get a string value from a node.
- *
- * @param {NLCSTNode} node - NLCST node.
- * @return {string}
- */
-function toString(node) {
-    return nlcstToString(node).replace(/['’-]/g, '');
-}
-
-/**
- * foo
- */
-function matches(search, parent, position) {
-    var siblings = parent.children;
-    var node = siblings[position];
-    var index = -1;
-    var length;
-    var queue = [node];
-
-    search = search.split(' ');
-    length = search.length;
-
-    while (++index < length) {
-        /*
-         * Check if this node matches.
-         */
-
-        if (!node || search[index] !== toString(node).toLowerCase()) {
-            return null;
-        }
-
-        /*
-         * Exit if this is the last node.
-         */
-
-        if (index === length - 1) {
-            break;
-        }
-
-        /*
-         * Find the next word.
-         */
-
-        while (++position < siblings.length) {
-            node = siblings[position];
-            queue.push(node);
-
-            if (node.type === 'PunctuationNode') {
-                return null;
-            }
-
-            if (node.type === 'WordNode') {
-                break;
-            }
-        }
-    }
-
-    return queue;
-}
-
-/**
- * Check `expression` in `parent` at `position`.
- *
- * @param {Array} expression - List of words, or a list of
- *   lists.
- * @param {NLCSTNode} parent - Parent node.
- * @param {number} position - Position in `parent` to
- *   check.
- * @return {Object?} - Result.
- */
-function find(expression, parent, position) {
-    var index = -1;
-    var length = expression.length;
-    var result
-
-    while (++index < length) {
-        result = matches(expression[index], parent, position);
-
-        if (result) {
-            return result;
-        }
-    }
-
-    return null;
-}
-
-/**
- * Check `expression` in `parent` at `position`.
- *
- * @param {Object} expression - Violation expression.
- * @param {NLCSTNode} parent - Parent node.
- * @param {number} position - Position in `parent` to
- *   check.
- * @return {Object?} - Result.
- */
-function check(expression, parent, position) {
-    var types = ['female', 'male', 'inconsiderate'];
-    var length = types.length;
-    var index = -1;
-    var result;
-    var type;
-    var count;
-    var kind;
-    var match;
-
-    while (++index < length) {
-        type = types[index];
-        kind = expression[type];
-
-        if (!kind) {
-            continue;
-        }
-
-        count = -1;
-
-        while (kind[++count]) {
-            match = kind[count];
-
-            if (typeof match === 'string') {
-                match = [match];
-            }
-
-            result = find(match, parent, position);
-
-            if (result) {
-                return {
-                    'queue': result,
-                    'type': type,
-                    'canonical': match[0]
-                };
-            }
-        }
-    }
-
-    return null;
-}
-
-/**
- * Create a human readable warning message for `violation`
- * and suggest `suggestion`.
- *
- * @example
- *   message('one', 'two');
- *   // '`one` may be insensitive, use `two` instead'
- *
- *   message(['one', 'two'], 'three');
- *   // '`one/two` may be insensitive, use `three` instead'
- *
- * @param {*} violation - One violation, a list of
- *   violations.
- * @param {*} suggestion - One or more suggestions
- * @return {string} - Human readable warning.
- */
-function message(violation, suggestion) {
-    return quote(violation) +
-        ' may be insensitive, use ' +
-        quote(suggestion) +
-        ' instead';
-}
-
-/**
- * Quote text meant as literal.
- *
- * @example
- *   quote('one');
- *   // '`one`'
- *
- * @example
- *   quote(['one', 'two']);
- *   // '`one`, `two`'
- */
-function quote(value) {
-    return '`' + (value.join ? value.join('`, `') : value) + '`';
-}
-
-/**
- * Stringify one or more of violations, where a violation
- * can be nested, or double nested.
- *
- * @example
- *   stringifyViolation('one');
- *   // 'one'
- *
- * @example
- *   stringifyViolation(['one', 'two']);
- *   // 'one/two'
- *
- * @example
- *   stringifyViolation([['one', 'two'], ['three', four]]);
- *   // 'one/three'
- *
- * @param {*} violation - One or more violations.
- */
-function stringifyViolation(violation) {
-    var values;
-    var value;
-    var index;
-    var length;
-
-    if (!violation.join) {
-        return violation;
-    }
-
-    values = [];
-    index = -1;
-    length = violation.length;
-
-    while (++index < length) {
-        value = violation[index];
-        values.push(value.join ? value[0] : value);
-    }
-
-    return values.join('/');
-}
-
-/**
- * Check whether the first character of a given value is
- * upper-case. Supports a string, or a list of strings.
- * Defers to the standard library for what defines
- * a “upper case” letter.
- *
- * @example
- *   isCapitalized('one'); // false
- *   isCapitalized('One'); // true
- *
- * @example
- *   isCapitalized(['one', 'Two']); // false
- *   isCapitalized(['One', 'two']); // true
- *
- * @param {string|Array.<string>} value - One, or a list
- *   of strings.
- * @return {boolean} - Whether the first character is
- *   upper-case.
- */
-function isCapitalized(value) {
-    var character = (value.charAt ? value : value[0]).charAt(0);
-
-    return character.toUpperCase() === character;
-}
-
-/**
- * Capitalize one value, or a list of values.
- *
- * @example
- *   capitalize('one'); // 'One'
- *
- * @example
- *   capitalize(['one', 'two']); // ['One', 'Two']
- *
- * @param {string|Array.<string>} value - One value, or a
- *   list of values.
- * @return {string|Array.<string>} - One or more
- *   capitalized values.
- */
-function capitalize(value) {
-    var result = [];
-    var wasString = typeof value === 'string';
-    var index = -1;
-    var length;
-
-    if (wasString) {
-        value = [value];
-    }
-
-    length = value.length;
-
-    while (++index < length) {
-        result[index] = value[index].charAt(0).toUpperCase() +
-            value[index].slice(1);
-    }
-
-    return wasString ? result[0] : result;
-}
-
-/**
- * Warn on `file` about `violation` (at `node`) with
- * `suggestion`s.
- *
- * @param {File} file - Virtual file.
- * @param {string|Array.<string>} violation - One or more
- *   violations.
- * @param {string|Array.<string>} suggestion - One or more
- *   suggestions.
- * @param {NLCSTNode} node - Node which violates.
- * @return {Error} - Virtual file message.
- */
-function warn(file, violation, suggestion, node) {
-    var err;
-    var index;
-    var length;
-
-    violation = stringifyViolation(violation);
-
-    if (isCapitalized(violation)) {
-        suggestion = capitalize(suggestion);
-    }
-
-    if (/[A-Z]/.test(violation.charAt(0))) {
-        if (!suggestion.join) {
-            suggestion = [suggestion];
-        } else {
-            suggestion = suggestion.concat();
-        }
-
-        index = -1;
-        length = suggestion.length;
-
-        while (++index < length) {
-            suggestion[index] = suggestion[index].charAt(0).toUpperCase() +
-                suggestion[index].slice(1);
-        }
-    }
-
-    err = file.message(message(violation, suggestion) , node);
-    err.violation = violation.toLowerCase();
-    err.fatal = false;
-
-    return err;
-}
-
-/**
- * Test `epxression` on the node at `position` in
- * `parent`.
- *
- * @param {File} file - Virtual file.
- * @param {Object} expression - An expression mapping
- *   offenses to fixes.
- * @param {number} position - Index in `parent`
- * @param {Node} parent - Parent node.
- */
-function test(file, expression, position, parent) {
-    var result = check(expression, parent, position);
-    var suggestions = expression.neutral || expression.considerate;
-    var contents;
-    var queue;
-
-    if (!result) {
-        return null;
-    }
-
-    queue = result.queue;
-
-    contents = nlcstToString({
-        'children': queue
-    });
-
-    return {
-        'end': position + queue.length - 1,
-        'type': result.type,
-        'canonical': result.canonical,
-        'id': expression.id,
-        'err': warn(file, contents, suggestions, queue[0])
-    };
-}
-
-/**
- * Factory to warn on the given `node` based on `file`.
- *
- * @param {File} file - Virtual file.
- * @return {Function} - Paragraph visitor.
- */
-function factory(file) {
-    /**
-     * Search `node` for violations.
-     *
-     * @param {NLCSTParagraphNode} node - Paragraph.
-     */
-    return function (node) {
-        var dictionary = {};
-
-        visit(node, 'SentenceNode', function (node) {
-            var children = node.children;
-            var length = children.length;
-            var count = patterns.length;
-            var position = -1;
-            var index;
-            var result;
-            var child;
-            var prev;
-            var pattern;
-            var id;
-            var dict;
-
-            while (++position < length) {
-                result = null;
-                child = children[position];
-
-                if (
-                    child.type === 'WhiteSpaceNode' ||
-                    /^(and|or|\/)$/.test(toString(child))
-                ) {
-                    continue;
-                }
-
-                if (child.type !== 'WordNode') {
-                    prev = null;
-                    continue;
-                }
-
-                index = -1;
-
-                while (++index < count) {
-                    pattern = patterns[index];
-                    result = test(file, pattern, position, node);
-
-                    if (result) {
-                        id = result.id;
-                        position = result.end;
-
-                        if (pattern.type === 'or') {
-                            if (
-                                prev &&
-                                prev.id === id &&
-                                prev.type !== result.type
-                            ) {
-                                file.messages = file.messages.slice(0, -1);
-                                result = null;
-                            } else {
-                                file.messages.push(result.err);
-                            }
-                        } else {
-                            dict = dictionary[id];
-
-                            if (!dict) {
-                                dict = dictionary[id] = {
-                                    'phrases': {},
-                                    'count': 0,
-                                    'first': child
-                                };
-                            }
-
-                            if (!dict.phrases[result.canonical]) {
-                                dict.phrases[result.canonical] = true;
-                                dict.count++;
-
-                                if (dict.count === pattern.inconsiderate.length) {
-                                    file.messages.push(warn(file, pattern.inconsiderate, pattern.considerate.join('/'), dict.first));
-                                }
-                            }
-                        }
-
-                        prev = result;
-
-                        break;
-                    }
-                }
-
-                if (!result) {
-                    prev = null;
-                }
-            }
-        });
-    };
-}
-
-/**
- * Transformer.
- *
- * @param {NLCSTNode} cst - Syntax tree.
- */
-function transformer(cst, file) {
-    visit(cst, 'ParagraphNode', factory(file));
-}
-
-/**
- * Attacher.
- *
- * @return {Function} - `transformer`.
- */
-function attacher() {
-    return transformer;
-}
-
-/*
- * Expose.
- */
-
-module.exports = attacher;
-
-},{"./patterns.json":69,"nlcst-to-string":70,"unist-util-visit":71}],69:[function(require,module,exports){
-module.exports=[
-  {
-    "neutral": [
-      "their"
-    ],
-    "female": [
-      "her"
-    ],
-    "male": [
-      "him"
-    ],
-    "type": "or",
-    "id": 0
-  },
-  {
-    "neutral": [
-      "theirs"
-    ],
-    "female": [
-      "hers"
-    ],
-    "male": [
-      "his"
-    ],
-    "type": "or",
-    "id": 1
-  },
-  {
-    "neutral": [
-      "they",
-      "it"
-    ],
-    "female": [
-      "she"
-    ],
-    "male": [
-      "he"
-    ],
-    "type": "or",
-    "id": 2
-  },
-  {
-    "neutral": [
-      "themselves",
-      "theirself",
-      "self"
-    ],
-    "female": [
-      "herself"
-    ],
-    "male": [
-      "himself"
-    ],
-    "type": "or",
-    "id": 3
-  },
-  {
-    "neutral": [
-      "kid",
-      "child"
-    ],
-    "female": [
-      "girl"
-    ],
-    "male": [
-      "boy"
-    ],
-    "type": "or",
-    "id": 4
-  },
-  {
-    "neutral": [
-      "people",
-      "persons",
-      "folks"
-    ],
-    "female": [
-      "women",
-      "girls",
-      "gals",
-      "ladies"
-    ],
-    "male": [
-      "men",
-      "guys",
-      "dudes",
-      "gents",
-      "gentlemen",
-      "mankind"
-    ],
-    "type": "or",
-    "id": 5
-  },
-  {
-    "neutral": [
-      "person",
-      "friend",
-      "pal",
-      "folk",
-      "individual"
-    ],
-    "female": [
-      "woman",
-      "gal",
-      "lady",
-      "babe",
-      "bimbo",
-      "chick"
-    ],
-    "male": [
-      "man",
-      "guy",
-      "lad",
-      "fellow",
-      "dude",
-      "bro",
-      "gentleman"
-    ],
-    "type": "or",
-    "id": 6
-  },
-  {
-    "neutral": [
-      "courteous",
-      "cultured"
-    ],
-    "female": [
-      "ladylike"
-    ],
-    "type": "or",
-    "id": 7
-  },
-  {
-    "neutral": [
-      "resolutely",
-      "bravely"
-    ],
-    "male": [
-      "like a man"
-    ],
-    "type": "or",
-    "id": 8
-  },
-  {
-    "neutral": [
-      "birth name"
-    ],
-    "female": [
-      "maiden name"
-    ],
-    "type": "or",
-    "id": 9
-  },
-  {
-    "neutral": [
-      "first voyage"
-    ],
-    "female": [
-      "maiden voyage"
-    ],
-    "type": "or",
-    "id": 10
-  },
-  {
-    "neutral": [
-      "strong enough"
-    ],
-    "male": [
-      "man enough"
-    ],
-    "type": "or",
-    "id": 11
-  },
-  {
-    "neutral": [
-      "upstaging",
-      "competitiveness"
-    ],
-    "male": [
-      "oneupmanship"
-    ],
-    "type": "or",
-    "id": 12
-  },
-  {
-    "neutral": [
-      "ms."
-    ],
-    "female": [
-      "miss.",
-      "mrs."
-    ],
-    "type": "or",
-    "id": 13
-  },
-  {
-    "neutral": [
-      "manufactured",
-      "artificial",
-      "synthetic",
-      "machine-made"
-    ],
-    "male": [
-      "manmade"
-    ],
-    "type": "or",
-    "id": 14
-  },
-  {
-    "neutral": [
-      "dynamo"
-    ],
-    "male": [
-      "man of action"
-    ],
-    "type": "or",
-    "id": 15
-  },
-  {
-    "neutral": [
-      "scholar",
-      "writer",
-      "literary figure"
-    ],
-    "male": [
-      "man of letters"
-    ],
-    "type": "or",
-    "id": 16
-  },
-  {
-    "neutral": [
-      "sophisticate"
-    ],
-    "male": [
-      "man of the world"
-    ],
-    "type": "or",
-    "id": 17
-  },
-  {
-    "neutral": [
-      "staff hours",
-      "hours of work"
-    ],
-    "male": [
-      "manhour, man hour"
-    ],
-    "type": "or",
-    "id": 18
-  },
-  {
-    "neutral": [
-      "native land"
-    ],
-    "female": [
-      "motherland"
-    ],
-    "male": [
-      "fatherland"
-    ],
-    "type": "or",
-    "id": 19
-  },
-  {
-    "neutral": [
-      "native tongue",
-      "native language"
-    ],
-    "female": [
-      "mother tongue"
-    ],
-    "male": [
-      "father tongue"
-    ],
-    "type": "or",
-    "id": 20
-  },
-  {
-    "neutral": [
-      "camaraderie"
-    ],
-    "male": [
-      "fellowship"
-    ],
-    "type": "or",
-    "id": 21
-  },
-  {
-    "neutral": [
-      "first-year student",
-      "fresher"
-    ],
-    "male": [
-      "freshman",
-      "freshwoman"
-    ],
-    "type": "or",
-    "id": 22
-  },
-  {
-    "neutral": [
-      "first-year students",
-      "freshers"
-    ],
-    "female": [
-      "freshwomen"
-    ],
-    "male": [
-      "freshmen"
-    ],
-    "type": "or",
-    "id": 23
-  },
-  {
-    "neutral": [
-      "garbage collector",
-      "waste collector",
-      "trash collector"
-    ],
-    "female": [
-      "garbagewoman"
-    ],
-    "male": [
-      "garbageman"
-    ],
-    "type": "or",
-    "id": 24
-  },
-  {
-    "neutral": [
-      "garbage collectors",
-      "waste collectors",
-      "trash collectors"
-    ],
-    "female": [
-      "garbagewomen"
-    ],
-    "male": [
-      "garbagemen"
-    ],
-    "type": "or",
-    "id": 25
-  },
-  {
-    "neutral": [
-      "chair",
-      "chairperson",
-      "coordinator"
-    ],
-    "female": [
-      "chairwoman"
-    ],
-    "male": [
-      "chairman"
-    ],
-    "type": "or",
-    "id": 26
-  },
-  {
-    "neutral": [
-      "committee member"
-    ],
-    "female": [
-      "committee woman"
-    ],
-    "male": [
-      "committee man"
-    ],
-    "type": "or",
-    "id": 27
-  },
-  {
-    "neutral": [
-      "cowhand"
-    ],
-    "female": [
-      "cowgirl"
-    ],
-    "male": [
-      "cowboy"
-    ],
-    "type": "or",
-    "id": 28
-  },
-  {
-    "neutral": [
-      "cowhands"
-    ],
-    "female": [
-      "cowgirls"
-    ],
-    "male": [
-      "cowboys"
-    ],
-    "type": "or",
-    "id": 29
-  },
-  {
-    "neutral": [
-      "cattle rancher"
-    ],
-    "female": [
-      "cattlewoman"
-    ],
-    "male": [
-      "cattleman"
-    ],
-    "type": "or",
-    "id": 30
-  },
-  {
-    "neutral": [
-      "cattle ranchers"
-    ],
-    "female": [
-      "cattlewomen"
-    ],
-    "male": [
-      "cattlemen"
-    ],
-    "type": "or",
-    "id": 31
-  },
-  {
-    "neutral": [
-      "chairs",
-      "chairpersons",
-      "coordinators"
-    ],
-    "female": [
-      "chairwomen"
-    ],
-    "male": [
-      "chairmen"
-    ],
-    "type": "or",
-    "id": 32
-  },
-  {
-    "neutral": [
-      "mail carrier",
-      "letter carrier",
-      "postal worker"
-    ],
-    "female": [
-      "postwoman",
-      "mailwoman"
-    ],
-    "male": [
-      "postman",
-      "mailman"
-    ],
-    "type": "or",
-    "id": 33
-  },
-  {
-    "neutral": [
-      "mail carriers",
-      "letter carriers",
-      "postal workers"
-    ],
-    "female": [
-      "postwomen",
-      "mailwomen"
-    ],
-    "male": [
-      "postmen",
-      "mailmen"
-    ],
-    "type": "or",
-    "id": 34
-  },
-  {
-    "neutral": [
-      "officer",
-      "police officer"
-    ],
-    "female": [
-      "policewoman"
-    ],
-    "male": [
-      "policeman"
-    ],
-    "type": "or",
-    "id": 35
-  },
-  {
-    "neutral": [
-      "officers",
-      "police officers"
-    ],
-    "female": [
-      "policewomen"
-    ],
-    "male": [
-      "policemen"
-    ],
-    "type": "or",
-    "id": 36
-  },
-  {
-    "neutral": [
-      "flight attendant"
-    ],
-    "female": [
-      "stewardess"
-    ],
-    "male": [
-      "steward"
-    ],
-    "type": "or",
-    "id": 37
-  },
-  {
-    "neutral": [
-      "flight attendants"
-    ],
-    "female": [
-      "stewardesses"
-    ],
-    "male": [
-      "stewards"
-    ],
-    "type": "or",
-    "id": 38
-  },
-  {
-    "neutral": [
-      "member of congress",
-      "congress person",
-      "legislator",
-      "representative"
-    ],
-    "female": [
-      "congresswoman"
-    ],
-    "male": [
-      "congressman"
-    ],
-    "type": "or",
-    "id": 39
-  },
-  {
-    "neutral": [
-      "member of congresss",
-      "congress persons",
-      "legislators",
-      "representatives"
-    ],
-    "female": [
-      "congresswomen"
-    ],
-    "male": [
-      "congressmen"
-    ],
-    "type": "or",
-    "id": 40
-  },
-  {
-    "neutral": [
-      "fire fighter"
-    ],
-    "female": [
-      "firewoman"
-    ],
-    "male": [
-      "fireman"
-    ],
-    "type": "or",
-    "id": 41
-  },
-  {
-    "neutral": [
-      "fire fighters"
-    ],
-    "female": [
-      "firewomen"
-    ],
-    "male": [
-      "firemen"
-    ],
-    "type": "or",
-    "id": 42
-  },
-  {
-    "neutral": [
-      "fisher",
-      "crew member"
-    ],
-    "female": [
-      "fisherwoman"
-    ],
-    "male": [
-      "fisherman"
-    ],
-    "type": "or",
-    "id": 43
-  },
-  {
-    "neutral": [
-      "fishers"
-    ],
-    "female": [
-      "fisherwomen"
-    ],
-    "male": [
-      "fishermen"
-    ],
-    "type": "or",
-    "id": 44
-  },
-  {
-    "neutral": [
-      "kinship",
-      "community"
-    ],
-    "female": [
-      "sisterhood"
-    ],
-    "male": [
-      "brotherhood"
-    ],
-    "type": "or",
-    "id": 45
-  },
-  {
-    "neutral": [
-      "common person",
-      "average person"
-    ],
-    "female": [
-      "common girl"
-    ],
-    "male": [
-      "common man"
-    ],
-    "type": "or",
-    "id": 46
-  },
-  {
-    "neutral": [
-      "business executive",
-      "entrepreneur",
-      "business person",
-      "professional"
-    ],
-    "female": [
-      "businesswoman",
-      "salarywoman"
-    ],
-    "male": [
-      "businessman",
-      "salaryman"
-    ],
-    "type": "or",
-    "id": 47
-  },
-  {
-    "neutral": [
-      "business executives",
-      "entrepreneurs"
-    ],
-    "female": [
-      "businesswomen",
-      "salarywomen",
-      "career girl",
-      "career woman"
-    ],
-    "male": [
-      "businessmen",
-      "salarymen"
-    ],
-    "type": "or",
-    "id": 48
-  },
-  {
-    "neutral": [
-      "cleaner"
-    ],
-    "female": [
-      "cleaning lady",
-      "cleaning girl",
-      "cleaning woman",
-      "janitress"
-    ],
-    "male": [
-      "cleaning man",
-      "cleaning boy",
-      "janitor"
-    ],
-    "type": "or",
-    "id": 49
-  },
-  {
-    "neutral": [
-      "cleaners"
-    ],
-    "female": [
-      "cleaning ladies",
-      "cleaning girls",
-      "janitresses"
-    ],
-    "male": [
-      "cleaning men",
-      "janitors"
-    ],
-    "type": "or",
-    "id": 50
-  },
-  {
-    "neutral": [
-      "courier",
-      "messenger"
-    ],
-    "female": [
-      "delivery girl"
-    ],
-    "male": [
-      "delivery boy"
-    ],
-    "type": "or",
-    "id": 51
-  },
-  {
-    "neutral": [
-      "supervisor",
-      "shift boss"
-    ],
-    "female": [
-      "forewoman"
-    ],
-    "male": [
-      "foreman"
-    ],
-    "type": "or",
-    "id": 52
-  },
-  {
-    "neutral": [
-      "lead",
-      "front",
-      "figurehead"
-    ],
-    "female": [
-      "frontwoman, front woman"
-    ],
-    "male": [
-      "frontman, front man"
-    ],
-    "type": "or",
-    "id": 53
-  },
-  {
-    "neutral": [
-      "figureheads"
-    ],
-    "female": [
-      "front women, frontwomen"
-    ],
-    "male": [
-      "front men, frontmen"
-    ],
-    "type": "or",
-    "id": 54
-  },
-  {
-    "neutral": [
-      "supervisors",
-      "shift bosses"
-    ],
-    "female": [
-      "forewomen"
-    ],
-    "male": [
-      "foremen"
-    ],
-    "type": "or",
-    "id": 55
-  },
-  {
-    "neutral": [
-      "insurance agent"
-    ],
-    "female": [
-      "insurance woman"
-    ],
-    "male": [
-      "insurance man"
-    ],
-    "type": "or",
-    "id": 56
-  },
-  {
-    "neutral": [
-      "insurance agents"
-    ],
-    "female": [
-      "insurance women"
-    ],
-    "male": [
-      "insurance men"
-    ],
-    "type": "or",
-    "id": 57
-  },
-  {
-    "neutral": [
-      "proprietor",
-      "building manager"
-    ],
-    "female": [
-      "landlady"
-    ],
-    "male": [
-      "landlord"
-    ],
-    "type": "or",
-    "id": 58
-  },
-  {
-    "neutral": [
-      "proprietors",
-      "building managers"
-    ],
-    "female": [
-      "landladies"
-    ],
-    "male": [
-      "landlords"
-    ],
-    "type": "or",
-    "id": 59
-  },
-  {
-    "neutral": [
-      "graduate"
-    ],
-    "female": [
-      "alumna"
-    ],
-    "male": [
-      "alumnus"
-    ],
-    "type": "or",
-    "id": 60
-  },
-  {
-    "neutral": [
-      "graduates"
-    ],
-    "female": [
-      "alumnae"
-    ],
-    "male": [
-      "alumni"
-    ],
-    "type": "or",
-    "id": 61
-  },
-  {
-    "neutral": [
-      "anchor",
-      "journalist"
-    ],
-    "female": [
-      "newswoman",
-      "newspaperwoman",
-      "anchorwoman"
-    ],
-    "male": [
-      "newsman",
-      "newspaperman",
-      "anchorman"
-    ],
-    "type": "or",
-    "id": 62
-  },
-  {
-    "neutral": [
-      "anchors",
-      "journalists"
-    ],
-    "female": [
-      "newswomen",
-      "newspaperwomen",
-      "anchorwomen"
-    ],
-    "male": [
-      "newsmen",
-      "newspapermen",
-      "anchormen"
-    ],
-    "type": "or",
-    "id": 63
-  },
-  {
-    "neutral": [
-      "repairer",
-      "technician"
-    ],
-    "female": [
-      "repairwoman"
-    ],
-    "male": [
-      "repairman"
-    ],
-    "type": "or",
-    "id": 64
-  },
-  {
-    "neutral": [
-      "technicians"
-    ],
-    "female": [
-      "repairwomen"
-    ],
-    "male": [
-      "repairmen"
-    ],
-    "type": "or",
-    "id": 65
-  },
-  {
-    "neutral": [
-      "salesperson",
-      "sales clerk",
-      "sales rep",
-      "sales agent",
-      "seller"
-    ],
-    "female": [
-      "saleswoman",
-      "sales woman",
-      "saleslady"
-    ],
-    "male": [
-      "salesman",
-      "sales man"
-    ],
-    "type": "or",
-    "id": 66
-  },
-  {
-    "neutral": [
-      "sales clerks",
-      "sales reps",
-      "sales agents",
-      "sellers"
-    ],
-    "female": [
-      "saleswomen",
-      "sales women",
-      "salesladies"
-    ],
-    "male": [
-      "salesmen",
-      "sales men"
-    ],
-    "type": "or",
-    "id": 67
-  },
-  {
-    "neutral": [
-      "soldier",
-      "service representative"
-    ],
-    "female": [
-      "servicewoman"
-    ],
-    "male": [
-      "serviceman"
-    ],
-    "type": "or",
-    "id": 68
-  },
-  {
-    "neutral": [
-      "soldiers",
-      "service representatives"
-    ],
-    "female": [
-      "servicewomen"
-    ],
-    "male": [
-      "servicemen"
-    ],
-    "type": "or",
-    "id": 69
-  },
-  {
-    "neutral": [
-      "server"
-    ],
-    "female": [
-      "waitress"
-    ],
-    "male": [
-      "waiter"
-    ],
-    "type": "or",
-    "id": 70
-  },
-  {
-    "neutral": [
-      "servers"
-    ],
-    "female": [
-      "waitresses"
-    ],
-    "male": [
-      "waiters"
-    ],
-    "type": "or",
-    "id": 71
-  },
-  {
-    "neutral": [
-      "worker",
-      "wage earner",
-      "taxpayer"
-    ],
-    "female": [
-      "workwoman",
-      "working woman"
-    ],
-    "male": [
-      "workman",
-      "working man"
-    ],
-    "type": "or",
-    "id": 72
-  },
-  {
-    "neutral": [
-      "quality construction",
-      "expertise"
-    ],
-    "male": [
-      "workmanship"
-    ],
-    "type": "or",
-    "id": 73
-  },
-  {
-    "neutral": [
-      "workers"
-    ],
-    "female": [
-      "workwomen"
-    ],
-    "male": [
-      "workmen"
-    ],
-    "type": "or",
-    "id": 74
-  },
-  {
-    "neutral": [
-      "performer",
-      "star",
-      "artist"
-    ],
-    "female": [
-      "actress"
-    ],
-    "male": [
-      "actor"
-    ],
-    "type": "or",
-    "id": 75
-  },
-  {
-    "neutral": [
-      "performers",
-      "stars",
-      "artists"
-    ],
-    "female": [
-      "actresses"
-    ],
-    "male": [
-      "actors"
-    ],
-    "type": "or",
-    "id": 76
-  },
-  {
-    "neutral": [
-      "pilot",
-      "aviator",
-      "airstaff"
-    ],
-    "female": [
-      "aircrewwoman",
-      "aircrew woman"
-    ],
-    "male": [
-      "aircrewman",
-      "airman"
-    ],
-    "type": "or",
-    "id": 77
-  },
-  {
-    "neutral": [
-      "pilots",
-      "aviators",
-      "airstaff"
-    ],
-    "female": [
-      "aircrewwomen",
-      "aircrew women"
-    ],
-    "male": [
-      "aircrewmen",
-      "airmen"
-    ],
-    "type": "or",
-    "id": 78
-  },
-  {
-    "neutral": [
-      "cabinet member"
-    ],
-    "female": [
-      "alderwoman"
-    ],
-    "male": [
-      "alderman"
-    ],
-    "type": "or",
-    "id": 79
-  },
-  {
-    "neutral": [
-      "cabinet",
-      "cabinet members"
-    ],
-    "female": [
-      "alderwomen"
-    ],
-    "male": [
-      "aldermen"
-    ],
-    "type": "or",
-    "id": 80
-  },
-  {
-    "neutral": [
-      "assembly person",
-      "assembly worker"
-    ],
-    "female": [
-      "assemblywoman"
-    ],
-    "male": [
-      "assemblyman"
-    ],
-    "type": "or",
-    "id": 81
-  },
-  {
-    "neutral": [
-      "relative"
-    ],
-    "female": [
-      "kinswoman",
-      "aunt"
-    ],
-    "male": [
-      "kinsman",
-      "uncle"
-    ],
-    "type": "or",
-    "id": 82
-  },
-  {
-    "neutral": [
-      "relatives"
-    ],
-    "female": [
-      "kinswomen",
-      "aunts"
-    ],
-    "male": [
-      "kinsmen",
-      "uncles"
-    ],
-    "type": "or",
-    "id": 83
-  },
-  {
-    "neutral": [
-      "klansperson"
-    ],
-    "female": [
-      "klanswoman"
-    ],
-    "male": [
-      "klansman"
-    ],
-    "type": "or",
-    "id": 84
-  },
-  {
-    "neutral": [
-      "clansperson",
-      "clan member"
-    ],
-    "female": [
-      "clanswoman"
-    ],
-    "male": [
-      "clansman"
-    ],
-    "type": "or",
-    "id": 85
-  },
-  {
-    "neutral": [
-      "klan",
-      "klanspersons"
-    ],
-    "female": [
-      "klanswomen"
-    ],
-    "male": [
-      "klansmen"
-    ],
-    "type": "or",
-    "id": 86
-  },
-  {
-    "neutral": [
-      "boogey"
-    ],
-    "female": [
-      "boogeywoman"
-    ],
-    "male": [
-      "boogeyman"
-    ],
-    "type": "or",
-    "id": 87
-  },
-  {
-    "neutral": [
-      "boogie"
-    ],
-    "female": [
-      "boogiewoman"
-    ],
-    "male": [
-      "boogieman"
-    ],
-    "type": "or",
-    "id": 88
-  },
-  {
-    "neutral": [
-      "bogey"
-    ],
-    "female": [
-      "bogeywoman"
-    ],
-    "male": [
-      "bogeyman"
-    ],
-    "type": "or",
-    "id": 89
-  },
-  {
-    "neutral": [
-      "bogie"
-    ],
-    "female": [
-      "bogiewoman"
-    ],
-    "male": [
-      "bogieman"
-    ],
-    "type": "or",
-    "id": 90
-  },
-  {
-    "neutral": [
-      "boogies"
-    ],
-    "female": [
-      "boogiewomen"
-    ],
-    "male": [
-      "boogiemen"
-    ],
-    "type": "or",
-    "id": 91
-  },
-  {
-    "neutral": [
-      "bogies"
-    ],
-    "female": [
-      "bogiewomen"
-    ],
-    "male": [
-      "bogiemen"
-    ],
-    "type": "or",
-    "id": 92
-  },
-  {
-    "neutral": [
-      "bonder"
-    ],
-    "female": [
-      "bondswoman"
-    ],
-    "male": [
-      "bondsman"
-    ],
-    "type": "or",
-    "id": 93
-  },
-  {
-    "neutral": [
-      "bonders"
-    ],
-    "female": [
-      "bondswomen"
-    ],
-    "male": [
-      "bondsmen"
-    ],
-    "type": "or",
-    "id": 94
-  },
-  {
-    "neutral": [
-      "homemaker"
-    ],
-    "female": [
-      "housewife"
-    ],
-    "type": "or",
-    "id": 95
-  },
-  {
-    "neutral": [
-      "partner",
-      "significant other",
-      "spouse"
-    ],
-    "female": [
-      "wife"
-    ],
-    "male": [
-      "husband"
-    ],
-    "type": "or",
-    "id": 96
-  },
-  {
-    "neutral": [
-      "partners",
-      "significant others",
-      "spouses"
-    ],
-    "female": [
-      "wives"
-    ],
-    "male": [
-      "husbands"
-    ],
-    "type": "or",
-    "id": 97
-  },
-  {
-    "neutral": [
-      "partner",
-      "friend",
-      "significant other"
-    ],
-    "female": [
-      "girlfriend"
-    ],
-    "male": [
-      "boyfriend"
-    ],
-    "type": "or",
-    "id": 98
-  },
-  {
-    "neutral": [
-      "partners",
-      "friends",
-      "significant others"
-    ],
-    "female": [
-      "girlfriends"
-    ],
-    "male": [
-      "boyfriends"
-    ],
-    "type": "or",
-    "id": 99
-  },
-  {
-    "neutral": [
-      "childhood"
-    ],
-    "female": [
-      "girlhood"
-    ],
-    "male": [
-      "boyhood"
-    ],
-    "type": "or",
-    "id": 100
-  },
-  {
-    "neutral": [
-      "childish"
-    ],
-    "female": [
-      "girly",
-      "girlish"
-    ],
-    "male": [
-      "boyish"
-    ],
-    "type": "or",
-    "id": 101
-  },
-  {
-    "neutral": [
-      "traveler"
-    ],
-    "female": [
-      "journeywoman"
-    ],
-    "male": [
-      "journeyman"
-    ],
-    "type": "or",
-    "id": 102
-  },
-  {
-    "neutral": [
-      "travelers"
-    ],
-    "female": [
-      "journeywomen"
-    ],
-    "male": [
-      "journeymen"
-    ],
-    "type": "or",
-    "id": 103
-  },
-  {
-    "neutral": [
-      "godparent",
-      "elder",
-      "patron"
-    ],
-    "female": [
-      "godmother",
-      "patroness"
-    ],
-    "male": [
-      "godfather"
-    ],
-    "type": "or",
-    "id": 104
-  },
-  {
-    "neutral": [
-      "grandchild"
-    ],
-    "female": [
-      "granddaughter"
-    ],
-    "male": [
-      "grandson"
-    ],
-    "type": "or",
-    "id": 105
-  },
-  {
-    "neutral": [
-      "grandchildred"
-    ],
-    "female": [
-      "granddaughters"
-    ],
-    "male": [
-      "grandsons"
-    ],
-    "type": "or",
-    "id": 106
-  },
-  {
-    "neutral": [
-      "ancestor"
-    ],
-    "female": [
-      "foremother"
-    ],
-    "male": [
-      "forefather"
-    ],
-    "type": "or",
-    "id": 107
-  },
-  {
-    "neutral": [
-      "ancestors"
-    ],
-    "female": [
-      "foremothers"
-    ],
-    "male": [
-      "forefathers"
-    ],
-    "type": "or",
-    "id": 108
-  },
-  {
-    "neutral": [
-      "grandparent",
-      "ancestor"
-    ],
-    "female": [
-      "granny",
-      "grandma",
-      "grandmother"
-    ],
-    "male": [
-      "grandpappy",
-      "granddaddy",
-      "gramps",
-      "grandpa",
-      "grandfather"
-    ],
-    "type": "or",
-    "id": 109
-  },
-  {
-    "neutral": [
-      "grandparents",
-      "ancestors"
-    ],
-    "female": [
-      "grandmothers"
-    ],
-    "male": [
-      "grandfathers"
-    ],
-    "type": "or",
-    "id": 110
-  },
-  {
-    "neutral": [
-      "spouse"
-    ],
-    "female": [
-      "bride"
-    ],
-    "male": [
-      "groom"
-    ],
-    "type": "or",
-    "id": 111
-  },
-  {
-    "neutral": [
-      "sibling"
-    ],
-    "female": [
-      "sister"
-    ],
-    "male": [
-      "brother"
-    ],
-    "type": "or",
-    "id": 112
-  },
-  {
-    "neutral": [
-      "siblings"
-    ],
-    "female": [
-      "sisters"
-    ],
-    "male": [
-      "brothers"
-    ],
-    "type": "or",
-    "id": 113
-  },
-  {
-    "neutral": [
-      "camera operator",
-      "camera person"
-    ],
-    "female": [
-      "camerawoman"
-    ],
-    "male": [
-      "cameraman"
-    ],
-    "type": "or",
-    "id": 114
-  },
-  {
-    "neutral": [
-      "camera operators"
-    ],
-    "female": [
-      "camerawomen"
-    ],
-    "male": [
-      "cameramen"
-    ],
-    "type": "or",
-    "id": 115
-  },
-  {
-    "neutral": [
-      "troglodyte",
-      "hominidae"
-    ],
-    "female": [
-      "cavewoman"
-    ],
-    "male": [
-      "caveman"
-    ],
-    "type": "or",
-    "id": 116
-  },
-  {
-    "neutral": [
-      "troglodytae",
-      "troglodyti",
-      "troglodytes",
-      "hominids"
-    ],
-    "female": [
-      "cavewomen"
-    ],
-    "male": [
-      "cavemen"
-    ],
-    "type": "or",
-    "id": 117
-  },
-  {
-    "neutral": [
-      "clergyperson",
-      "clergy",
-      "cleric"
-    ],
-    "female": [
-      "clergywomen"
-    ],
-    "male": [
-      "clergyman"
-    ],
-    "type": "or",
-    "id": 118
-  },
-  {
-    "neutral": [
-      "clergies",
-      "clerics"
-    ],
-    "female": [
-      "clergywomen"
-    ],
-    "male": [
-      "clergymen"
-    ],
-    "type": "or",
-    "id": 119
-  },
-  {
-    "neutral": [
-      "council member"
-    ],
-    "female": [
-      "councilwoman"
-    ],
-    "male": [
-      "councilman"
-    ],
-    "type": "or",
-    "id": 120
-  },
-  {
-    "neutral": [
-      "council members"
-    ],
-    "female": [
-      "councilwomen"
-    ],
-    "male": [
-      "councilmen"
-    ],
-    "type": "or",
-    "id": 121
-  },
-  {
-    "neutral": [
-      "country person"
-    ],
-    "female": [
-      "countrywoman"
-    ],
-    "male": [
-      "countryman"
-    ],
-    "type": "or",
-    "id": 122
-  },
-  {
-    "neutral": [
-      "country folk"
-    ],
-    "female": [
-      "countrywomen"
-    ],
-    "male": [
-      "countrymen"
-    ],
-    "type": "or",
-    "id": 123
-  },
-  {
-    "neutral": [
-      "artisan",
-      "craftsperson",
-      "skilled worker"
-    ],
-    "female": [
-      "handywoman",
-      "craftswoman"
-    ],
-    "male": [
-      "handyman",
-      "craftsman"
-    ],
-    "type": "or",
-    "id": 124
-  },
-  {
-    "neutral": [
-      "presenter"
-    ],
-    "female": [
-      "hostess"
-    ],
-    "male": [
-      "host"
-    ],
-    "type": "or",
-    "id": 125
-  },
-  {
-    "neutral": [
-      "presenters"
-    ],
-    "female": [
-      "hostesses"
-    ],
-    "male": [
-      "hosts"
-    ],
-    "type": "or",
-    "id": 126
-  },
-  {
-    "neutral": [
-      "artisans",
-      "craftspersons",
-      "skilled workers"
-    ],
-    "female": [
-      "handywomen",
-      "craftswomen"
-    ],
-    "male": [
-      "handymen",
-      "craftsmen"
-    ],
-    "type": "or",
-    "id": 127
-  },
-  {
-    "neutral": [
-      "guillotine"
-    ],
-    "female": [
-      "hangwoman"
-    ],
-    "male": [
-      "hangman"
-    ],
-    "type": "or",
-    "id": 128
-  },
-  {
-    "neutral": [
-      "guillotines"
-    ],
-    "female": [
-      "hangwomen"
-    ],
-    "male": [
-      "hangmen"
-    ],
-    "type": "or",
-    "id": 129
-  },
-  {
-    "neutral": [
-      "sidekick"
-    ],
-    "female": [
-      "henchwoman"
-    ],
-    "male": [
-      "henchman"
-    ],
-    "type": "or",
-    "id": 130
-  },
-  {
-    "neutral": [
-      "sidekicks"
-    ],
-    "female": [
-      "henchwomen"
-    ],
-    "male": [
-      "henchmen"
-    ],
-    "type": "or",
-    "id": 131
-  },
-  {
-    "neutral": [
-      "role-model"
-    ],
-    "female": [
-      "heroine"
-    ],
-    "male": [
-      "hero"
-    ],
-    "type": "or",
-    "id": 132
-  },
-  {
-    "neutral": [
-      "role-models"
-    ],
-    "female": [
-      "heroines"
-    ],
-    "male": [
-      "heroes"
-    ],
-    "type": "or",
-    "id": 133
-  },
-  {
-    "neutral": [
-      "parental",
-      "warm",
-      "intimate"
-    ],
-    "female": [
-      "maternal"
-    ],
-    "male": [
-      "paternal",
-      "fraternal"
-    ],
-    "type": "or",
-    "id": 134
-  },
-  {
-    "neutral": [
-      "parental"
-    ],
-    "female": [
-      "maternity"
-    ],
-    "male": [
-      "paternity"
-    ],
-    "type": "or",
-    "id": 135
-  },
-  {
-    "neutral": [
-      "parents"
-    ],
-    "female": [
-      "mamas",
-      "mothers",
-      "moms",
-      "mums",
-      "mommas",
-      "mommies"
-    ],
-    "male": [
-      "papas",
-      "fathers",
-      "dads",
-      "daddies"
-    ],
-    "type": "or",
-    "id": 136
-  },
-  {
-    "neutral": [
-      "parent"
-    ],
-    "female": [
-      "mama",
-      "mother",
-      "mom",
-      "mum",
-      "momma",
-      "mommy"
-    ],
-    "male": [
-      "papa",
-      "father",
-      "dad",
-      "pop",
-      "daddy"
-    ],
-    "type": "or",
-    "id": 137
-  },
-  {
-    "neutral": [
-      "loving",
-      "warm",
-      "nurturing"
-    ],
-    "female": [
-      "motherly"
-    ],
-    "type": "or",
-    "id": 138
-  },
-  {
-    "neutral": [
-      "child"
-    ],
-    "female": [
-      "daughter"
-    ],
-    "male": [
-      "son"
-    ],
-    "type": "or",
-    "id": 139
-  },
-  {
-    "neutral": [
-      "children"
-    ],
-    "female": [
-      "daughters"
-    ],
-    "male": [
-      "sons"
-    ],
-    "type": "or",
-    "id": 140
-  },
-  {
-    "neutral": [
-      "convierge"
-    ],
-    "female": [
-      "doorwoman"
-    ],
-    "male": [
-      "doorman"
-    ],
-    "type": "or",
-    "id": 141
-  },
-  {
-    "neutral": [
-      "convierges"
-    ],
-    "female": [
-      "doorwomen"
-    ],
-    "male": [
-      "doormen"
-    ],
-    "type": "or",
-    "id": 142
-  },
-  {
-    "neutral": [
-      "humanly",
-      "mature"
-    ],
-    "female": [
-      "feminin"
-    ],
-    "male": [
-      "dudely",
-      "manly"
-    ],
-    "type": "or",
-    "id": 143
-  },
-  {
-    "neutral": [
-      "human resources"
-    ],
-    "male": [
-      "manpower"
-    ],
-    "type": "or",
-    "id": 144
-  },
-  {
-    "neutral": [
-      "human"
-    ],
-    "female": [
-      "female"
-    ],
-    "male": [
-      "male"
-    ],
-    "type": "or",
-    "id": 145
-  },
-  {
-    "neutral": [
-      "humans"
-    ],
-    "female": [
-      "females"
-    ],
-    "male": [
-      "males"
-    ],
-    "type": "or",
-    "id": 146
-  },
-  {
-    "neutral": [
-      "ruler"
-    ],
-    "female": [
-      "empress",
-      "queen"
-    ],
-    "male": [
-      "emperor",
-      "king"
-    ],
-    "type": "or",
-    "id": 147
-  },
-  {
-    "neutral": [
-      "rulers"
-    ],
-    "female": [
-      "empresses",
-      "queens"
-    ],
-    "male": [
-      "emperors",
-      "kings"
-    ],
-    "type": "or",
-    "id": 148
-  },
-  {
-    "neutral": [
-      "jumbo",
-      "gigantic"
-    ],
-    "female": [
-      "queen-size"
-    ],
-    "male": [
-      "king-size"
-    ],
-    "type": "or",
-    "id": 149
-  },
-  {
-    "neutral": [
-      "power behind the throne"
-    ],
-    "female": [
-      "queenmaker"
-    ],
-    "male": [
-      "kingmaker"
-    ],
-    "type": "or",
-    "id": 150
-  },
-  {
-    "neutral": [
-      "civilian"
-    ],
-    "female": [
-      "laywoman"
-    ],
-    "male": [
-      "layman"
-    ],
-    "type": "or",
-    "id": 151
-  },
-  {
-    "neutral": [
-      "civilians"
-    ],
-    "female": [
-      "laywomen"
-    ],
-    "male": [
-      "laymen"
-    ],
-    "type": "or",
-    "id": 152
-  },
-  {
-    "neutral": [
-      "emcee",
-      "moderator",
-      "convenor"
-    ],
-    "male": [
-      "master of ceremonies"
-    ],
-    "type": "or",
-    "id": 153
-  },
-  {
-    "neutral": [
-      "skilled",
-      "authoritative",
-      "commanding"
-    ],
-    "male": [
-      "masterful"
-    ],
-    "type": "or",
-    "id": 154
-  },
-  {
-    "neutral": [
-      "genius",
-      "creator",
-      "instigator",
-      "oversee",
-      "launch",
-      "originate"
-    ],
-    "male": [
-      "mastermind"
-    ],
-    "type": "or",
-    "id": 155
-  },
-  {
-    "neutral": [
-      "work of genius",
-      "chef d’oeuvre"
-    ],
-    "male": [
-      "masterpiece"
-    ],
-    "type": "or",
-    "id": 156
-  },
-  {
-    "neutral": [
-      "vision",
-      "comprehensive plan"
-    ],
-    "male": [
-      "masterplan"
-    ],
-    "type": "or",
-    "id": 157
-  },
-  {
-    "neutral": [
-      "trump card",
-      "stroke of genius"
-    ],
-    "male": [
-      "masterstroke"
-    ],
-    "type": "or",
-    "id": 158
-  },
-  {
-    "neutral": [
-      "official",
-      "owner",
-      "expert",
-      "superior",
-      "chief",
-      "ruler"
-    ],
-    "female": [
-      "dame"
-    ],
-    "male": [
-      "lord"
-    ],
-    "type": "or",
-    "id": 159
-  },
-  {
-    "neutral": [
-      "officials",
-      "masters",
-      "chiefs",
-      "rulers"
-    ],
-    "female": [
-      "dames"
-    ],
-    "male": [
-      "lords"
-    ],
-    "type": "or",
-    "id": 160
-  },
-  {
-    "neutral": [
-      "sociopath"
-    ],
-    "male": [
-      "madman",
-      "mad man"
-    ],
-    "type": "or",
-    "id": 161
-  },
-  {
-    "neutral": [
-      "sociopaths"
-    ],
-    "male": [
-      "madmen",
-      "mad men"
-    ],
-    "type": "or",
-    "id": 162
-  },
-  {
-    "neutral": [
-      "humankind"
-    ],
-    "male": [
-      "mankind"
-    ],
-    "type": "or",
-    "id": 163
-  },
-  {
-    "neutral": [
-      "adulthood",
-      "personhood"
-    ],
-    "female": [
-      "girlhood"
-    ],
-    "male": [
-      "masculinity",
-      "manhood"
-    ],
-    "type": "or",
-    "id": 164
-  },
-  {
-    "neutral": [
-      "humanity"
-    ],
-    "female": [
-      "femininity"
-    ],
-    "male": [
-      "manliness"
-    ],
-    "type": "or",
-    "id": 165
-  },
-  {
-    "neutral": [
-      "shooter"
-    ],
-    "female": [
-      "markswoman"
-    ],
-    "male": [
-      "marksman"
-    ],
-    "type": "or",
-    "id": 166
-  },
-  {
-    "neutral": [
-      "shooters"
-    ],
-    "female": [
-      "markswomen"
-    ],
-    "male": [
-      "marksmen"
-    ],
-    "type": "or",
-    "id": 167
-  },
-  {
-    "neutral": [
-      "intermediary",
-      "go-between"
-    ],
-    "female": [
-      "middlewoman"
-    ],
-    "male": [
-      "middleman"
-    ],
-    "type": "or",
-    "id": 168
-  },
-  {
-    "neutral": [
-      "intermediaries",
-      "go-betweens"
-    ],
-    "female": [
-      "middlewomen"
-    ],
-    "male": [
-      "middlemen"
-    ],
-    "type": "or",
-    "id": 169
-  },
-  {
-    "neutral": [
-      "milk person"
-    ],
-    "female": [
-      "milkwomen"
-    ],
-    "male": [
-      "milkman"
-    ],
-    "type": "or",
-    "id": 170
-  },
-  {
-    "neutral": [
-      "milk people"
-    ],
-    "female": [
-      "milkwomen"
-    ],
-    "male": [
-      "milkmen"
-    ],
-    "type": "or",
-    "id": 171
-  },
-  {
-    "neutral": [
-      "nibling",
-      "sibling’s child"
-    ],
-    "female": [
-      "niece"
-    ],
-    "male": [
-      "nephew"
-    ],
-    "type": "or",
-    "id": 172
-  },
-  {
-    "neutral": [
-      "niblings",
-      "sibling’s children"
-    ],
-    "female": [
-      "nieces"
-    ],
-    "male": [
-      "nephews"
-    ],
-    "type": "or",
-    "id": 173
-  },
-  {
-    "neutral": [
-      "noble"
-    ],
-    "female": [
-      "noblewoman"
-    ],
-    "male": [
-      "nobleman"
-    ],
-    "type": "or",
-    "id": 174
-  },
-  {
-    "neutral": [
-      "nobles"
-    ],
-    "female": [
-      "noblewomen"
-    ],
-    "male": [
-      "noblemen"
-    ],
-    "type": "or",
-    "id": 175
-  },
-  {
-    "neutral": [
-      "notary",
-      "consumer advocate",
-      "trouble shooter"
-    ],
-    "female": [
-      "ombudswoman"
-    ],
-    "male": [
-      "ombudsman"
-    ],
-    "type": "or",
-    "id": 176
-  },
-  {
-    "neutral": [
-      "notaries"
-    ],
-    "female": [
-      "ombudswomen"
-    ],
-    "male": [
-      "ombudsmen"
-    ],
-    "type": "or",
-    "id": 177
-  },
-  {
-    "neutral": [
-      "heir"
-    ],
-    "female": [
-      "princess"
-    ],
-    "male": [
-      "prince"
-    ],
-    "type": "or",
-    "id": 178
-  },
-  {
-    "neutral": [
-      "heirs"
-    ],
-    "female": [
-      "princesses"
-    ],
-    "male": [
-      "princes"
-    ],
-    "type": "or",
-    "id": 179
-  },
-  {
-    "neutral": [
-      "fairy"
-    ],
-    "female": [
-      "sandwoman"
-    ],
-    "male": [
-      "sandman"
-    ],
-    "type": "or",
-    "id": 180
-  },
-  {
-    "neutral": [
-      "fairies"
-    ],
-    "female": [
-      "sandwomen"
-    ],
-    "male": [
-      "sandmen"
-    ],
-    "type": "or",
-    "id": 181
-  },
-  {
-    "neutral": [
-      "promoter"
-    ],
-    "female": [
-      "showwoman"
-    ],
-    "male": [
-      "showman"
-    ],
-    "type": "or",
-    "id": 182
-  },
-  {
-    "neutral": [
-      "promoters"
-    ],
-    "female": [
-      "showwomen",
-      "show women"
-    ],
-    "male": [
-      "showmen"
-    ],
-    "type": "or",
-    "id": 183
-  },
-  {
-    "neutral": [
-      "astronaut"
-    ],
-    "female": [
-      "spacewoman"
-    ],
-    "male": [
-      "spaceman"
-    ],
-    "type": "or",
-    "id": 184
-  },
-  {
-    "neutral": [
-      "astronauts"
-    ],
-    "female": [
-      "spacewomen"
-    ],
-    "male": [
-      "spacemen"
-    ],
-    "type": "or",
-    "id": 185
-  },
-  {
-    "neutral": [
-      "speaker",
-      "spokes person",
-      "representative"
-    ],
-    "female": [
-      "spokeswoman"
-    ],
-    "male": [
-      "spokesman"
-    ],
-    "type": "or",
-    "id": 186
-  },
-  {
-    "neutral": [
-      "speakers"
-    ],
-    "female": [
-      "spokeswomen"
-    ],
-    "male": [
-      "spokesmen"
-    ],
-    "type": "or",
-    "id": 187
-  },
-  {
-    "neutral": [
-      "athlete",
-      "sports person"
-    ],
-    "female": [
-      "sportswoman"
-    ],
-    "male": [
-      "sportsman"
-    ],
-    "type": "or",
-    "id": 188
-  },
-  {
-    "neutral": [
-      "athletes",
-      "sports persons"
-    ],
-    "female": [
-      "sportswomen"
-    ],
-    "male": [
-      "sportsmen"
-    ],
-    "type": "or",
-    "id": 189
-  },
-  {
-    "neutral": [
-      "senator"
-    ],
-    "female": [
-      "stateswoman"
-    ],
-    "male": [
-      "statesman"
-    ],
-    "type": "or",
-    "id": 190
-  },
-  {
-    "neutral": [
-      "step-sibling"
-    ],
-    "female": [
-      "stepsister"
-    ],
-    "male": [
-      "stepbrother"
-    ],
-    "type": "or",
-    "id": 191
-  },
-  {
-    "neutral": [
-      "step-siblings"
-    ],
-    "female": [
-      "stepsisters"
-    ],
-    "male": [
-      "stepbrothers"
-    ],
-    "type": "or",
-    "id": 192
-  },
-  {
-    "neutral": [
-      "step-parent"
-    ],
-    "female": [
-      "stepmom",
-      "stepmother"
-    ],
-    "male": [
-      "stepdad",
-      "stepfather"
-    ],
-    "type": "or",
-    "id": 193
-  },
-  {
-    "neutral": [
-      "step-parents"
-    ],
-    "female": [
-      "stepmothers"
-    ],
-    "male": [
-      "stepfathers"
-    ],
-    "type": "or",
-    "id": 194
-  },
-  {
-    "neutral": [
-      "titan"
-    ],
-    "female": [
-      "superwoman"
-    ],
-    "male": [
-      "superman"
-    ],
-    "type": "or",
-    "id": 195
-  },
-  {
-    "neutral": [
-      "titans"
-    ],
-    "female": [
-      "superwomen"
-    ],
-    "male": [
-      "supermen"
-    ],
-    "type": "or",
-    "id": 196
-  },
-  {
-    "neutral": [
-      "inhumane"
-    ],
-    "female": [
-      "unwomanly",
-      "unwomenly"
-    ],
-    "male": [
-      "unmanly",
-      "unmenly"
-    ],
-    "type": "or",
-    "id": 197
-  },
-  {
-    "neutral": [
-      "watcher"
-    ],
-    "female": [
-      "watchwoman"
-    ],
-    "male": [
-      "watchman"
-    ],
-    "type": "or",
-    "id": 198
-  },
-  {
-    "neutral": [
-      "watchers"
-    ],
-    "female": [
-      "watchwomen"
-    ],
-    "male": [
-      "watchmen"
-    ],
-    "type": "or",
-    "id": 199
-  },
-  {
-    "neutral": [
-      "weather forecaster",
-      "meteorologist"
-    ],
-    "female": [
-      "weatherwoman"
-    ],
-    "male": [
-      "weatherman"
-    ],
-    "type": "or",
-    "id": 200
-  },
-  {
-    "neutral": [
-      "weather forecasters",
-      "meteorologists"
-    ],
-    "female": [
-      "weatherwomen"
-    ],
-    "male": [
-      "weathermen"
-    ],
-    "type": "or",
-    "id": 201
-  },
-  {
-    "neutral": [
-      "bereaved"
-    ],
-    "female": [
-      "widow",
-      "widows"
-    ],
-    "male": [
-      "widower",
-      "widowers"
-    ],
-    "type": "or",
-    "id": 202
-  },
-  {
-    "neutral": [
-      "french"
-    ],
-    "male": [
-      "frenchmen"
-    ],
-    "type": "or",
-    "id": 203
-  },
-  {
-    "considerate": [
-      "person with learning disabilities"
-    ],
-    "inconsiderate": [
-      "learning disabled"
-    ],
-    "type": "or",
-    "id": 204
-  },
-  {
-    "considerate": [
-      "person with disabilities"
-    ],
-    "inconsiderate": [
-      "disabled"
-    ],
-    "type": "or",
-    "id": 205
-  },
-  {
-    "considerate": [
-      "person with mental illness"
-    ],
-    "inconsiderate": [
-      "mentally ill"
-    ],
-    "type": "or",
-    "id": 206
-  },
-  {
-    "considerate": [
-      "person with physical handicaps"
-    ],
-    "inconsiderate": [
-      "handicapped"
-    ],
-    "type": "or",
-    "id": 207
-  },
-  {
-    "considerate": [
-      "person with schizophrenia"
-    ],
-    "inconsiderate": [
-      "schizophrenic"
-    ],
-    "type": "or",
-    "id": 208
-  },
-  {
-    "considerate": [
-      "person with an amputation"
-    ],
-    "inconsiderate": [
-      "amputee"
-    ],
-    "type": "or",
-    "id": 209
-  },
-  {
-    "considerate": [
-      "person with a limp"
-    ],
-    "inconsiderate": [
-      "cripple"
-    ],
-    "type": "or",
-    "id": 210
-  },
-  {
-    "considerate": [
-      "person with Down’s Syndrome"
-    ],
-    "inconsiderate": [
-      "mongoloid"
-    ],
-    "type": "or",
-    "id": 211
-  },
-  {
-    "considerate": [
-      "person with symptoms of mental illness"
-    ],
-    "inconsiderate": [
-      "crazy"
-    ],
-    "type": "or",
-    "id": 212
-  },
-  {
-    "considerate": [
-      "individual who has had a stroke"
-    ],
-    "inconsiderate": [
-      "stroke victim"
-    ],
-    "type": "or",
-    "id": 213
-  },
-  {
-    "considerate": [
-      "person who has multiple sclerosis"
-    ],
-    "inconsiderate": [
-      "suffering from multiple sclerosis"
-    ],
-    "type": "or",
-    "id": 214
-  },
-  {
-    "considerate": [
-      "with family support needs"
-    ],
-    "inconsiderate": [
-      "family burden"
-    ],
-    "type": "or",
-    "id": 215
-  },
-  {
-    "considerate": [
-      "primary",
-      "replica"
-    ],
-    "inconsiderate": [
-      [
-        "master",
-        "masters"
-      ],
-      [
-        "slave",
-        "slaves"
-      ]
-    ],
-    "type": "and",
-    "id": 216
-  }
-]
-
-},{}],70:[function(require,module,exports){
-arguments[4][29][0].apply(exports,arguments)
-},{"dup":29}],71:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer. All rights reserved.
- * @module unist:util:visit
- * @fileoverview Utility to recursively walk over unist nodes.
- */
-
-'use strict';
-
-/**
- * Walk forwards.
- *
- * @param {Array.<*>} values - Things to iterate over,
- *   forwards.
- * @param {function(*, number): boolean} callback - Function
- *   to invoke.
- * @return {boolean} - False if iteration stopped.
- */
-function forwards(values, callback) {
-    var index = -1;
-    var length = values.length;
-
-    while (++index < length) {
-        if (callback(values[index], index) === false) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * Walk backwards.
- *
- * @param {Array.<*>} values - Things to iterate over,
- *   backwards.
- * @param {function(*, number): boolean} callback - Function
- *   to invoke.
- * @return {boolean} - False if iteration stopped.
- */
-function backwards(values, callback) {
-    var index = values.length;
-    var length = -1;
-
-    while (--index > length) {
-        if (callback(values[index], index) === false) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-/**
- * Visit.
- *
- * @param {Node} tree - Root node
- * @param {string} [type] - Node type.
- * @param {function(node): boolean?} callback - Invoked
- *   with each found node.  Can return `false` to stop.
- * @param {boolean} [reverse] - By default, `visit` will
- *   walk forwards, when `reverse` is `true`, `visit`
- *   walks backwards.
- */
-function visit(tree, type, callback, reverse) {
-    var iterate;
-    var one;
-    var all;
-
-    if (typeof type === 'function') {
-        reverse = callback;
-        callback = type;
-        type = null;
-    }
-
-    iterate = reverse ? backwards : forwards;
-
-    /**
-     * Visit `children` in `parent`.
-     */
-    all = function (children, parent) {
-        return iterate(children, function (child, index) {
-            return child && one(child, index, parent);
-        });
-    };
-
-    /**
-     * Visit a single node.
-     */
-    one = function (node, index, parent) {
-        var result;
-
-        index = index || (parent ? 0 : null);
-
-        if (!type || node.type === type) {
-            result = callback(node, index, parent || null);
-        }
-
-        if (node.children && result !== false) {
-            return all(node.children, node);
-        }
-
-        return result;
-    };
-
-    one(tree);
-}
-
-/*
- * Expose.
- */
-
-module.exports = visit;
 
 },{}]},{},[1])(1)
 });

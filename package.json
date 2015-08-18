@@ -73,7 +73,7 @@
     "lint-style": "jscs --reporter inline .",
     "lint": "npm run lint-api && npm run lint-style",
     "make": "npm run lint && npm run test-coverage",
-    "bundle": "browserify index.js --no-builtins -s alex > alex.js",
+    "bundle": "browserify index.js -s alex > alex.js",
     "postbundle": "esmangle alex.js > alex.min.js",
     "build-md": "mdast . --quiet",
     "build": "npm run bundle && npm run build-md"
