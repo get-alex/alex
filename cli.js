@@ -3,6 +3,7 @@
 
 /* eslint-disable no-console */
 
+var bail = require('bail');
 var meow = require('meow');
 var globby = require('globby');
 var getStdin = require('get-stdin');
@@ -18,8 +19,7 @@ var cli = meow({
         '',
         'Examples',
         '  $ echo "His network looks good" | alex',
-        '  $ alex example.txt',
-        '  $ alex readme.md'
+        '  $ alex *.{txt,md}'
     ]
 });
 
@@ -52,12 +52,12 @@ if (expextPipeIn) {
     return;
 }
 
-globby(input, function () {
-    input.forEach(function (filePath) {
+globby(input, function (err, filePaths) {
+    bail(err);
+
+    filePaths.forEach(function (filePath) {
         toFile.read(filePath, function (err, file) {
-            if (err) {
-                throw err;
-            }
+            bail(err);
 
             alex(file);
 
