@@ -62,9 +62,8 @@ npm install alex --global
 Let’s say `example.md` looks as follows:
 
 ```markdown
-All changes are written to the **master server**. The slaves are read-only
-copies of master. When an _incoming message_ is given to the master, he
-propagates through to the slaves.
+The boogeyman wrote all changes to the **master server**. Thus, the slaves
+were read-only copies of master. But not to worry, he was cripple.
 ```
 
 Then, run **alex** on `example.md`:
@@ -77,8 +76,10 @@ Yields:
 
 ```text
 example.md
-  1:34  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead
-  2:70  warning  `he` may be insensitive, use `they`, `it` instead
+   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead
+  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead
+  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead
+  2:59-2:66  warning  `cripple` may be insensitive, use `person with a limp` instead
 ```
 
 See `alex --help` for more information.
@@ -133,7 +134,7 @@ demonstrated in the example above, as it holds the possible violations.
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead.
 
-## Globbing
+## Traversal
 
 ```sh
 alex $(git ls-files | awk '/.(md|txt)$/')
