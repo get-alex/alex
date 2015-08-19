@@ -2,6 +2,5 @@ build/
 components/
 coverage/
 node_modules/
-build.js
 .DS_Store
 *.log
