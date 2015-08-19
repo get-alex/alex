@@ -1,0 +1,15 @@
+{
+  "name": "alex.com",
+  "private": true,
+  "version": "0.0.0",
+  "description": "The alex.com website",
+  "author": "Titus Wormer <tituswormer@gmail.com>",
+  "dependencies": {
+    "duo": "^0.15.0",
+    "duo-babel": "^6.0.0"
+  },
+  "scripts": {
+    "build": "duo --use duo-babel --type js --stdout < index.js > build.js",
+    "prepublish": "npm run build"
+  }
+}
