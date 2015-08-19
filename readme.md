@@ -67,7 +67,7 @@ Let’s say `example.md` looks as follows:
 
 ```markdown
 The boogeyman wrote all changes to the **master server**. Thus, the slaves
-were read-only copies of master. But not to worry, he was cripple.
+were read-only copies of master. But not to worry, he was a cripple.
 ```
 
 Then, run **alex** on `example.md`:
