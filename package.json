@@ -72,7 +72,7 @@
     "test": "npm run test-api",
     "lint-api": "eslint .",
     "lint-style": "jscs --reporter inline .",
-    "lint-text": "node cli.js readme.md CONTRIBUTING.md history.md",
+    "lint-text": "./cli.js *.md !example.md",
     "lint": "npm run lint-api && npm run lint-style && npm run lint-text",
     "make": "npm run lint && npm run test-coverage",
     "bundle": "browserify index.js -s alex > alex.js",
