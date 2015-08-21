@@ -49,7 +49,8 @@
     "retext-equality": "^1.0.0",
     "to-vfile": "^1.0.0",
     "vfile": "^1.1.0",
-    "vfile-reporter": "^1.2.0"
+    "vfile-reporter": "^1.2.0",
+    "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
     "browserify": "^11.0.1",

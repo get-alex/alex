@@ -20,6 +20,7 @@ var bridge = require('mdast-util-to-nlcst');
 var retext = require('retext');
 var parser = require('parse-english');
 var equality = require('retext-equality');
+var sort = require('vfile-sort');
 
 /*
  * Processor.
@@ -60,6 +61,8 @@ function alex(value) {
         bridge(file);
 
         english.run(file);
+
+        sort(file);
 
         result = file;
     });

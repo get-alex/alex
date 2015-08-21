@@ -21,6 +21,7 @@ var bridge = require('mdast-util-to-nlcst');
 var retext = require('retext');
 var parser = require('parse-english');
 var equality = require('retext-equality');
+var sort = require('vfile-sort');
 
 /*
  * Processor.
@@ -62,6 +63,8 @@ function alex(value) {
 
         english.run(file);
 
+        sort(file);
+
         result = file;
     });
 
@@ -74,7 +77,7 @@ function alex(value) {
 
 module.exports = alex;
 
-},{"bail":2,"mdast":35,"mdast-util-to-nlcst":7,"parse-english":58,"retext":91,"retext-equality":84}],2:[function(require,module,exports){
+},{"bail":2,"mdast":35,"mdast-util-to-nlcst":7,"parse-english":58,"retext":91,"retext-equality":84,"vfile-sort":127}],2:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -11018,7 +11021,7 @@ function unified(options) {
 
 module.exports = unified;
 
-},{"attach-ware":51,"bail":2,"unherit":52,"vfile":127,"ware":55}],51:[function(require,module,exports){
+},{"attach-ware":51,"bail":2,"unherit":52,"vfile":128,"ware":55}],51:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -17112,7 +17115,7 @@ arguments[4][33][0].apply(exports,arguments)
 arguments[4][34][0].apply(exports,arguments)
 },{"dup":34}],119:[function(require,module,exports){
 arguments[4][50][0].apply(exports,arguments)
-},{"attach-ware":120,"bail":2,"dup":50,"unherit":121,"vfile":127,"ware":124}],120:[function(require,module,exports){
+},{"attach-ware":120,"bail":2,"dup":50,"unherit":121,"vfile":128,"ware":124}],120:[function(require,module,exports){
 arguments[4][51][0].apply(exports,arguments)
 },{"dup":51,"unherit":121}],121:[function(require,module,exports){
 arguments[4][52][0].apply(exports,arguments)
@@ -17127,6 +17130,57 @@ arguments[4][56][0].apply(exports,arguments)
 },{"co":126,"dup":56}],126:[function(require,module,exports){
 arguments[4][57][0].apply(exports,arguments)
 },{"dup":57}],127:[function(require,module,exports){
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module vfile:sort
+ * @fileoverview Sort VFile messages by line/column.
+ */
+
+'use strict';
+
+/**
+ * Compare a single property.
+ *
+ * @param {VFileMessage} a - Original.
+ * @param {VFileMessage} b - Comparison.
+ * @param {string} property - Property to compare.
+ * @return {number}
+ */
+function check(a, b, property) {
+    return (a[property] || 0) - (b[property] || 0);
+}
+
+/**
+ * Comparator.
+ *
+ * @param {VFileMessage} a - Original.
+ * @param {VFileMessage} b - Comparison.
+ * @return {number}
+ */
+function comparator(a, b) {
+    return check(a, b, 'line') || check(a, b, 'column') || -1;
+}
+
+/**
+ * Sort all `file`s messages by line/column.
+ *
+ * @param {VFile} file - Virtual file.
+ * @return {VFile} - `file`.
+ */
+function sort(file) {
+    file.messages.sort(comparator);
+    return file;
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = sort;
+
+},{}],128:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
