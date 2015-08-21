@@ -136,7 +136,8 @@ demonstrated in the example above, as it holds the possible violations.
 
 ## Editors
 
-*   Atom — [atom-linter-alex](https://github.com/wooorm/atom-linter-alex).
+*   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex);
+*   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex).
 
 ## Workflow
 
