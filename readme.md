@@ -13,13 +13,13 @@
 [![Build Status](https://img.shields.io/travis/wooorm/alex.svg)](https://travis-ci.org/wooorm/alex) [![Coverage Status](https://img.shields.io/codecov/c/github/wooorm/alex.svg)](https://codecov.io/github/wooorm/alex) [![Code Climate](http://img.shields.io/codeclimate/github/wooorm/alex.svg)](https://codeclimate.com/github/wooorm/alex)
 
 Whether your own or someone else’s writing, **alex** helps you find gender
-favouring, polarising, binary thinking, identity insensitive, race related,
-religion inconsiderate, or other **unequal** phrasing.
+favouring, polarising, race related, religion inconsiderate, or other
+**unequal** phrasing.
 
 For example, when `We’ve confirmed his identity` is given to **alex**,
 it will warn you and suggest using `their` instead of `his`<sup>†</sip>.
 
-† - Yes, using `they` here is standard English since the 16<sup>th</sup>
+† - Yes, using `their` here is standard English since the 16<sup>th</sup>
 century, and was used by Shakespeare.
 
 ## Why
