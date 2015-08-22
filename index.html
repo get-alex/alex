@@ -24,11 +24,7 @@
 
         <p>For example, when <code>We’ve confirmed his identity</code> is
         given to <strong>alex</strong>, it will warn you and suggest using
-        <code>their</code> instead of <code>his</code><sup>†</sup>.
-
-        <p><sup>†</sup> - Yes, using <code>they</code> here is standard English
-        since the 16<sup>th</sup> century, and was used by Shakespeare.</p>
-        <p class="double"><a href="https://github.com/wooorm/alex">GitHub »</a></p>
+        <code class="label label-ok">their</code> instead of <code class="label label-nok">his</code>.
       </div>
     </section>
     <section class="section demo">
@@ -36,10 +32,13 @@
         <h2>Demo</h2>
         <p><small>Take alex for a spin, start typing below.</small></p>
         <ol id="issues" class="issues"></ol>
-        <div id="no-issues" class="no-issues"><code class="ok">No issues!</code></div>
+        <div id="no-issues" class="no-issues"><code class="label label-ok">No issues!</code></div>
       </div>
-      <textarea class="input" rows="10">The boogeyman wrote all changes to the **master server**. Thus, the slaves
-were read-only copies of master. But not to worry, he was a cripple.</textarea>
+      <div class="input-container">
+        <div id="highlight" class="highlight"></div>
+        <textarea class="input" rows="10">The boogeyman wrote all changes to the **master server**.
+Thus, the slaves were read-only copies of master. But not to worry, he was a cripple.</textarea>
+      </div>
     </section>
     <section class="section cover">
       <div class="cover-inner">

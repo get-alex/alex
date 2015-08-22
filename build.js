@@ -105,26 +105,111 @@ var events = require('component/event');
  */
 
 var $input = document.getElementsByTagName('textarea')[0];
+var $highlight = document.getElementById('highlight');
 var $issues = document.getElementById('issues');
 var $noIssues = document.getElementById('no-issues');
 
-function decorate(message) {
+function decorateMessage(message) {
     var value = message.reason;
     var index = value.indexOf('use');
 
     return value.replace(/`(.+?)`/g, function ($0, $1, position) {
         var name = position > index ? 'ok' : 'nok';
-        return '<code class="' + name + '">' + $1 + '</code>';
+        return '<code class="label label-' + name + '">' + $1 + '</code>';
     });
 }
 
-var cache = {};
+function getOffsets(messages) {
+    var length = messages.length;
+    var map = {};
+    var offsets = [];
+    var index = -1;
+    var position = undefined;
+    var start = undefined;
+    var end = undefined;
+    var key = undefined;
+    var prev = undefined;
+
+    /*
+     * Algorithm is a bit funky as the locations are sorted,
+     * thus we can expect a lot to be true.
+     */
+
+    while (++index < length) {
+        position = messages[index].location || {};
+        start = position.start && position.start.offset;
+        end = position.end && position.end.offset;
+
+        if (isNaN(start) || isNaN(end)) {
+            continue;
+        }
+
+        if (prev && end < prev) {
+            continue;
+        }
+
+        prev = end;
+
+        if (start in map) {
+            if (end > map[start]) {
+                map[start] = end;
+            }
+        } else {
+            map[start] = end;
+        }
+    }
+
+    for (key in map) {
+        offsets.push([Number(key), map[key]]);
+    }
+
+    return offsets;
+}
+
+function decorateContent(content, messages) {
+    var offsets = getOffsets(messages);
+    var length = offsets.length;
+    var $fragment = document.createDocumentFragment();
+    var index = -1;
+    var last = 0;
+    var offset = undefined;
+    var value = undefined;
+    var warning = undefined;
+    var $warning = undefined;
+
+    while (++index < length) {
+        offset = offsets[index];
+
+        $fragment.appendChild(document.createTextNode(content.slice(last, offset[0])));
+
+        $warning = document.createElement('span');
+        $warning.className = 'offense';
+        $warning.appendChild(document.createTextNode(content.slice(offset[0], offset[1])));
+
+        $fragment.appendChild($warning);
+
+        last = offset[1];
+    }
+
+    $fragment.appendChild(document.createTextNode(content.slice(last)));
+
+    return $fragment;
+}
+
+function removeChildren($node) {
+    var $head = undefined;
+
+    while ($head = $node.firstChild) {
+        $node.removeChild($head);
+    }
+}
 
 /**
  * Change.
  */
 function onchange() {
-    var messages = alex($input.value).messages;
+    var value = $input.value;
+    var messages = alex(value).messages;
     var index = -1;
     var length = messages.length;
     var $fragment = document.createDocumentFragment();
@@ -135,26 +220,20 @@ function onchange() {
     $noIssues.setAttribute('style', length ? 'display:none' : '');
     $issues.setAttribute('style', !length ? 'display:none' : '');
 
-    while ($head = $issues.firstChild) {
-        if ($head.source) {
-            cache[$head.source] = $head;
-        }
+    $highlight.setAttribute('style', 'opacity:0');
+    removeChildren($highlight);
 
-        $issues.removeChild($head);
-    }
+    $highlight.appendChild(decorateContent(value, messages));
+    $highlight.setAttribute('style');
+
+    removeChildren($issues);
 
     while (++index < length) {
         message = messages[index];
-        $item = cache[message];
-
-        if ($item) {
-            cache[message] = null;
-        } else {
-            $item = document.createElement('li');
-            $item.className = 'issue';
-            $item.source = message.toString();
-            $item.innerHTML = decorate(message);
-        }
+        $item = document.createElement('li');
+        $item.className = 'issue';
+        $item.source = message.toString();
+        $item.innerHTML = decorateMessage(message);
 
         $fragment.appendChild($item);
     }
@@ -193,6 +272,7 @@ var bridge = require('mdast-util-to-nlcst');
 var retext = require('retext');
 var parser = require('parse-english');
 var equality = require('retext-equality');
+var sort = require('vfile-sort');
 
 /*
  * Processor.
@@ -234,6 +314,8 @@ function alex(value) {
 
     english.run(file);
 
+    sort(file);
+
     result = file;
   });
 
@@ -245,7 +327,7 @@ function alex(value) {
  */
 
 module.exports = alex;
-}, {"bail":5,"mdast":6,"mdast-util-to-nlcst":7,"retext":8,"parse-english":9,"retext-equality":10}],
+}, {"bail":5,"mdast":6,"mdast-util-to-nlcst":7,"retext":8,"parse-english":9,"retext-equality":10,"vfile-sort":11}],
 5: [function(require, module, exports) {
 /**
  * @author Titus Wormer
@@ -313,8 +395,8 @@ module.exports = unified({
   'Parser': Parser,
   'Compiler': Compiler
 });
-}, {"unified":11,"./lib/parse.js":12,"./lib/stringify.js":13}],
-11: [function(require, module, exports) {
+}, {"unified":12,"./lib/parse.js":13,"./lib/stringify.js":14}],
+12: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -591,8 +673,8 @@ function unified(options) {
  */
 
 module.exports = unified;
-}, {"bail":5,"ware":14,"attach-ware":15,"vfile":16,"unherit":17}],
-14: [function(require, module, exports) {
+}, {"bail":5,"ware":15,"attach-ware":16,"vfile":17,"unherit":18}],
+15: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -684,8 +766,8 @@ Ware.prototype.run = function () {
 
   return this;
 };
-}, {"wrap-fn":18}],
-18: [function(require, module, exports) {
+}, {"wrap-fn":19}],
+19: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -812,8 +894,8 @@ function once(fn) {
     return ret;
   };
 }
-}, {"co":19}],
-19: [function(require, module, exports) {
+}, {"co":20}],
+20: [function(require, module, exports) {
 
 /**
  * slice() reference.
@@ -1110,7 +1192,7 @@ function error(err) {
   });
 }
 }, {}],
-15: [function(require, module, exports) {
+16: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -1262,8 +1344,8 @@ function patch(Ware) {
 }
 
 module.exports = patch;
-}, {"unherit":17}],
-17: [function(require, module, exports) {
+}, {"unherit":18}],
+18: [function(require, module, exports) {
 "use strict";
 
 (function (f) {
@@ -1561,7 +1643,7 @@ module.exports = patch;
     }, {}] }, {}, [1])(1);
 });
 }, {}],
-16: [function(require, module, exports) {
+17: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -1785,9 +1867,6 @@ function VFile(options) {
     }
 
     self.contents = options.contents || '';
-    self.filename = options.filename || '';
-    self.directory = options.directory || '';
-    self.extension = options.extension || '';
 
     self.messages = [];
 
@@ -1797,6 +1876,14 @@ function VFile(options) {
      */
 
     self.filePath = filePathFactory(self);
+
+    self.history = [];
+
+    self.move({
+        'filename': options.filename,
+        'directory': options.directory,
+        'extension': options.extension
+    });
 }
 
 /**
@@ -1841,6 +1928,8 @@ function toString() {
  */
 function move(options) {
     var self = this;
+    var before = self.filePath();
+    var after;
 
     if (!options) {
         options = {};
@@ -1849,6 +1938,12 @@ function move(options) {
     self.directory = options.directory || self.directory || '';
     self.filename = options.filename || self.filename || '';
     self.extension = options.extension || self.extension || '';
+
+    after = self.filePath();
+
+    if (after && before !== after) {
+        self.history.push(after);
+    }
 
     return self;
 }
@@ -1879,8 +1974,18 @@ function move(options) {
  */
 function message(reason, position) {
     var filePath = this.filePath();
-    var location;
+    var range;
     var err;
+    var location = {
+        'start': {
+            'line': null,
+            'column': null
+        },
+        'end': {
+            'line': null,
+            'column': null
+        }
+    };
 
     /*
      * Node / location / position.
@@ -1891,19 +1996,27 @@ function message(reason, position) {
     }
 
     if (position && position.start) {
-        location = stringify(position.start) + '-' + stringify(position.end);
+        range = stringify(position.start) + '-' + stringify(position.end);
+        location = position;
         position = position.start;
     } else {
-        location = stringify(position);
+        range = stringify(position);
+
+        if (position) {
+            location.start = position;
+            location.end.line = null;
+            location.end.column = null;
+        }
     }
 
     err = new Error(reason.message || reason);
 
-    err.name = (filePath ? filePath + ':' : '') + location;
+    err.name = (filePath ? filePath + ':' : '') + range;
     err.file = filePath;
     err.reason = reason.message || reason;
     err.line = position ? position.line : null;
     err.column = position ? position.column : null;
+    err.location = location;
 
     if (reason.stack) {
         err.stack = reason.stack;
@@ -2072,7 +2185,7 @@ vFilePrototype.namespace = namespace;
 
 module.exports = VFile;
 }, {}],
-12: [function(require, module, exports) {
+13: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -4668,8 +4781,8 @@ Parser.prototype.tokenizeFactory = tokenizeFactory;
  */
 
 module.exports = Parser;
-}, {"he":20,"repeat-string":21,"trim":22,"trim-trailing-lines":23,"extend.js":24,"./utilities.js":25,"./expressions.js":26,"./defaults.js":27}],
-20: [function(require, module, exports) {
+}, {"he":21,"repeat-string":22,"trim":23,"trim-trailing-lines":24,"extend.js":25,"./utilities.js":26,"./expressions.js":27,"./defaults.js":28}],
+21: [function(require, module, exports) {
 /*! http://mths.be/he v0.5.0 by @mathias | MIT license */
 'use strict';
 
@@ -4990,7 +5103,7 @@ module.exports = Parser;
 	}
 })(undefined);
 }, {}],
-21: [function(require, module, exports) {
+22: [function(require, module, exports) {
 /*!
  * repeat-string <https://github.com/jonschlinkert/repeat-string>
  *
@@ -5058,7 +5171,7 @@ function repeat(str, num) {
 var res = '';
 var cache;
 }, {}],
-22: [function(require, module, exports) {
+23: [function(require, module, exports) {
 'use strict';
 
 exports = module.exports = trim;
@@ -5078,7 +5191,7 @@ exports.right = function (str) {
   return str.replace(/\s*$/, '');
 };
 }, {}],
-23: [function(require, module, exports) {
+24: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -5116,7 +5229,7 @@ function trimTrailingLines(value) {
 
 module.exports = trimTrailingLines;
 }, {}],
-24: [function(require, module, exports) {
+25: [function(require, module, exports) {
 /**
  * Extend an object with another.
  *
@@ -5141,7 +5254,7 @@ module.exports = function (src) {
   return src;
 };
 }, {}],
-25: [function(require, module, exports) {
+26: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5316,8 +5429,8 @@ exports.validate = {
 exports.normalizeIdentifier = normalizeIdentifier;
 exports.clean = clean;
 exports.raise = raise;
-}, {"collapse-white-space":28}],
-28: [function(require, module, exports) {
+}, {"collapse-white-space":29}],
+29: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -5347,7 +5460,7 @@ function collapse(value) {
 
 module.exports = collapse;
 }, {}],
-26: [function(require, module, exports) {
+27: [function(require, module, exports) {
 /* This file is generated by `script/build-expressions.js` */
 'use strict';
 
@@ -5424,7 +5537,7 @@ module.exports = {
   }
 };
 }, {}],
-27: [function(require, module, exports) {
+28: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5469,7 +5582,7 @@ module.exports = {
     }
 };
 }, {}],
-13: [function(require, module, exports) {
+14: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -7206,8 +7319,8 @@ compilerPrototype.compile = function () {
  */
 
 module.exports = Compiler;
-}, {"he":20,"markdown-table":29,"repeat-string":21,"extend.js":24,"ccount":30,"longest-streak":31,"./utilities.js":25,"./defaults.js":27}],
-29: [function(require, module, exports) {
+}, {"he":21,"markdown-table":30,"repeat-string":22,"extend.js":25,"ccount":31,"longest-streak":32,"./utilities.js":26,"./defaults.js":28}],
+30: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -7491,7 +7604,7 @@ function markdownTable(table, options) {
 
 module.exports = markdownTable;
 }, {}],
-30: [function(require, module, exports) {
+31: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -7542,7 +7655,7 @@ function ccount(value, character) {
 
 module.exports = ccount;
 }, {}],
-31: [function(require, module, exports) {
+32: [function(require, module, exports) {
 'use strict';
 
 /**
@@ -7868,8 +7981,8 @@ function toNLCST(file, Parser) {
  */
 
 module.exports = toNLCST;
-}, {"mdast-range":32,"parse-latin":33,"nlcst-to-string":34}],
-32: [function(require, module, exports) {
+}, {"mdast-range":33,"parse-latin":34,"nlcst-to-string":35}],
+33: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -8038,8 +8151,8 @@ function attacher() {
  */
 
 module.exports = attacher;
-}, {"mdast-util-visit":35}],
-35: [function(require, module, exports) {
+}, {"mdast-util-visit":36}],
+36: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -8154,12 +8267,12 @@ function visit(tree, type, callback, reverse) {
 
 module.exports = visit;
 }, {}],
-33: [function(require, module, exports) {
+34: [function(require, module, exports) {
 'use strict';
 
 module.exports = require('./lib/parse-latin');
-}, {"./lib/parse-latin":36}],
-36: [function(require, module, exports) {
+}, {"./lib/parse-latin":37}],
+37: [function(require, module, exports) {
 /*!
  * parse-latin
  *
@@ -8900,8 +9013,8 @@ ParseLatin.plugin = pluginFactory;
  */
 
 ParseLatin.modifier = modifierFactory;
-}, {"./parser":37,"./expressions":38,"./plugin":39,"./modifier":40,"./plugin/merge-initial-word-symbol":41,"./plugin/merge-final-word-symbol":42,"./plugin/merge-inner-word-symbol":43,"./plugin/merge-initialisms":44,"./plugin/merge-words":45,"./plugin/patch-position":46,"./plugin/merge-non-word-sentences":47,"./plugin/merge-affix-symbol":48,"./plugin/merge-initial-lower-case-letter-sentences":49,"./plugin/merge-prefix-exceptions":50,"./plugin/merge-affix-exceptions":51,"./plugin/merge-remaining-full-stops":52,"./plugin/make-initial-white-space-siblings":53,"./plugin/make-final-white-space-siblings":54,"./plugin/break-implicit-sentences":55,"./plugin/remove-empty-nodes":56}],
-37: [function(require, module, exports) {
+}, {"./parser":38,"./expressions":39,"./plugin":40,"./modifier":41,"./plugin/merge-initial-word-symbol":42,"./plugin/merge-final-word-symbol":43,"./plugin/merge-inner-word-symbol":44,"./plugin/merge-initialisms":45,"./plugin/merge-words":46,"./plugin/patch-position":47,"./plugin/merge-non-word-sentences":48,"./plugin/merge-affix-symbol":49,"./plugin/merge-initial-lower-case-letter-sentences":50,"./plugin/merge-prefix-exceptions":51,"./plugin/merge-affix-exceptions":52,"./plugin/merge-remaining-full-stops":53,"./plugin/make-initial-white-space-siblings":54,"./plugin/make-final-white-space-siblings":55,"./plugin/break-implicit-sentences":56,"./plugin/remove-empty-nodes":57}],
+38: [function(require, module, exports) {
 'use strict';
 
 var tokenizer;
@@ -8938,8 +9051,8 @@ function parserFactory(options) {
 }
 
 module.exports = parserFactory;
-}, {"./tokenizer":57}],
-57: [function(require, module, exports) {
+}, {"./tokenizer":58}],
+58: [function(require, module, exports) {
 'use strict';
 
 var nlcstToString;
@@ -9005,8 +9118,8 @@ function tokenizerFactory(childType, expression) {
 }
 
 module.exports = tokenizerFactory;
-}, {"nlcst-to-string":34}],
-34: [function(require, module, exports) {
+}, {"nlcst-to-string":35}],
+35: [function(require, module, exports) {
 'use strict';
 
 /**
@@ -9048,7 +9161,7 @@ function nlcstToString(nlcst) {
 
 module.exports = nlcstToString;
 }, {}],
-38: [function(require, module, exports) {
+39: [function(require, module, exports) {
 'use strict';
 
 module.exports = {
@@ -9065,7 +9178,7 @@ module.exports = {
     'whiteSpace': /^(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+$/
 };
 }, {}],
-39: [function(require, module, exports) {
+40: [function(require, module, exports) {
 'use strict';
 
 /**
@@ -9093,7 +9206,7 @@ function pluginFactory(callback) {
 
 module.exports = pluginFactory;
 }, {}],
-40: [function(require, module, exports) {
+41: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9147,8 +9260,8 @@ function modifierFactory(callback) {
  */
 
 module.exports = modifierFactory;
-}, {"array-iterate":58}],
-58: [function(require, module, exports) {
+}, {"array-iterate":59}],
+59: [function(require, module, exports) {
 'use strict';
 
 /**
@@ -9226,7 +9339,7 @@ function iterate(values, callback, context) {
 
 module.exports = iterate;
 }, {}],
-41: [function(require, module, exports) {
+42: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9302,8 +9415,8 @@ function mergeInitialWordSymbol(child, index, parent) {
  */
 
 module.exports = modifier(mergeInitialWordSymbol);
-}, {"nlcst-to-string":34,"../modifier":40}],
-42: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41}],
+43: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9370,8 +9483,8 @@ function mergeFinalWordSymbol(child, index, parent) {
  */
 
 module.exports = modifier(mergeFinalWordSymbol);
-}, {"nlcst-to-string":34,"../modifier":40}],
-43: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41}],
+44: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9489,8 +9602,8 @@ function mergeInnerWordSymbol(child, index, parent) {
  */
 
 module.exports = modifier(mergeInnerWordSymbol);
-}, {"nlcst-to-string":34,"../modifier":40,"../expressions":38}],
-44: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41,"../expressions":39}],
+45: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9601,8 +9714,8 @@ function mergeInitialisms(child, index, parent) {
  */
 
 module.exports = modifier(mergeInitialisms);
-}, {"nlcst-to-string":34,"../modifier":40,"../expressions":38}],
-45: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41,"../expressions":39}],
+46: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9665,8 +9778,8 @@ function mergeFinalWordSymbol(child, index, parent) {
  */
 
 module.exports = modifier(mergeFinalWordSymbol);
-}, {"../modifier":40}],
-46: [function(require, module, exports) {
+}, {"../modifier":41}],
+47: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9716,8 +9829,8 @@ function patchPosition(child, index, node) {
  */
 
 module.exports = plugin(patchPosition);
-}, {"../plugin":39}],
-47: [function(require, module, exports) {
+}, {"../plugin":40}],
+48: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9803,8 +9916,8 @@ function mergeNonWordSentences(child, index, parent) {
  */
 
 module.exports = modifier(mergeNonWordSentences);
-}, {"../modifier":40}],
-48: [function(require, module, exports) {
+}, {"../modifier":41}],
+49: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9879,8 +9992,8 @@ function mergeAffixSymbol(child, index, parent) {
  */
 
 module.exports = modifier(mergeAffixSymbol);
-}, {"nlcst-to-string":34,"../modifier":40,"../expressions":38}],
-49: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41,"../expressions":39}],
+50: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -9964,8 +10077,8 @@ function mergeInitialLowerCaseLetterSentences(child, index, parent) {
  */
 
 module.exports = modifier(mergeInitialLowerCaseLetterSentences);
-}, {"nlcst-to-string":34,"../modifier":40,"../expressions":38}],
-50: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41,"../expressions":39}],
+51: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10053,8 +10166,8 @@ function mergePrefixExceptions(child, index, parent) {
  */
 
 module.exports = modifier(mergePrefixExceptions);
-}, {"nlcst-to-string":34,"../modifier":40}],
-51: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41}],
+52: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10129,8 +10242,8 @@ function mergeAffixExceptions(child, index, parent) {
  */
 
 module.exports = modifier(mergeAffixExceptions);
-}, {"nlcst-to-string":34,"../modifier":40}],
-52: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41}],
+53: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10279,8 +10392,8 @@ function mergeRemainingFullStops(child) {
  */
 
 module.exports = plugin(mergeRemainingFullStops);
-}, {"nlcst-to-string":34,"../plugin":39,"../expressions":38}],
-53: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../plugin":40,"../expressions":39}],
+54: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10319,8 +10432,8 @@ function makeInitialWhiteSpaceSiblings(child, index, parent) {
  */
 
 module.exports = plugin(makeInitialWhiteSpaceSiblings);
-}, {"../plugin":39}],
-54: [function(require, module, exports) {
+}, {"../plugin":40}],
+55: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10366,8 +10479,8 @@ function makeFinalWhiteSpaceSiblings(child, index, parent) {
  */
 
 module.exports = modifier(makeFinalWhiteSpaceSiblings);
-}, {"../modifier":40}],
-55: [function(require, module, exports) {
+}, {"../modifier":41}],
+56: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10454,8 +10567,8 @@ function breakImplicitSentences(child, index, parent) {
  */
 
 module.exports = modifier(breakImplicitSentences);
-}, {"nlcst-to-string":34,"../modifier":40,"../expressions":38}],
-56: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"../modifier":41,"../expressions":39}],
+57: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -10493,7 +10606,7 @@ function removeEmptyNodes(child, index, parent) {
  */
 
 module.exports = modifier(removeEmptyNodes);
-}, {"../modifier":40}],
+}, {"../modifier":41}],
 8: [function(require, module, exports) {
 /**
  * @author Titus Wormer
@@ -10524,8 +10637,8 @@ module.exports = unified({
   'Parser': Parser,
   'Compiler': Compiler
 });
-}, {"unified":11,"./lib/parse.js":59,"./lib/compile.js":60}],
-59: [function(require, module, exports) {
+}, {"unified":12,"./lib/parse.js":60,"./lib/compile.js":61}],
+60: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -10614,8 +10727,8 @@ Parser.prototype.parse = parse;
  */
 
 module.exports = Parser;
-}, {"parse-latin":33}],
-60: [function(require, module, exports) {
+}, {"parse-latin":34}],
+61: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -10711,7 +10824,7 @@ Compiler.prototype.compile = compile;
  */
 
 module.exports = Compiler;
-}, {"nlcst-to-string":34}],
+}, {"nlcst-to-string":35}],
 9: [function(require, module, exports) {
 'use strict';
 
@@ -11174,13 +11287,13 @@ ParseEnglish.modifier = Parser.modifier;
  */
 
 ParseEnglish.plugin = Parser.plugin;
-}, {"parse-latin":33,"nlcst-to-string":34}],
+}, {"parse-latin":34,"nlcst-to-string":35}],
 10: [function(require, module, exports) {
 'use strict';
 
 module.exports = require('./lib/equality.js');
-}, {"./lib/equality.js":61}],
-61: [function(require, module, exports) {
+}, {"./lib/equality.js":62}],
+62: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11724,8 +11837,8 @@ function attacher() {
  */
 
 module.exports = attacher;
-}, {"object-keys":62,"unist-util-visit":63,"nlcst-to-string":34,"./patterns.json":64}],
-62: [function(require, module, exports) {
+}, {"object-keys":63,"unist-util-visit":64,"nlcst-to-string":35,"./patterns.json":65}],
+63: [function(require, module, exports) {
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -11842,8 +11955,8 @@ keysShim.shim = function shimObjectKeys() {
 };
 
 module.exports = keysShim;
-}, {"./isArguments":65}],
-65: [function(require, module, exports) {
+}, {"./isArguments":66}],
+66: [function(require, module, exports) {
 'use strict';
 
 var toStr = Object.prototype.toString;
@@ -11857,7 +11970,7 @@ module.exports = function isArguments(value) {
 	return isArgs;
 };
 }, {}],
-63: [function(require, module, exports) {
+64: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -11972,7 +12085,7 @@ function visit(tree, type, callback, reverse) {
 
 module.exports = visit;
 }, {}],
-64: [function(require, module, exports) {
+65: [function(require, module, exports) {
 module.exports = [
   {
     "type": "or",
@@ -15431,6 +15544,57 @@ module.exports = [
 ]
 ;
 }, {}],
+11: [function(require, module, exports) {
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module vfile:sort
+ * @fileoverview Sort VFile messages by line/column.
+ */
+
+'use strict';
+
+/**
+ * Compare a single property.
+ *
+ * @param {VFileMessage} a - Original.
+ * @param {VFileMessage} b - Comparison.
+ * @param {string} property - Property to compare.
+ * @return {number}
+ */
+function check(a, b, property) {
+  return (a[property] || 0) - (b[property] || 0);
+}
+
+/**
+ * Comparator.
+ *
+ * @param {VFileMessage} a - Original.
+ * @param {VFileMessage} b - Comparison.
+ * @return {number}
+ */
+function comparator(a, b) {
+  return check(a, b, 'line') || check(a, b, 'column') || -1;
+}
+
+/**
+ * Sort all `file`s messages by line/column.
+ *
+ * @param {VFile} file - Virtual file.
+ * @return {VFile} - `file`.
+ */
+function sort(file) {
+  file.messages.sort(comparator);
+  return file;
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = sort;
+}, {}],
 3: [function(require, module, exports) {
 
 /**
@@ -15487,8 +15651,8 @@ module.exports = function debounce(func, wait, immediate) {
     return result;
   };
 };
-}, {"date-now":66}],
-66: [function(require, module, exports) {
+}, {"date-now":67}],
+67: [function(require, module, exports) {
 "use strict";
 
 module.exports = Date.now || now;

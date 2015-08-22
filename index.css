@@ -10,7 +10,7 @@ body {
   overflow-x: hidden;
 }
 
-body, .input {
+body, .input, .highlight {
   font-family: 'Neuton', serif;
   line-height: 1.430;
 }
@@ -193,7 +193,7 @@ a:hover, a:focus {
   }
 }
 
-.text, .report, .input {
+.text, .report, .input, .highlight {
   padding-right: 7.5em;
   padding-left: 7.5em;
 }
@@ -206,11 +206,11 @@ a:hover, a:focus {
   padding-bottom: 2em;
 }
 
-.input {
+.input, .highlight {
   padding-top: 2em;
 }
 
-.text, .input {
+.text, .input, .highlight {
   padding-bottom: 5em;
 }
 
@@ -252,7 +252,7 @@ a:hover, a:focus {
 }
 
 @media screen and (max-width: 35em) {
-  .text, .report, .input {
+  .text, .report, .input, .highlight {
     padding: 2em;
   }
 
@@ -269,16 +269,57 @@ a:hover, a:focus {
   border-bottom-width: 0 !important;
 }
 
-.input {
+.input-container {
+  position: relative;
+}
+
+.input, .highlight {
+  /* major iOS bugs when not set to the default font :( */
+  padding: 2em;
+  font-family: Helvetica, webkit-pictograph, arial, serif;
+
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  resize: none;
-  background-color: #110730;
-  color: #eae5fb;
   border-width: 0;
-  font-size: 1em;
+  font-size: 0.9em;
   display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+
+  -webkit-appearance: none;
+  -webkit-rtl-ordering: logical;
+  -webkit-user-select: text;
+  -webkit-flex-direction: column;
+  background-color: transparent;
+}
+
+.input {
+  resize: none;
+  color: #eae5fb;
+}
+
+.highlight {
+  z-index: -1;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-color: #110730;
+  color: transparent;
+}
+
+.highlight .offense {
+  background-color: #ce4037;
+  border-radius: 0.2em;
+  display: inline-block;
+  left: -0.125em;
+  top: 0.09375em;
+  padding-right: 0.25em;
+  margin-right: -0.25em;
+  position: relative;
+  line-height: 1.2;
 }
 
 .issue:after {
@@ -289,7 +330,7 @@ a:hover, a:focus {
   content: "."
 }
 
-.report code {
+.label {
   background-color: darkgrey;
   color: white;
   padding: 0.2em 0.25em;
@@ -297,11 +338,11 @@ a:hover, a:focus {
   font-size: 0.7em;
 }
 
-.report .ok {
+.label-ok {
   background-color: #29a853;
 }
 
-.report .nok {
+.label-nok {
   background-color: #ce4037;
 }
 
