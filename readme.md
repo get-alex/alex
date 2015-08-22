@@ -17,14 +17,11 @@ favouring, polarising, race related, religion inconsiderate, or other
 **unequal** phrasing.
 
 For example, when `We’ve confirmed his identity` is given to **alex**,
-it will warn you and suggest using `their` instead of `his`<sup>†</sip>.
-
-† - Yes, using `their` here is standard English since the 16<sup>th</sup>
-century, and was used by Shakespeare.
+it will warn you and suggest using `their` instead of `his`.
 
 ## Why
 
-*   [x] Catches numerous different possible offenses;
+*   [x] Catches many possible offenses;
 *   [x] Suggests helpful alternatives;
 *   [x] Reads plain-text and markdown as input;
 *   [x] Stylish;
@@ -141,8 +138,8 @@ demonstrated in the example above, as it holds the possible violations.
 
 ## Workflow
 
-The recommended workflow is to add **alex** to locally and to run it with
-your tests.
+The recommended workflow is to add **alex** locally and to run it with your
+tests.
 
 A `package.json` file with [npm scripts](https://docs.npmjs.com/misc/scripts),
 and additionally using [mocha](http://mochajs.org) for unit tests, could look
