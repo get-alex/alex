@@ -19,14 +19,15 @@ favouring, polarising, race related, religion inconsiderate, or other
 For example, when `We’ve confirmed his identity` is given to **alex**,
 it will warn you and suggest using `their` instead of `his`.
 
+> Suggestions, feature requests, and issues are more than welcome!
+
 ## Why
 
 *   [x] Catches many possible offenses;
 *   [x] Suggests helpful alternatives;
 *   [x] Reads plain-text and markdown as input;
 *   [x] Stylish;
-*   [x] Actively maintained;
-*   [x] Feature requests and issues are more than welcome!
+*   [x] [Online demo »](https://wooorm.github.io/alex/#demo)
 
 ## Installation
 
