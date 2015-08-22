@@ -224,7 +224,7 @@ function onchange() {
     removeChildren($highlight);
 
     $highlight.appendChild(decorateContent(value, messages));
-    $highlight.setAttribute('style');
+    $highlight.setAttribute('style', '');
 
     removeChildren($issues);
 
