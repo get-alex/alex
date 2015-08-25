@@ -38,6 +38,15 @@ ul {
   list-style-type: circle;
 }
 
+.checkbox-list {
+  list-style-type: none;
+}
+
+.checkbox-list input {
+  margin-left: -2em;
+  margin-right: 0.5em;
+}
+
 pre {
   background-color: #f7f7f7;
   font-family: monospace;
@@ -113,7 +122,7 @@ a {
   text-decoration: none;
 }
 
-.cover a {
+.cover a, .footer a {
   color: inherit;
 }
 
@@ -200,35 +209,46 @@ a:hover, a:focus {
 
 .text, .report {
   padding-top: 5em;
+  padding-bottom: 5em;
 }
 
-.report {
+.report:first-child {
   padding-bottom: 2em;
+}
+
+.report:last-child {
+  padding-top: 2em;
 }
 
 .input, .highlight {
   padding-top: 2em;
 }
 
-.text, .input, .highlight {
-  padding-bottom: 5em;
-}
-
 .text {
   text-align: center;
 }
 
-.cover {
+.cover, .footer {
   height: 100%;
-  background-image: url("./asset/cover.jpg");
-  background-size: 100%;
-  background-size: cover;
-  background-position: center;
+  background-color: #8060E5 !important;
   color: white;
   position: relative;
 }
 
-.cover-inner {
+.cover::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 1em;
+  border: 0.5em solid white;
+  width: 0;
+  height: 0;
+  border-left-color: transparent;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.cover-inner, .footer-inner {
   -webkit-user-select: none;
   position: absolute;
   top: 50%;
@@ -244,6 +264,18 @@ a:hover, a:focus {
 .title {
   font-size: 6em;
   margin: 0;
+  font-family: "helvetica neue", "helvetica-neue", "helvetica", "arial", sans-serif;
+  font-weight: 100;
+  letter-spacing: 0.05em;
+  border-bottom: 0.03125em solid currentcolor;
+  display: inline-block;
+  margin-bottom: 1em;
+}
+
+.title__inner {
+  position: relative;
+  padding-left: 0.025em;
+  border-bottom: 0.03125em solid currentcolor;
 }
 
 .byline {
@@ -271,6 +303,7 @@ a:hover, a:focus {
 
 .input-container {
   position: relative;
+  background-color: #1d1f21;
 }
 
 .input, .highlight {
@@ -296,18 +329,20 @@ a:hover, a:focus {
 
 .input {
   resize: none;
-  color: #eae5fb;
+  color: white;
+  position: relative;
+  z-index: 1;
 }
 
 .highlight {
-  z-index: -1;
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
-  background-color: #110730;
   color: transparent;
+  overflow: hidden;
+  transition: 100ms opacity;
 }
 
 .highlight .offense {

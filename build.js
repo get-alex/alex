@@ -204,48 +204,69 @@ function removeChildren($node) {
     }
 }
 
+var previousValue = '';
+
 /**
  * Change.
  */
 function onchange() {
     var value = $input.value;
-    var messages = alex(value).messages;
-    var index = -1;
-    var length = messages.length;
-    var $fragment = document.createDocumentFragment();
-    var $item;
-    var $head;
-    var message;
+    var messages = undefined;
+    var index = undefined;
+    var length = undefined;
+    var $fragment = undefined;
+    var $item = undefined;
+    var $head = undefined;
+    var message = undefined;
 
-    $noIssues.setAttribute('style', length ? 'display:none' : '');
-    $issues.setAttribute('style', !length ? 'display:none' : '');
+    if (value !== previousValue) {
+        previousValue = value;
+        messages = alex(value).messages;
+        index = -1;
+        length = messages.length;
+        $fragment = document.createDocumentFragment();
 
-    $highlight.setAttribute('style', 'opacity:0');
-    removeChildren($highlight);
+        $noIssues.setAttribute('style', length ? 'display:none' : '');
+        $issues.setAttribute('style', !length ? 'display:none' : '');
 
-    $highlight.appendChild(decorateContent(value, messages));
-    $highlight.setAttribute('style', '');
+        $highlight.setAttribute('style', 'opacity:0');
+        removeChildren($highlight);
 
-    removeChildren($issues);
+        $highlight.appendChild(decorateContent(value, messages));
+        $highlight.setAttribute('style', '');
 
-    while (++index < length) {
-        message = messages[index];
-        $item = document.createElement('li');
-        $item.className = 'issue';
-        $item.source = message.toString();
-        $item.innerHTML = decorateMessage(message);
+        removeChildren($issues);
 
-        $fragment.appendChild($item);
+        while (++index < length) {
+            message = messages[index];
+            $item = document.createElement('li');
+            $item.className = 'issue';
+            $item.source = message.toString();
+            $item.innerHTML = decorateMessage(message);
+
+            $fragment.appendChild($item);
+        }
+
+        $issues.appendChild($fragment);
     }
 
-    $issues.appendChild($fragment);
+    $highlight.scrollTop = $input.scrollTop;
+    $highlight.style.opacity = '';
 }
 
-var debouncedChange = debounce(onchange, 100);
+function onstart() {
+    if ($input.value !== previousValue || $highlight.scrollTop !== $input.scrollTop) {
+        $highlight.style.opacity = '0';
+    }
+}
 
-events.bind($input, 'change', debouncedChange);
-events.bind($input, 'onpropertychange', debouncedChange);
-events.bind($input, 'input', debouncedChange);
+var end = debounce(onchange, 300);
+var start = debounce(onstart, 100, true);
+
+['change', 'onpropertychange', 'input', 'keydown', 'click', 'focus', 'scroll'].forEach(function (name) {
+    events.bind($input, name, start);
+    events.bind($input, name, end);
+});
 
 onchange();
 }, {"wooorm/alex":2,"component/debounce":3,"component/event":4}],

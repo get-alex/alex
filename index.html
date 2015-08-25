@@ -10,7 +10,7 @@
   <body class="home">
     <section class="section cover">
       <div class="cover-inner">
-        <h1 class="title">ALEX</h1>
+        <h1 class="title"><span class="title__inner">ALEX</span></h1>
         <p class="byline">Catch insensitive, inconsiderate writing</p>
       </div>
     </section>
@@ -18,31 +18,85 @@
       <div class="content">
         <h2 id="introduction">Introduction</h2>
         <p>Whether your own or someone else’s writing, <strong>alex</strong>
-        helps you find gender favouring, polarising, binary thinking,
-        identity insensitive, race related, religion inconsiderate, or other
-        <strong>unequal</strong> phrasing.</p>
+        helps you find gender favouring, polarising, race related, religion
+        inconsiderate, or other <strong>unequal</strong> phrasing.</p>
 
-        <p>For example, when <code>We’ve confirmed his identity</code> is
-        given to <strong>alex</strong>, it will warn you and suggest using
-        <code class="label label-ok">their</code> instead of <code class="label label-nok">his</code>.
+        <p>For example, when <code>We’ve confirmed his identity</code> is given
+        to <strong>alex</strong>, it will warn and suggest using
+        <code class="label label-ok">their</code> instead of
+        <code class="label label-nok">his</code>.</p>
+
+        <p class="double"><a href="https://github.com/wooorm/alex">GitHub »</a></p>
+
+        <h3 class="double">Why</h3>
+        <ol class="checkbox-list">
+          <li><input type="checkbox" checked disabled /> Catches many possible offenses;</li>
+          <li><input type="checkbox" checked disabled /> Suggests helpful alternatives;</li>
+          <li><input type="checkbox" checked disabled /> Reads plain-text and markdown as input;</li>
+          <li><input type="checkbox" checked disabled /> Stylish;</li>
+          <li><input type="checkbox" checked disabled /> <a href="#demo">Online demo »</a></li>
+        </ol>
       </div>
     </section>
-    <section class="section demo">
+    <section id="demo" class="section demo">
       <div class="report">
         <h2>Demo</h2>
-        <p><small>Take alex for a spin, start typing below.</small></p>
-        <ol id="issues" class="issues"></ol>
-        <div id="no-issues" class="no-issues"><code class="label label-ok">No issues!</code></div>
+        <p>Take alex for a spin, start typing below.</p>
       </div>
       <div class="input-container">
         <div id="highlight" class="highlight"></div>
-        <textarea class="input" rows="10">The boogeyman wrote all changes to the **master server**.
+        <textarea class="input" rows="4">The boogeyman wrote all changes to the **master server**.
 Thus, the slaves were read-only copies of master. But not to worry, he was a cripple.</textarea>
       </div>
+      <div class="report">
+        <ol id="issues" class="issues"></ol>
+        <div id="no-issues" class="no-issues"><code class="label label-ok">No issues!</code></div>
+      </div>
     </section>
-    <section class="section cover">
-      <div class="cover-inner">
-        <h1 class="author"><a href="http://wooorm.com">@wooorm</a></h1>
+    <section class="section text">
+      <div class="content">
+        <h2 id="cli">Command Line</h2>
+
+        <img alt="screen shot" src="https://raw.githubusercontent.com/wooorm/alex/master/screenshot.png?token=AA5pFuEdA4Blb1cSMK3Q_nS1aO-vsCWbks5V5dHkwA%3D%3D">
+
+        <p>Let’s say <code>example.md</code> looks as follows:</p>
+
+        <pre><code>The boogeyman wrote all changes to the <strong>**master server**</strong>. Thus, the slaves
+were read-only copies of master. But not to worry, he was a cripple.
+</code></pre>
+
+        <p>Then, run <strong>alex</strong> on <code>example.md</code>:<p>
+
+        <pre><code><span class="code fn">alex</span> <span class="code">example.md</span></code></pre>
+
+        Yields:
+
+        <pre><code>example.md
+   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead
+  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead
+  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead
+  2:59-2:66  warning  `cripple` may be insensitive, use `person with a limp` instead
+        </code></pre>
+
+        <p>See <code><span class="code fn">alex</span> <span class="code">--help</span></code> for more information.</p>
+      </div>
+    </section>
+    <section class="section text">
+      <div class="content">
+        <h2 id="editors">Editor Integrations</h2>
+
+        <img alt="screen cast" src="https://raw.githubusercontent.com/wooorm/atom-linter-alex/master/screencast.gif?token=AA5pFhwJyhXtc0a3GdKXaLfWqyIQvN0Mks5V5dJUwA%3D%3D">
+
+        <ul>
+          <li>Atom — <a href="https://github.com/wooorm/atom-linter-alex">atom-linter-alex</a> (by <a href="https://github.com/wooorm">@wooorm</a>);</li>
+          <li>Sublime — <a href="https://github.com/sindresorhus/SublimeLinter-contrib-alex">SublimeLinter-contrib-alex</a> (by <a href="https://github.com/sindresorhus">@sindresorhus</a>).</li>
+        </ul>
+      </div>
+    </section>
+    <section class="section footer">
+      <div class="footer-inner">
+        <h1>Made with love.</h1>
+        <p>Have a suggestion? Raise an issue on <a href="https://github.com/wooorm/alex/issues/new">GitHub »</a>.</p>
       </div>
     </section>
     <script src="build.js"></script>
