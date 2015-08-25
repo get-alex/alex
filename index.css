@@ -332,6 +332,7 @@ a:hover, a:focus {
   color: white;
   position: relative;
   z-index: 1;
+  font-weight: light;
 }
 
 .highlight {
