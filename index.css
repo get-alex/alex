@@ -158,32 +158,10 @@ a:hover, a:focus {
 }
 
 
-  .plug-in-description {
-    display: block;
-  }
-}
-
-@media screen and (max-width: 60em) {
-  .spread {
-    margin-left: -2em;
-    margin-right: -2em;
-  }
-}
-
-.spread-block {
-  width: 47.5%;
-  float: left;
-}
-
-.spread-block:first-child {
-  margin-right: 5%;
-}
-
-@media screen and (max-width: 45em) {
-  .spread-block {
-    width: 100%;
-    margin-right: 0;
-    float: none;
+@media screen and (min-width: 45em) {
+  pre.wide {
+    margin-left: -4.3em;
+    margin-right: -4.3em;
   }
 }
 
