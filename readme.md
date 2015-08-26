@@ -8,7 +8,7 @@
     <br>
 </h1>
 
->   📝 **alex** — Catch insensitive, inconsiderate writing.
+> 📝 **alex** — Catch insensitive, inconsiderate writing.
 
 [![Build Status](https://img.shields.io/travis/wooorm/alex.svg)](https://travis-ci.org/wooorm/alex) [![Coverage Status](https://img.shields.io/codecov/c/github/wooorm/alex.svg)](https://codecov.io/github/wooorm/alex) [![Code Climate](http://img.shields.io/codeclimate/github/wooorm/alex.svg)](https://codeclimate.com/github/wooorm/alex)
 

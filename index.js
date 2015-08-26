@@ -18,7 +18,7 @@ var bail = require('bail');
 var mdast = require('mdast');
 var bridge = require('mdast-util-to-nlcst');
 var retext = require('retext');
-var parser = require('parse-english');
+var parser = require('retext-english');
 var equality = require('retext-equality');
 var sort = require('vfile-sort');
 
@@ -27,7 +27,7 @@ var sort = require('vfile-sort');
  */
 
 var markdown = mdast();
-var english = retext(parser).use(equality);
+var english = retext().use(parser).use(equality);
 
 /**
  * Alex.
