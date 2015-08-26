@@ -146,7 +146,7 @@ a:hover, a:focus {
   background-color: #fafafa;
 }
 
-.content, .spread {
+.content {
   margin-left: auto;
   margin-right: auto;
   max-width: 100%;
@@ -157,21 +157,6 @@ a:hover, a:focus {
   width: 30em;
 }
 
-.spread {
-  width: 50em;
-  overflow: hidden;
-  padding-left: 2em;
-  padding-right: 2em;
-}
-
-.plug-in-description:before {
-  content: " — "
-}
-
-@media screen and (min-width: 45em) and (max-width: 60em), (max-width: 30em) {
-  .plug-in-description:before {
-    content: "";
-  }
 
   .plug-in-description {
     display: block;
@@ -400,30 +385,4 @@ a:hover, a:focus {
 
 .code.operator {
   color: #ed6a43;
-}
-
-.button {
-  display: inline-block;
-  border-style: none;
-  background-color: transparent;
-  padding: 0.25em 0.5em;
-  margin: 0;
-  color: #8060E5;
-  border: 1px solid #8060E5;
-  font-size: 14px;
-  border-radius: 0.25em;
-  cursor: pointer;
-  -webkit-transition: 200ms;
-  -moz-transition: 200ms;
-  transition: 200ms;
-}
-
-.button, .button:hover, .button:focus {
-  text-decoration: none;
-  text-decoration-line: none;
-}
-
-.button:hover, .button:focus {
-  color: white;
-  background-color: #8060E5;
 }
