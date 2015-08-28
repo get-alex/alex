@@ -4,12 +4,14 @@
 /* eslint-disable no-console */
 
 var bail = require('bail');
+var notifier = require('update-notifier');
 var meow = require('meow');
 var globby = require('globby');
 var getStdin = require('get-stdin');
 var format = require('vfile-reporter');
 var toFile = require('to-vfile');
 var alex = require('./');
+var pack = require('./package');
 
 var expextPipeIn = !process.stdin.isTTY;
 
@@ -22,6 +24,10 @@ var cli = meow({
         '  $ alex *.{txt,md}'
     ]
 });
+
+notifier({
+    'pkg': pack
+}).notify();
 
 var input = cli.input;
 var exit = 0;
