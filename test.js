@@ -8,13 +8,12 @@
 
 'use strict';
 
-/* eslint-env mocha */
-
 /*
  * Dependencies.
  */
 
 var assert = require('assert');
+var test = require('ava');
 var alex = require('./');
 
 /*
@@ -24,17 +23,17 @@ var alex = require('./');
  * warnings are exposed.
  */
 
-describe('alex', function () {
-    it('should work', function () {
-        assert.deepEqual(alex([
-            'The boogeyman wrote all changes to the **master server**. Thus,',
-            'the slaves were read-only copies of master. But not to worry,',
-            'he was a cripple.'
-        ].join('\n')).messages.map(String), [
-            '1:5-1:14: `boogeyman` may be insensitive, use `boogey` instead',
-            '1:42-1:48: `master` / `slaves` may be insensitive, use `primary` / `replica` instead',
-            '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
-            '3:10-3:17: `cripple` may be insensitive, use `person with a limp` instead'
-        ]);
-    })
-})
+test('alex should work', function (t) {
+    assert.deepEqual(alex([
+        'The boogeyman wrote all changes to the **master server**. Thus,',
+        'the slaves were read-only copies of master. But not to worry,',
+        'he was a cripple.'
+    ].join('\n')).messages.map(String), [
+        '1:5-1:14: `boogeyman` may be insensitive, use `boogey` instead',
+        '1:42-1:48: `master` / `slaves` may be insensitive, use `primary` / `replica` instead',
+        '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
+        '3:10-3:17: `cripple` may be insensitive, use `person with a limp` instead'
+    ]);
+
+    t.end();
+});

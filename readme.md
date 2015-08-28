@@ -143,20 +143,20 @@ The recommended workflow is to add **alex** locally and to run it with your
 tests.
 
 A `package.json` file with [npm scripts](https://docs.npmjs.com/misc/scripts),
-and additionally using [mocha](http://mochajs.org) for unit tests, could look
+and additionally using [ava](http://ava.li) for unit tests, could look
 as follows:
 
 ```json
 {
   "name": "alpha",
   "scripts": {
-    "test-api": "mocha",
+    "test-api": "ava",
     "test-doc": "alex docs/*.md",
     "test": "npm run test-api && npm run test-doc"
   },
   "devDependencies": {
     "alex": "^1.0.0",
-    "mocha": "^2.0.0"
+    "ava": "^0.1.0"
   }
 }
 ```
