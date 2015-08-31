@@ -58,9 +58,7 @@ if (expextPipeIn) {
     return;
 }
 
-globby(input, function (err, filePaths) {
-    bail(err);
-
+globby(input).then(function (filePaths) {
     filePaths.forEach(function (filePath) {
         toFile.read(filePath, function (err, file) {
             bail(err);
@@ -70,7 +68,7 @@ globby(input, function (err, filePaths) {
             log(file);
         });
     });
-});
+}, bail);
 
 /*
  * Exit.

@@ -39,8 +39,8 @@
   "dependencies": {
     "bail": "^1.0.0",
     "chalk": "^1.1.0",
-    "get-stdin": "^4.0.1",
-    "globby": "^2.0.0",
+    "get-stdin": "^5.0.0",
+    "globby": "^3.0.0",
     "mdast": "^1.0.0",
     "mdast-util-to-nlcst": "^0.2.0",
     "meow": "^3.3.0",
