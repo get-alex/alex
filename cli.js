@@ -47,13 +47,33 @@ function log(file) {
     }
 }
 
+/*
+ * Exit.
+ */
+
+process.on('exit', function () {
+    console.log(format(result));
+
+    /* eslint-disable no-process-exit */
+    process.exit(exit);
+    /* eslint-enable no-process-exit */
+});
+
 if (expextPipeIn) {
-    getStdin(function (value) {
+    getStdin().then(function (value) {
         var file = toFile('<stdin>');
+
         file.contents = value;
-        log(alex(file));
-    });
-} else if (!input.length) {
+
+        alex(file);
+
+        log(file);
+    }, bail);
+
+    return;
+}
+
+if (!input.length) {
     cli.showHelp();
     return;
 }
@@ -69,15 +89,3 @@ globby(input).then(function (filePaths) {
         });
     });
 }, bail);
-
-/*
- * Exit.
- */
-
-process.on('exit', function () {
-    console.log(format(result));
-
-    /* eslint-disable no-process-exit */
-    process.exit(exit);
-    /* eslint-enable no-process-exit */
-});
