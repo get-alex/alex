@@ -1,10 +1,9 @@
 <!--lint disable no-html-->
-
 <!--lint disable first-heading-level-->
 
 <h1 align="center">
+    <img width="400" src="logo.svg" alt="alex">
     <br>
-    <img width="400" src="./logo.svg" alt="alex">
     <br>
 </h1>
 
@@ -29,19 +28,19 @@ it will warn you and suggest using `their` instead of `his`.
 *   [x] Stylish;
 *   [x] [Online demo »](https://wooorm.github.io/alex/#demo)
 
-## Installation
+## Install
 
-[npm](https://docs.npmjs.com/cli/install) (with [node](https://nodejs.org/download/)):
+[npm](https://docs.npmjs.com/cli/install) (with [Node.js](https://nodejs.org/download/)):
 
-```bash
-npm install alex --global
+```
+$ npm install alex --global
 ```
 
 ## Table of Contents
 
 *   [Command Line](#command-line)
 
-*   [Programmatic](#programmatic)
+*   [API](#api)
 
     *   [alex(value)](#alexvalue)
 
@@ -63,20 +62,20 @@ npm install alex --global
 
 Let’s say `example.md` looks as follows:
 
-```markdown
+```md
 The boogeyman wrote all changes to the **master server**. Thus, the slaves
 were read-only copies of master. But not to worry, he was a cripple.
 ```
 
 Then, run **alex** on `example.md`:
 
-```sh
-alex example.md
+```
+$ alex example.md
 ```
 
 Yields:
 
-```text
+```
 example.md
    1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead
   1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead
@@ -84,9 +83,9 @@ example.md
   2:59-2:66  warning  `cripple` may be insensitive, use `person with a limp` instead
 ```
 
-See `alex --help` for more information.
+See `$ alex --help` for more information.
 
-## Programmatic
+## API
 
 ### alex(value)
 
@@ -134,8 +133,8 @@ demonstrated in the example above, as it holds the possible violations.
 
 ## Editors
 
-*   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex);
-*   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex).
+*   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
+*   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
 
 ## Workflow
 
@@ -143,12 +142,11 @@ The recommended workflow is to add **alex** locally and to run it with your
 tests.
 
 A `package.json` file with [npm scripts](https://docs.npmjs.com/misc/scripts),
-and additionally using [ava](http://ava.li) for unit tests, could look
+and additionally using [AVA](http://ava.li) for unit tests, could look
 as follows:
 
 ```json
 {
-  "name": "alpha",
   "scripts": {
     "test-api": "ava",
     "test-doc": "alex docs/*.md",
@@ -164,7 +162,7 @@ as follows:
 ## Ignoring files
 
 ```sh
-alex $(git ls-files | awk '/.(md|txt)$/')
+$ alex $(git ls-files | awk '/.(md|txt)$/')
 ```
 
 There’s no support for ignoring or extension searching yet. Luckily, Unix is
