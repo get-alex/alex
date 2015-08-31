@@ -12,7 +12,6 @@
  * Dependencies.
  */
 
-var assert = require('assert');
 var test = require('ava');
 var alex = require('./');
 
@@ -23,8 +22,8 @@ var alex = require('./');
  * warnings are exposed.
  */
 
-test('alex should work', function (t) {
-    assert.deepEqual(alex([
+test(function (t) {
+    t.same(alex([
         'The boogeyman wrote all changes to the **master server**. Thus,',
         'the slaves were read-only copies of master. But not to worry,',
         'he was a cripple.'
