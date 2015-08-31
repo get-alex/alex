@@ -1,5 +1,4 @@
-<!--lint disable no-html-->
-<!--lint disable first-heading-level-->
+<!--lint disable no-html first-heading-level-->
 
 <h1 align="center">
     <img width="400" src="logo.svg" alt="alex">
@@ -32,7 +31,7 @@ it will warn you and suggest using `their` instead of `his`.
 
 [npm](https://docs.npmjs.com/cli/install) (with [Node.js](https://nodejs.org/download/)):
 
-```
+```sh
 $ npm install alex --global
 ```
 
@@ -69,13 +68,13 @@ were read-only copies of master. But not to worry, he was a cripple.
 
 Then, run **alex** on `example.md`:
 
-```
+```sh
 $ alex example.md
 ```
 
 Yields:
 
-```
+```txt
 example.md
    1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead
   1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead
