@@ -1,7 +1,7 @@
 <!--lint disable no-html first-heading-level-->
 
 <h1 align="center">
-    <img width="400" src="logo.svg" alt="alex">
+    <img width="400" src="media/logo.svg" alt="alex">
     <br>
     <br>
 </h1>
