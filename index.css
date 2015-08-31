@@ -288,6 +288,11 @@ a:hover, a:focus {
   -webkit-user-select: text;
   -webkit-flex-direction: column;
   background-color: transparent;
+
+  width: 38em;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .input {
@@ -296,6 +301,13 @@ a:hover, a:focus {
   position: relative;
   z-index: 1;
   font-weight: light;
+  background-color: transparent;
+  transition: 100ms background-color;
+}
+
+.input:focus {
+  background-color: rgba(255, 255, 255, .1);
+  outline: 0;
 }
 
 .highlight {
