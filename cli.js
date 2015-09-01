@@ -19,9 +19,13 @@ var cli = meow({
     'help': [
         'Usage:  alex [<file> ...]',
         '',
+        'When no input files are given, searches for markdown and text',
+        'files in the current directory, `doc`, and `docs`.',
+        '',
         'Examples',
         '  $ echo "His network looks good" | alex',
-        '  $ alex *.{txt,md}'
+        '  $ alex *.md !example.md',
+        '  $ alex'
     ]
 });
 
@@ -29,10 +33,13 @@ notifier({
     'pkg': pack
 }).notify();
 
-var input = cli.input;
 var exit = 0;
-
 var result = [];
+var input = cli.input.length ? cli.input : [
+    '*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}',
+    'doc/**/*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}',
+    'docs/**/*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
+];
 
 /**
  * Log a virtual file processed by alex.
@@ -70,11 +77,6 @@ if (expextPipeIn) {
         log(file);
     }, bail);
 
-    return;
-}
-
-if (!input.length) {
-    cli.showHelp();
     return;
 }
 

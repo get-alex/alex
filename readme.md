@@ -49,8 +49,6 @@ $ npm install alex --global
 
 *   [Workflow](#workflow)
 
-*   [Ignoring files](#ignoring-files)
-
 *   [Contributing](#contributing)
 
 *   [License](#license)
@@ -83,6 +81,9 @@ example.md
 ```
 
 See `$ alex --help` for more information.
+
+> When no input files are given to **Alex**, it searches for markdown and
+> text files in the current directory, `doc`, and `docs`.
 
 ## API
 
@@ -148,7 +149,7 @@ as follows:
 {
   "scripts": {
     "test-api": "ava",
-    "test-doc": "alex docs/*.md",
+    "test-doc": "alex",
     "test": "npm run test-api && npm run test-doc"
   },
   "devDependencies": {
@@ -157,16 +158,6 @@ as follows:
   }
 }
 ```
-
-## Ignoring files
-
-```sh
-$ alex $(git ls-files | awk '/.(md|txt)$/')
-```
-
-There’s no support for ignoring or extension searching yet. Luckily, Unix is
-awesome. The above script will process all by git known (and not ignored) files
-with an `md` or `txt` extension.
 
 ## Contributing
 
