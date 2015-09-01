@@ -146,7 +146,7 @@ a:hover, a:focus {
   background-color: #fafafa;
 }
 
-.content {
+.content, .spread {
   margin-left: auto;
   margin-right: auto;
   max-width: 100%;
@@ -157,6 +157,37 @@ a:hover, a:focus {
   width: 30em;
 }
 
+.spread {
+  width: 50em;
+  overflow: hidden;
+  padding-left: 2em;
+  padding-right: 2em;
+}
+
+
+@media screen and (max-width: 60em) {
+  .spread {
+    margin-left: -2em;
+    margin-right: -2em;
+  }
+}
+
+.spread-block {
+  width: 47.5%;
+  float: left;
+}
+
+.spread-block:first-child {
+  margin-right: 5%;
+}
+
+@media screen and (max-width: 45em) {
+  .spread-block {
+    width: 100%;
+    margin-right: 0;
+    float: none;
+  }
+}
 
 @media screen and (min-width: 45em) {
   pre.wide {
