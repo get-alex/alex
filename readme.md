@@ -19,7 +19,7 @@ it will warn you and suggest using `their` instead of `his`.
 
 > Suggestions, feature requests, and issues are more than welcome!
 
-Give **alex** a spin on the [Online demo »](https://wooorm.github.io/alex/#demo).
+Give **alex** a spin on the [Online demo »](http://alexjs.com/#demo).
 
 ## Why
 
