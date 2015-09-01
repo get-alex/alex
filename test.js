@@ -3,7 +3,7 @@
  * @copyright 2015 Titus Wormer
  * @license MIT
  * @module alex:test
- * @fileoverview Test suite for Alex.
+ * @fileoverview Test suite for alex.
  */
 
 'use strict';

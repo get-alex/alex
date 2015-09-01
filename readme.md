@@ -84,7 +84,7 @@ example.md
 
 See `$ alex --help` for more information.
 
-> When no input files are given to **Alex**, it searches for markdown and
+> When no input files are given to **alex**, it searches for markdown and
 > text files in the current directory, `doc`, and `docs`.
 
 ## API
@@ -119,7 +119,7 @@ demonstrated in the example above, as it holds the possible violations.
 
 ## Support
 
-**Alex** checks for many patterns of English language, and warns for:
+**alex** checks for many patterns of English language, and warns for:
 
 *   Gendered work-titles, for example warning about `garbageman` and suggesting
     `garbage collector` instead;

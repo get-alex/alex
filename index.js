@@ -4,7 +4,7 @@
  * @license MIT
  * @module alex
  * @fileoverview
- *   Alex checks your (or someone else’s) writing for possible
+ *   alex checks your (or someone else’s) writing for possible
  *   inconsiderate wording.
  */
 
@@ -30,7 +30,7 @@ var markdown = mdast();
 var english = retext().use(parser).use(equality);
 
 /**
- * Alex.
+ * alex.
  *
  * Read markdown as input, converts to natural language,
  * then detect violations.
