@@ -36,9 +36,7 @@ notifier({
 var exit = 0;
 var result = [];
 var input = cli.input.length ? cli.input : [
-    '*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}',
-    'doc/**/*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}',
-    'docs/**/*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
+    '{docs/**/,doc/**/,}*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
 ];
 
 /**
