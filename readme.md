@@ -19,13 +19,15 @@ it will warn you and suggest using `their` instead of `his`.
 
 > Suggestions, feature requests, and issues are more than welcome!
 
+Give **alex** a spin on the [Online demo »](https://wooorm.github.io/alex/#demo).
+
 ## Why
 
+*   [x] To get better at considerate writing;
 *   [x] Catches many possible offenses;
 *   [x] Suggests helpful alternatives;
 *   [x] Reads plain-text and markdown as input;
-*   [x] Stylish;
-*   [x] [Online demo »](https://wooorm.github.io/alex/#demo)
+*   [x] Stylish.
 
 ## Install
 
