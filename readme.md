@@ -31,7 +31,7 @@ Give **alex** a spin on the [Online demo »](http://alexjs.com/#demo).
 
 ## Install
 
-[npm](https://docs.npmjs.com/cli/install) (with [Node.js](https://nodejs.org/download/)):
+[npm](https://docs.npmjs.com/cli/install) (with [Node.js](https://nodejs.org/en/download/)):
 
 ```sh
 $ npm install alex --global
