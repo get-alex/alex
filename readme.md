@@ -1,9 +1,9 @@
 <!--lint disable no-html first-heading-level maximum-line-length-->
 
 <h1 align="center">
-    <img width="400" src="https://rawgit.com/wooorm/alex/master/media/logo.svg" alt="alex">
-    <br>
-    <br>
+  <img width="400" src="https://rawgit.com/wooorm/alex/master/media/logo.svg" alt="alex">
+  <br>
+  <br>
 </h1>
 
 > 📝 **alex** — Catch insensitive, inconsiderate writing.
