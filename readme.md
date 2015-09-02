@@ -133,6 +133,9 @@ demonstrated in the example above, as it holds the possible violations.
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead.
 
+**alex** ignores words meant literally, so `“he”`, `He — ...`, and [the like](https://github.com/wooorm/nlcst-is-literal#isliteralparent-index)
+are not warned about
+
 ## Editors
 
 *   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
