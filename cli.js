@@ -1,7 +1,20 @@
 #!/usr/bin/env node
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module alex
+ * @fileoverview CLI for alex.
+ */
+
 'use strict';
 
+/* eslint-env node */
 /* eslint-disable no-console */
+
+/*
+ * Dependencies.
+ */
 
 var bail = require('bail');
 var notifier = require('update-notifier');
@@ -13,7 +26,23 @@ var toFile = require('to-vfile');
 var alex = require('./');
 var pack = require('./package');
 
+/*
+ * Constants.
+ */
+
 var expextPipeIn = !process.stdin.isTTY;
+
+/*
+ * Update messages.
+ */
+
+notifier({
+    'pkg': pack
+}).notify();
+
+/*
+ * Set-up meow.
+ */
 
 var cli = meow({
     'help': [
@@ -29,15 +58,25 @@ var cli = meow({
     ]
 });
 
-notifier({
-    'pkg': pack
-}).notify();
+/*
+ * Set-up.
+ */
 
 var exit = 0;
 var result = [];
 var input = cli.input.length ? cli.input : [
     '{docs/**/,doc/**/,}*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
 ];
+
+/*
+ * Exit.
+ */
+
+process.on('exit', function () {
+    console.log(format(result));
+
+    process.exit(exit);
+});
 
 /**
  * Log a virtual file processed by alex.
@@ -53,16 +92,8 @@ function log(file) {
 }
 
 /*
- * Exit.
+ * Handle stdin(4).
  */
-
-process.on('exit', function () {
-    console.log(format(result));
-
-    /* eslint-disable no-process-exit */
-    process.exit(exit);
-    /* eslint-enable no-process-exit */
-});
 
 if (expextPipeIn) {
     getStdin().then(function (value) {
@@ -77,6 +108,10 @@ if (expextPipeIn) {
 
     return;
 }
+
+/*
+ * Handle patterns.
+ */
 
 globby(input).then(function (filePaths) {
     filePaths.forEach(function (filePath) {
