@@ -8,7 +8,7 @@
 
 > 📝 **alex** — Catch insensitive, inconsiderate writing.
 
-[![Build Status](https://img.shields.io/travis/wooorm/alex.svg)](https://travis-ci.org/wooorm/alex) [![Coverage Status](https://img.shields.io/codecov/c/github/wooorm/alex.svg)](https://codecov.io/github/wooorm/alex) [![Code Climate](http://img.shields.io/codeclimate/github/wooorm/alex.svg)](https://codeclimate.com/github/wooorm/alex)
+[![Build Status](https://img.shields.io/travis/wooorm/alex.svg)](https://travis-ci.org/wooorm/alex) [![Coverage Status](https://img.shields.io/codecov/c/github/wooorm/alex.svg)](https://codecov.io/github/wooorm/alex)
 
 Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, race related, religion inconsiderate, or other
