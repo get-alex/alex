@@ -18476,6 +18476,1452 @@ module.exports = [
     "id": 219
   },
   {
+    "type": "simple",
+    "considerate": {
+      "Armenian person": "a",
+      "Armenian American": "a"
+    },
+    "inconsiderate": {
+      "armo": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 220
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Armenian people": "a",
+      "Armenian Americans": "a"
+    },
+    "inconsiderate": {
+      "armos": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 221
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Australian Aboriginal": "a",
+      "people of the pacific islands": "a"
+    },
+    "inconsiderate": {
+      "boongas": "a",
+      "boongs": "a",
+      "bungas": "a",
+      "boonies": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 222
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Australian Aboriginal": "a",
+      "pacific islander": "a"
+    },
+    "inconsiderate": {
+      "boonga": "a",
+      "boong": "a",
+      "bong": "a",
+      "bung": "a",
+      "bunga": "a",
+      "boonie": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 223
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Dutch person": "a"
+    },
+    "inconsiderate": {
+      "cheesehead": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 224
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Dutch people": "a"
+    },
+    "inconsiderate": {
+      "cheeseheads": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 225
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "French person": "a"
+    },
+    "inconsiderate": {
+      "cheeseeating surrender monkey": "a",
+      "cheese eating surrender monkey": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 226
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "French people": "a"
+    },
+    "inconsiderate": {
+      "cheeseeating surrender monkies": "a",
+      "cheese eating surrender monkies": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 227
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Finnish American": "a"
+    },
+    "inconsiderate": {
+      "chinaswede": "a",
+      "china swede": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 228
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Finnish Americans": "a"
+    },
+    "inconsiderate": {
+      "chinaswedes": "a",
+      "china swedes": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 229
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Chinese person": "a"
+    },
+    "inconsiderate": {
+      "chinamen": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 230
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Chinese people": "a"
+    },
+    "inconsiderate": {
+      "ching chong": "a",
+      "chinaman": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 231
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Chinese person": "a",
+      "Asian person": "a"
+    },
+    "inconsiderate": {
+      "banana": "a",
+      "ching chong": "a",
+      "chink": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 232
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Chinese people": "a",
+      "Asian people": "a"
+    },
+    "inconsiderate": {
+      "bananas": "a",
+      "ching chongs": "a",
+      "chinks": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 233
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Chinese person": "a",
+      "Korean person": "a"
+    },
+    "inconsiderate": {
+      "chonky": "a",
+      "chunky": "a",
+      "chunger": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 234
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Chinese people": "a",
+      "Korean people": "a"
+    },
+    "inconsiderate": {
+      "chonkies": "a",
+      "chunkies": "a",
+      "chonkys": "a",
+      "chunkys": "a",
+      "chungers": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 235
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Canadian Aboriginal": "a"
+    },
+    "inconsiderate": {
+      "chug": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 236
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Canadian Aboriginals": "a"
+    },
+    "inconsiderate": {
+      "chugs": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 237
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "hispanic person": "a",
+      "person of color": "a",
+      "black person": "a"
+    },
+    "inconsiderate": {
+      "coconut": "a",
+      "oreo": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 238
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "hispanic people": "a",
+      "people of color": "a",
+      "black people": "a"
+    },
+    "inconsiderate": {
+      "coconuts": "a",
+      "oreos": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 239
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Cajun": "a"
+    },
+    "inconsiderate": {
+      "coonass": "a",
+      "coon ass": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 240
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Cajun people": "a"
+    },
+    "inconsiderate": {
+      "coonasses": "a",
+      "coon asses": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 241
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Indian person": "a"
+    },
+    "inconsiderate": {
+      "currymuncher": "a",
+      "curry muncher": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 242
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Indian people": "a"
+    },
+    "inconsiderate": {
+      "currymunchers": "a",
+      "curry munchers": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 243
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Hindi person": "a"
+    },
+    "inconsiderate": {
+      "Dotheads": "a",
+      "Dot heads": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 244
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Hindi people": "a"
+    },
+    "inconsiderate": {
+      "Dothead": "a",
+      "Dot head": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 245
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "caribbean people": "a"
+    },
+    "inconsiderate": {
+      "golliwogs": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 246
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "caribbean person": "a"
+    },
+    "inconsiderate": {
+      "golliwog": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 247
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "foreigners": "a"
+    },
+    "inconsiderate": {
+      "guizi": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 248
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "romani person": "a"
+    },
+    "inconsiderate": {
+      "gyppos": "a",
+      "gippos": "a",
+      "gypos": "a",
+      "gyppies": "a",
+      "gyppys": "a",
+      "gipps": "a",
+      "gypsys": "a",
+      "gypsies": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 249
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "romani people": "a"
+    },
+    "inconsiderate": {
+      "gyppo": "a",
+      "gippo": "a",
+      "gypo": "a",
+      "gyppie": "a",
+      "gyppy": "a",
+      "gipp": "a",
+      "gypsy": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 250
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "afrikaner": "a"
+    },
+    "inconsiderate": {
+      "hairyback": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 251
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "afrikaners": "a"
+    },
+    "inconsiderate": {
+      "hairybacks": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 252
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Maori person": "a"
+    },
+    "inconsiderate": {
+      "hori": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 253
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Maoris": "a"
+    },
+    "inconsiderate": {
+      "horis": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 254
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Indonesian person": "a"
+    },
+    "inconsiderate": {
+      "jap": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 255
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Indonesians": "a"
+    },
+    "inconsiderate": {
+      "indons": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 256
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Japanese person": "a"
+    },
+    "inconsiderate": {
+      "jap": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 257
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Japanese": "a"
+    },
+    "inconsiderate": {
+      "japs": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 258
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Koreans": "a"
+    },
+    "inconsiderate": {
+      "gyopos": "a",
+      "kyopos": "a",
+      "kimchis": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 259
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Korean person": "a"
+    },
+    "inconsiderate": {
+      "gyopo": "a",
+      "kyopo": "a",
+      "kimchi": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 260
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "lebanese": "a"
+    },
+    "inconsiderate": {
+      "lebos": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 261
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "lebanese person": "a"
+    },
+    "inconsiderate": {
+      "lebo": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 262
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "lithuanians": "a"
+    },
+    "inconsiderate": {
+      "lugans": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 263
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "lithuanian person": "a"
+    },
+    "inconsiderate": {
+      "lugan": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 264
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "russians": "a"
+    },
+    "inconsiderate": {
+      "moskals": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 265
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "russian person": "a"
+    },
+    "inconsiderate": {
+      "moskal": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 266
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Poles": "a",
+      "Slavs": "a"
+    },
+    "inconsiderate": {
+      "polacks": "a",
+      "pollocks": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 267
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Pole": "a",
+      "Slav": "a",
+      "Polish person": "a",
+      "Slavic person": "a"
+    },
+    "inconsiderate": {
+      "polack": "a",
+      "pollock": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 268
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "English": "a",
+      "Brittish": "a"
+    },
+    "inconsiderate": {
+      "lebo": "a",
+      "pom": "a",
+      "poms": "a",
+      "pohm": "a",
+      "pohms": "a",
+      "pommy": "a",
+      "pommie": "a",
+      "pommies": "a",
+      "pommie grant": "a",
+      "pommie grants": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 269
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Hispanic": "a",
+      "Spanish": "a"
+    },
+    "inconsiderate": {
+      "spic": "a",
+      "spick": "a",
+      "spik": "a",
+      "spig": "a",
+      "spigotty": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 270
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "German": "a"
+    },
+    "inconsiderate": {
+      "boche": "a",
+      "bosche": "a",
+      "bosch": "a",
+      "hun": "a",
+      "jerry": "a",
+      "kraut": "a",
+      "piefke": "a",
+      "squarehead": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 271
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Germans": "a"
+    },
+    "inconsiderate": {
+      "boches": "a",
+      "bosches": "a",
+      "boschs": "a",
+      "huns": "a",
+      "jerries": "a",
+      "krauts": "a",
+      "piefkes": "a",
+      "squareheads": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 272
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "female Australian Aboriginal": "a"
+    },
+    "inconsiderate": {
+      "lubra": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 273
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "female Native American": "a"
+    },
+    "inconsiderate": {
+      "squa": "a",
+      "skwa": "a",
+      "esqua": "a",
+      "sqeh": "a",
+      "skwe": "a",
+      "que": "a",
+      "kwa": "a",
+      "ikwe": "a",
+      "exkwew": "a",
+      "xkwe": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 274
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "italian": "a"
+    },
+    "inconsiderate": {
+      "dago": "a",
+      "dego": "a",
+      "greaseball": "a",
+      "greaser": "a",
+      "guinea": "a",
+      "ginzo": "a",
+      "swamp guinea": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 275
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "italians": "a"
+    },
+    "inconsiderate": {
+      "dagos": "a",
+      "degos": "a",
+      "greaseballs": "a",
+      "greasers": "a",
+      "guineas": "a",
+      "ginzos": "a",
+      "swamp guineas": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 276
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "person of color": "a",
+      "black person": "a",
+      "non-Muslim": "a"
+    },
+    "inconsiderate": {
+      "kaffir": "a",
+      "kaffer": "a",
+      "kafir": "a",
+      "kaffre": "a",
+      "kuffar": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 277
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "african americans": "a",
+      "south americans": "a",
+      "caribbean people": "a",
+      "africans": "a",
+      "people of color": "a",
+      "black people": "a"
+    },
+    "inconsiderate": {
+      "abid": "a",
+      "abeed": "a",
+      "bluegums": "a",
+      "bootlips": "a",
+      "bounty bars": "a",
+      "brownies": "a",
+      "buffies": "a",
+      "burrheads": "a",
+      "burr heads": "a",
+      "coons": "a",
+      "darkeys": "a",
+      "darkies": "a",
+      "eight balls": "a",
+      "gables": "a",
+      "groids": "a",
+      "jigaboos": "a",
+      "jiggabos": "a",
+      "jigaroonis": "a",
+      "jijjiboos": "a",
+      "zigabos": "a",
+      "jigs": "a",
+      "jiggs": "a",
+      "jiggas": "a",
+      "jiggers": "a",
+      "jungle bunnies": "a",
+      "macacas": "a",
+      "maumaus": "a",
+      "mau maus": "a",
+      "mooncrickets": "a",
+      "moon crickets": "a",
+      "pickaninnies": "a",
+      "porch monkies": "a",
+      "sambos": "a",
+      "spades": "a",
+      "spearchuckers": "a",
+      "sooties": "a",
+      "schvartsen": "a",
+      "schwartzen": "a",
+      "thicklips": "a",
+      "tar babies": "a",
+      "niggers": "a",
+      "negros": "a",
+      "nigers": "a",
+      "nigs": "a",
+      "nigors": "a",
+      "nigras": "a",
+      "nigres": "a",
+      "nigars": "a",
+      "niggurs": "a",
+      "niggas": "a",
+      "niggahs": "a",
+      "niggars": "a",
+      "nigguhs": "a",
+      "niggresses": "a",
+      "nigettes": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 278
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "african american": "a",
+      "south american": "a",
+      "caribbean person": "a",
+      "african": "a",
+      "person of color": "a",
+      "black person": "a"
+    },
+    "inconsiderate": {
+      "abid": "a",
+      "abeed": "a",
+      "alligator bait": "a",
+      "gator bait": "a",
+      "bluegum": "a",
+      "bootlip": "a",
+      "bounty bar": "a",
+      "brownie": "a",
+      "buffy": "a",
+      "burrhead": "a",
+      "burr head": "a",
+      "coon": "a",
+      "darky": "a",
+      "darkey": "a",
+      "darkie": "a",
+      "gable": "a",
+      "eight ball": "a",
+      "groid": "a",
+      "jigaboo": "a",
+      "jiggabo": "a",
+      "jigarooni": "a",
+      "jijjiboo": "a",
+      "zigabo": "a",
+      "jig": "a",
+      "jigg": "a",
+      "jigga": "a",
+      "jigger": "a",
+      "jungle bunny": "a",
+      "macaca": "a",
+      "maumau": "a",
+      "mau mau": "a",
+      "mooncricket": "a",
+      "moon cricket": "a",
+      "pickaninny": "a",
+      "porch monkey": "a",
+      "sambo": "a",
+      "spade": "a",
+      "spearchuckers": "a",
+      "sooty": "a",
+      "schvartse": "a",
+      "schwartze": "a",
+      "thicklip": "a",
+      "tar baby": "a",
+      "nigger": "a",
+      "negro": "a",
+      "niger": "a",
+      "nig": "a",
+      "nigor": "a",
+      "nigra": "a",
+      "nigre": "a",
+      "nigar": "a",
+      "niggur": "a",
+      "nigga": "a",
+      "niggah": "a",
+      "niggar": "a",
+      "nigguh": "a",
+      "niggress": "a",
+      "nigette": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 279
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Native Americans": "a"
+    },
+    "inconsiderate": {
+      "injuns": "a",
+      "prairie niggers": "a",
+      "redskins": "a",
+      "timber niggers": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 280
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "Native American": "a"
+    },
+    "inconsiderate": {
+      "injun": "a",
+      "prairie nigger": "a",
+      "redskin": "a",
+      "timber nigger": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 281
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "middle eastern person": "a",
+      "arabic person": "a"
+    },
+    "inconsiderate": {
+      "arabush": "a",
+      "camel jockey": "a",
+      "dune coon": "a",
+      "hajji": "a",
+      "hadji": "a",
+      "haji": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 282
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "middle eastern people": "a",
+      "arabic people": "a"
+    },
+    "inconsiderate": {
+      "arabushs": "a",
+      "camel jockeys": "a",
+      "dune coons": "a",
+      "hajjis": "a",
+      "hadjis": "a",
+      "hajis": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 283
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "sikhs": "a",
+      "arabs": "a",
+      "muslims": "a"
+    },
+    "inconsiderate": {
+      "pakis": "a",
+      "ragheads": "a",
+      "sand niggers": "a",
+      "towel heads": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 284
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "sikh": "a",
+      "arab": "a",
+      "muslim": "a"
+    },
+    "inconsiderate": {
+      "pakis": "a",
+      "osama": "a",
+      "raghead": "a",
+      "sand nigger": "a",
+      "towel head": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 285
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "mexican": "a",
+      "immigrant": "a",
+      "migrant worker": "a"
+    },
+    "inconsiderate": {
+      "beaner": "a",
+      "beaney": "a",
+      "tacohead": "a",
+      "wetback": "a",
+      "illegal": "a",
+      "pocho": "a",
+      "pocha": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 286
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "mexicans": "a",
+      "immigrants": "a",
+      "migrant workers": "a"
+    },
+    "inconsiderate": {
+      "beaners": "a",
+      "beaneys": "a",
+      "tacoheads": "a",
+      "wetbacks": "a",
+      "illegals": "a",
+      "pochos": "a",
+      "pochas": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 287
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "caucasian": "a"
+    },
+    "inconsiderate": {
+      "bule": "a",
+      "gora": "a",
+      "gub": "a",
+      "gubba": "a",
+      "gweilo": "a",
+      "gwailo": "a",
+      "kwai lo": "a",
+      "haole": "a",
+      "honky": "a",
+      "honkey": "a",
+      "honkie": "a",
+      "japie": "a",
+      "yarpie": "a",
+      "mabuno": "a",
+      "mahbuno": "a",
+      "klansman": "a",
+      "mzungu": "a",
+      "redleg": "a",
+      "redneck": "a",
+      "roundeye": "a",
+      "whitey": "a",
+      "wigger": "a",
+      "whigger": "a",
+      "wigga": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 288
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "caucasians": "a"
+    },
+    "inconsiderate": {
+      "bules": "a",
+      "goras": "a",
+      "gubs": "a",
+      "gubbas": "a",
+      "gweilos": "a",
+      "gwailos": "a",
+      "kwai los": "a",
+      "haoles": "a",
+      "honkeys": "a",
+      "honkies": "a",
+      "japies": "a",
+      "yarpies": "a",
+      "mabunos": "a",
+      "mahbunos": "a",
+      "klansmen": "a",
+      "mzungus": "a",
+      "redlegs": "a",
+      "rednecks": "a",
+      "round eyes": "a",
+      "whities": "a",
+      "whiteys": "a",
+      "wiggers": "a",
+      "whiggers": "a",
+      "wiggas": "a",
+      "write trash": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 289
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "ukrainian": "a"
+    },
+    "inconsiderate": {
+      "ukrop": "a",
+      "khokhol": "a",
+      "khokhols": "a",
+      "katsap": "a",
+      "kacap": "a",
+      "kacapas": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 290
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "african": "a"
+    },
+    "inconsiderate": {
+      "uncle tom": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 291
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "foreigner": "a",
+      "asian": "a",
+      "african": "a"
+    },
+    "inconsiderate": {
+      "wog": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 292
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "foreigners": "a",
+      "asians": "a",
+      "africans": "a"
+    },
+    "inconsiderate": {
+      "wogs": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 293
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "northerner": "a",
+      "american": "a"
+    },
+    "inconsiderate": {
+      "gringo": "a",
+      "hillbilly": "a",
+      "seppo": "a",
+      "septic": "a",
+      "yankee": "a",
+      "yank": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 294
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "northerners": "a",
+      "americans": "a"
+    },
+    "inconsiderate": {
+      "gringos": "a",
+      "hillbillies": "a",
+      "seppos": "a",
+      "septics": "a",
+      "yankees": "a",
+      "yanks": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 295
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "jew": "a"
+    },
+    "inconsiderate": {
+      "christ killers": "a",
+      "cushi": "a",
+      "kushi": "a",
+      "heeb": "a",
+      "hebe": "a",
+      "hymie": "a",
+      "ike": "a",
+      "ikeymo": "a",
+      "kike": "a",
+      "kyke": "a",
+      "yid": "a",
+      "shylock": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 296
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "jews": "a"
+    },
+    "inconsiderate": {
+      "christ killers": "a",
+      "cushis": "a",
+      "kushis": "a",
+      "heebs": "a",
+      "hebes": "a",
+      "hymies": "a",
+      "ikes": "a",
+      "ikeymos": "a",
+      "kikes": "a",
+      "kykes": "a",
+      "yids": "a",
+      "shylocks": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 297
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "asian": "a"
+    },
+    "inconsiderate": {
+      "buddhahead": "a",
+      "coolie": "a",
+      "dink": "a",
+      "gook": "a",
+      "gookeye": "a",
+      "gook eye": "a",
+      "gooky": "a",
+      "pancake face": "a",
+      "slope": "a",
+      "slopehead": "a",
+      "slopy": "a",
+      "slopey": "a",
+      "sloper": "a",
+      "squinty": "a",
+      "zipperhead": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 298
+  },
+  {
+    "type": "simple",
+    "considerate": {
+      "asians": "a"
+    },
+    "inconsiderate": {
+      "buddhaheads": "a",
+      "coolies": "a",
+      "dinks": "a",
+      "gooks": "a",
+      "gookeyes": "a",
+      "gook eyes": "a",
+      "gookies": "a",
+      "pancake faces": "a",
+      "slopes": "a",
+      "slopeheads": "a",
+      "slopies": "a",
+      "slopeys": "a",
+      "slopers": "a",
+      "stuinties": "a",
+      "zipperheads": "a"
+    },
+    "categories": [
+      "a"
+    ],
+    "id": 299
+  },
+  {
     "type": "and",
     "considerate": {
       "primary": "a",
@@ -18493,7 +19939,7 @@ module.exports = [
       "a",
       "b"
     ],
-    "id": 220
+    "id": 300
   }
 ]
 ;
