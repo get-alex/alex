@@ -47,7 +47,7 @@ $ npm install alex --global
 
 *   [Support](#support)
 
-*   [Editors](#editors)
+*   [Integrations](#integrations)
 
 *   [Workflow](#workflow)
 
@@ -136,10 +136,11 @@ demonstrated in the example above, as it holds the possible violations.
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the like](https://github.com/wooorm/nlcst-is-literal#isliteralparent-index)
 are not warned about
 
-## Editors
+## Integrations
 
 *   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
 *   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
+*   Gulp — [dustinspecker/gulp-alex](https://github.com/dustinspecker/gulp-alex)
 
 ## Workflow
 
