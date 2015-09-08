@@ -45,11 +45,16 @@ $ npm install alex --global
 
     *   [alex(value)](#alexvalue)
 
-*   [Support](#support)
-
 *   [Integrations](#integrations)
 
+*   [Support](#support)
+
 *   [Workflow](#workflow)
+
+*   [FAQ](#faq)
+
+    *   [Why is this named alex?](#why-is-this-named-alex)
+    *   [Alex didn’t check ‘X’, this is dumb!](#alex-didnt-check-x-this-is-dumb)
 
 *   [Contributing](#contributing)
 
@@ -92,7 +97,7 @@ See `$ alex --help` for more information.
 [npm](https://docs.npmjs.com/cli/install):
 
 ```sh
-$ npm install alex
+$ npm install alex --save
 ```
 
 **alex** is also available for [bower](http://bower.io/#install-packages) and
@@ -127,6 +132,12 @@ alex('We’ve confirmed his identity.').messages;
 in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
 demonstrated in the example above, as it holds the possible violations.
 
+## Integrations
+
+*   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
+*   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
+*   Gulp — [dustinspecker/gulp-alex](https://github.com/dustinspecker/gulp-alex)
+
 ## Support
 
 **alex** checks for many patterns of English language, and warns for:
@@ -145,12 +156,6 @@ demonstrated in the example above, as it holds the possible violations.
 
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the like](https://github.com/wooorm/nlcst-is-literal#isliteralparent-index)
 are not warned about
-
-## Integrations
-
-*   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
-*   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
-*   Gulp — [dustinspecker/gulp-alex](https://github.com/dustinspecker/gulp-alex)
 
 ## Workflow
 
@@ -174,6 +179,21 @@ as follows:
   }
 }
 ```
+
+## FAQ
+
+<!--lint disable no-heading-punctuation-->
+
+### Why is this named alex?
+
+It’s a nice androgynous/unisex name, it was free on npm, I like it! :smile:
+
+### Alex didn’t check ‘X’, this is dumb!
+
+This is not a question, and I don’t agree. See
+[CONTRIBUTING.md](CONTRIBUTING.md) on how to get ‘X’ checked by alex.
+
+<!--lint enable no-heading-punctuation-->
 
 ## Contributing
 
