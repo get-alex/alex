@@ -89,6 +89,16 @@ See `$ alex --help` for more information.
 
 ## API
 
+[npm](https://docs.npmjs.com/cli/install):
+
+```sh
+$ npm install alex
+```
+
+**alex** is also available for [bower](http://bower.io/#install-packages) and
+[duo](http://duojs.org/#getting-started), and as an AMD, CommonJS, and globals
+module, [uncompressed](alex.js) and [compressed](alex.min.js).
+
 ### alex(value)
 
 **Example**
