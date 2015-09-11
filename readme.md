@@ -137,6 +137,7 @@ demonstrated in the example above, as it holds the possible violations.
 *   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
 *   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
 *   Gulp — [dustinspecker/gulp-alex](https://github.com/dustinspecker/gulp-alex)
+*   Slack — [keoghpe/alex-slack](https://github.com/keoghpe/alex-slack)
 
 ## Support
 
