@@ -203,7 +203,7 @@ a:hover, a:focus {
   }
 }
 
-.text, .report, .input, .highlight {
+.text, .report {
   padding-right: 7.5em;
   padding-left: 7.5em;
 }
@@ -218,10 +218,6 @@ a:hover, a:focus {
 }
 
 .report:last-child {
-  padding-top: 2em;
-}
-
-.input, .highlight {
   padding-top: 2em;
 }
 
@@ -309,14 +305,13 @@ a:hover, a:focus {
 
 .input, .highlight {
   /* major iOS bugs when not set to the default font :( */
-  padding: 2em;
   font-family: Helvetica, webkit-pictograph, arial, serif;
 
   box-sizing: border-box;
   width: 100%;
   height: 100%;
   border-width: 0;
-  font-size: 0.9em;
+  font-size: 18px;
   display: block;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -334,6 +329,7 @@ a:hover, a:focus {
 }
 
 .input {
+  padding: 0;
   resize: none;
   color: white;
   position: relative;
@@ -341,6 +337,14 @@ a:hover, a:focus {
   font-weight: light;
   background-color: transparent;
   transition: 100ms background-color;
+}
+
+.input-container {
+  padding-top: 24px;
+  padding-bottom: 24px;
+}
+
+.highlight {
 }
 
 .input:focus {
@@ -352,11 +356,19 @@ a:hover, a:focus {
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
-  bottom: 0;
+  top: 24px;
+  bottom: 24px;
+  height: initial !important;
   color: transparent;
   overflow: hidden;
   transition: 100ms opacity;
+}
+
+.highlight-inner {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
 }
 
 .highlight .offense {
