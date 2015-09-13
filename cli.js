@@ -46,7 +46,12 @@ notifier({
 
 var cli = meow({
     'help': [
-        'Usage:  alex [<file> ...]',
+        'Usage:  alex [<file> ...] [-w, --why]',
+        '',
+        'Options:',
+        '',
+        '  -w, --why    output more info regarding why things might be ' +
+        'offensive',
         '',
         'When no input files are given, searches for markdown and text',
         'files in the current directory, `doc`, and `docs`.',
@@ -64,6 +69,7 @@ var cli = meow({
 
 var exit = 0;
 var result = [];
+var why = Boolean(cli.flags.w || cli.flags.why);
 var input = cli.input.length ? cli.input : [
     '{docs/**/,doc/**/,}*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
 ];
@@ -73,7 +79,9 @@ var input = cli.input.length ? cli.input : [
  */
 
 process.on('exit', function () {
-    console.log(format(result));
+    console.log(format(result, {
+        'verbose': why
+    }));
 
     process.exit(exit);
 });
