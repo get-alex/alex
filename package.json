@@ -54,7 +54,7 @@
     "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
-    "ava": "^0.1.0",
+    "ava": "^0.2.0",
     "browserify": "^11.0.1",
     "eslint": "^1.0.0",
     "esmangle": "^1.0.1",
