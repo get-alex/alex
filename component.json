@@ -23,8 +23,8 @@
   "dependencies": {
     "wooorm/bail": "^1.0.0",
     "wooorm/mdast": "^1.0.0",
-    "wooorm/mdast-util-to-nlcst": "~0.2.1",
-    "wooorm/retext": "^1.0.0-rc.4",
+    "wooorm/mdast-util-to-nlcst": "^1.0.0",
+    "wooorm/retext": "^1.0.0",
     "wooorm/retext-english": "^1.0.0",
     "wooorm/retext-equality": "^1.2.0",
     "wooorm/vfile-sort": "^1.0.0"

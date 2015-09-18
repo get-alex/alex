@@ -58,11 +58,13 @@ function alex(value) {
      */
 
     markdown.process(value, function (err, file) {
+        var tree;
+
         bail(err);
 
-        bridge(file);
+        tree = bridge(file, english.Parser);
 
-        english.run(file);
+        english.run(tree, file);
 
         sort(file);
 
