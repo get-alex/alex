@@ -2,6 +2,14 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+1.3.0 / 2015-10-07
+==================
+
+*   Add support for not treating input as markdown ([d6bbe4e](https://github.com/wooorm/alex/commit/d6bbe4e))
+*   Add precedence for files over stdin(4) ([39952c3](https://github.com/wooorm/alex/commit/39952c3))
+*   Update retext-equality ([3962980](https://github.com/wooorm/alex/commit/3962980))
+*   Updated language in readme ([4007cd5](https://github.com/wooorm/alex/commit/4007cd5))
+
 1.2.0 / 2015-09-18
 ==================
 
