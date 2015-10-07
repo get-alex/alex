@@ -54,7 +54,7 @@ $ npm install alex --global
 *   [FAQ](#faq)
 
     *   [Why is this named alex?](#why-is-this-named-alex)
-    *   [Alex didn’t check ‘X’, this is dumb!](#alex-didnt-check-x-this-is-dumb)
+    *   [Alex didn’t check ‘X’!](#alex-didnt-check-x)
 
 *   [Contributing](#contributing)
 
@@ -189,9 +189,9 @@ as follows:
 
 It’s a nice androgynous/unisex name, it was free on npm, I like it! :smile:
 
-### Alex didn’t check ‘X’, this is dumb!
+### Alex didn’t check ‘X’!
 
-This is not a question, and I don’t agree. See
+See
 [CONTRIBUTING.md](CONTRIBUTING.md) on how to get ‘X’ checked by alex.
 
 <!--lint enable no-heading-punctuation-->
