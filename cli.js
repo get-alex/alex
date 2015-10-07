@@ -103,7 +103,7 @@ function log(file) {
  * Handle stdin(4).
  */
 
-if (expextPipeIn) {
+if (!cli.input.length && expextPipeIn) {
     getStdin().then(function (value) {
         var file = toFile('<stdin>');
 
