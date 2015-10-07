@@ -44,6 +44,8 @@ $ npm install alex --global
 *   [API](#api)
 
     *   [alex(value)](#alexvalue)
+    *   [alex.markdown(value)](#alexmarkdownvalue)
+    *   [alex.text(value)](#alextextvalue)
 
 *   [Integrations](#integrations)
 
@@ -106,6 +108,8 @@ module, [uncompressed](alex.js) and [compressed](alex.min.js).
 
 ### alex(value)
 
+### alex.markdown(value)
+
 **Example**
 
 ```js
@@ -131,6 +135,28 @@ alex('We’ve confirmed his identity.').messages;
 [`VFile`](https://github.com/wooorm/vfile). You’ll probably be interested
 in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
 demonstrated in the example above, as it holds the possible violations.
+
+### alex.text(value)
+
+Works just like [`alex()`](#alexvalue), but does not parse as markdown
+(thus things like code are not ignored)
+
+**Example**
+
+```js
+alex('The `boogeyman`.').messages; // []
+
+alex.text('The `boogeyman`.').messages;
+/*
+ * [ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
+ *   name: '1:6-1:15',
+ *   file: '',
+ *   reason: '`boogeyman` may be insensitive, use `boogey` instead',
+ *   line: 1,
+ *   column: 6,
+ *   fatal: false } ]
+ */
+```
 
 ## Integrations
 

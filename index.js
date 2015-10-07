@@ -16,6 +16,7 @@
  * Dependencies.
  */
 
+var VFile = require('vfile');
 var bail = require('bail');
 var mdast = require('mdast');
 var bridge = require('mdast-util-to-nlcst');
@@ -74,8 +75,30 @@ function alex(value) {
     return result;
 }
 
+/**
+ * alex, but just for plain-text.
+ *
+ * Useful iof you would rather not have things like
+ * (inline or block-level) code be ignored.
+ *
+ * @param {string|VFile} value - Content
+ * @return {VFile} - Result.
+ */
+function text(value) {
+    var file = new VFile(value);
+
+    english.run(english.parse(file), file, bail);
+
+    sort(file);
+
+    return file;
+}
+
 /*
  * Expose.
  */
+
+alex.text = text;
+alex.markdown = alex;
 
 module.exports = alex;

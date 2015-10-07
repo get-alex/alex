@@ -24,7 +24,7 @@ var alex = require('./');
  * warnings are exposed.
  */
 
-test(function (t) {
+test('alex()', function (t) {
     t.same(alex([
         'The boogeyman wrote all changes to the **master server**. Thus,',
         'the slaves were read-only copies of master. But not to worry,',
@@ -34,6 +34,20 @@ test(function (t) {
         '1:42-1:48: `master` / `slaves` may be insensitive, use `primary` / `replica` instead',
         '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
         '3:10-3:17: `cripple` may be insensitive, use `person with a limp` instead'
+    ]);
+
+    t.end();
+});
+
+test('alex.markdown()', function (t) {
+    t.same(alex.markdown('The `boogeyman`.').messages.map(String), []);
+
+    t.end();
+});
+
+test('alex.text()', function (t) {
+    t.same(alex.text('The `boogeyman`.').messages.map(String), [
+        '1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead'
     ]);
 
     t.end();

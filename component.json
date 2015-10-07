@@ -27,7 +27,8 @@
     "wooorm/retext": "^1.0.0",
     "wooorm/retext-english": "^1.0.0",
     "wooorm/retext-equality": "^1.4.0",
-    "wooorm/vfile-sort": "^1.0.0"
+    "wooorm/vfile-sort": "^1.0.0",
+    "wooorm/vfile": "^1.1.0"
   },
   "scripts": [
     "index.js"

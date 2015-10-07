@@ -46,12 +46,13 @@ notifier({
 
 var cli = meow({
     'help': [
-        'Usage:  alex [<file> ...] [-w, --why]',
+        'Usage:  alex [<file> ...] [-w, --why] [-t, --text]',
         '',
         'Options:',
         '',
         '  -w, --why    output more info regarding why things might be ' +
         'offensive',
+        '  -t, --text   treat input as plain-text (not markdown)',
         '',
         'When no input files are given, searches for markdown and text',
         'files in the current directory, `doc`, and `docs`.',
@@ -70,6 +71,7 @@ var cli = meow({
 var exit = 0;
 var result = [];
 var why = Boolean(cli.flags.w || cli.flags.why);
+var fn = Boolean(cli.flags.t || cli.flags.text) ? 'text' : 'markdown'
 var input = cli.input.length ? cli.input : [
     '{docs/**/,doc/**/,}*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
 ];
@@ -126,7 +128,7 @@ globby(input).then(function (filePaths) {
         toFile.read(filePath, function (err, file) {
             bail(err);
 
-            alex(file);
+            alex[fn](file);
 
             log(file);
         });
