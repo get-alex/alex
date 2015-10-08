@@ -78,7 +78,7 @@ function alex(value) {
 /**
  * alex, but just for plain-text.
  *
- * Useful iof you would rather not have things like
+ * Useful if you would rather not have things like
  * (inline or block-level) code be ignored.
  *
  * @param {string|VFile} value - Content
