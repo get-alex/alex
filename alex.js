@@ -79,7 +79,7 @@ function alex(value) {
 /**
  * alex, but just for plain-text.
  *
- * Useful iof you would rather not have things like
+ * Useful if you would rather not have things like
  * (inline or block-level) code be ignored.
  *
  * @param {string|VFile} value - Content
@@ -104,7 +104,7 @@ alex.markdown = alex;
 
 module.exports = alex;
 
-},{"bail":4,"mdast":20,"mdast-util-to-nlcst":19,"retext":57,"retext-english":53,"retext-equality":54,"vfile":68,"vfile-sort":67}],2:[function(require,module,exports){
+},{"bail":4,"mdast":21,"mdast-util-to-nlcst":20,"retext":59,"retext-english":55,"retext-equality":56,"vfile":69,"vfile-sort":68}],2:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -360,7 +360,7 @@ function patch(Ware) {
 
 module.exports = patch;
 
-},{"unherit":62}],4:[function(require,module,exports){
+},{"unherit":64}],4:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -2072,7 +2072,7 @@ function blitBuffer (src, dst, offset, length) {
 }
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"base64-js":5,"ieee754":13,"is-array":15}],7:[function(require,module,exports){
+},{"base64-js":5,"ieee754":14,"is-array":16}],7:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -2636,6 +2636,94 @@ module.exports = function(src) {
 }
 
 },{}],12:[function(require,module,exports){
+'use strict';
+
+var hasOwn = Object.prototype.hasOwnProperty;
+var toStr = Object.prototype.toString;
+
+var isArray = function isArray(arr) {
+	if (typeof Array.isArray === 'function') {
+		return Array.isArray(arr);
+	}
+
+	return toStr.call(arr) === '[object Array]';
+};
+
+var isPlainObject = function isPlainObject(obj) {
+	if (!obj || toStr.call(obj) !== '[object Object]') {
+		return false;
+	}
+
+	var hasOwnConstructor = hasOwn.call(obj, 'constructor');
+	var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+	// Not own constructor property must be Object
+	if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
+		return false;
+	}
+
+	// Own properties are enumerated firstly, so to speed up,
+	// if last one is own, then all properties are own.
+	var key;
+	for (key in obj) {/**/}
+
+	return typeof key === 'undefined' || hasOwn.call(obj, key);
+};
+
+module.exports = function extend() {
+	var options, name, src, copy, copyIsArray, clone,
+		target = arguments[0],
+		i = 1,
+		length = arguments.length,
+		deep = false;
+
+	// Handle a deep copy situation
+	if (typeof target === 'boolean') {
+		deep = target;
+		target = arguments[1] || {};
+		// skip the boolean and the target
+		i = 2;
+	} else if ((typeof target !== 'object' && typeof target !== 'function') || target == null) {
+		target = {};
+	}
+
+	for (; i < length; ++i) {
+		options = arguments[i];
+		// Only deal with non-null/undefined values
+		if (options != null) {
+			// Extend the base object
+			for (name in options) {
+				src = target[name];
+				copy = options[name];
+
+				// Prevent never-ending loop
+				if (target !== copy) {
+					// Recurse if we're merging plain objects or arrays
+					if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
+						if (copyIsArray) {
+							copyIsArray = false;
+							clone = src && isArray(src) ? src : [];
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[name] = extend(deep, clone, copy);
+
+					// Don't bring in undefined values
+					} else if (typeof copy !== 'undefined') {
+						target[name] = copy;
+					}
+				}
+			}
+		}
+	}
+
+	// Return the modified object
+	return target;
+};
+
+
+},{}],13:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/he v0.5.0 by @mathias | MIT license */
 ;(function(root) {
@@ -2968,7 +3056,7 @@ module.exports = function(src) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
   var eLen = nBytes * 8 - mLen - 1
@@ -3054,7 +3142,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -3079,7 +3167,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 
 /**
  * isArray
@@ -3114,7 +3202,7 @@ module.exports = isArray || function (val) {
   return !! val && '[object Array]' == str.call(val);
 };
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 /**
@@ -3167,7 +3255,7 @@ function longestStreak(value, character) {
 
 module.exports = longestStreak;
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 
 /*
@@ -3453,7 +3541,7 @@ function markdownTable(table, options) {
 
 module.exports = markdownTable;
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -3633,7 +3721,7 @@ function attacher() {
 
 module.exports = attacher;
 
-},{"unist-util-visit":66}],19:[function(require,module,exports){
+},{"unist-util-visit":67}],20:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -3915,7 +4003,7 @@ function toNLCST(file, Parser) {
 
 module.exports = toNLCST;
 
-},{"mdast-range":18,"nlcst-to-string":27}],20:[function(require,module,exports){
+},{"mdast-range":19,"nlcst-to-string":29}],21:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -3925,6 +4013,8 @@ module.exports = toNLCST;
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -3940,12 +4030,11 @@ var Compiler = require('./lib/stringify.js');
 
 module.exports = unified({
     'name': 'mdast',
-    'type': 'ast',
     'Parser': Parser,
     'Compiler': Compiler
 });
 
-},{"./lib/parse.js":23,"./lib/stringify.js":24,"unified":63}],21:[function(require,module,exports){
+},{"./lib/parse.js":24,"./lib/stringify.js":25,"unified":27}],22:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -3956,6 +4045,8 @@ module.exports = unified({
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Note that `stringify.entities` is a string.
@@ -3990,8 +4081,9 @@ module.exports = {
     }
 };
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* This file is generated by `script/build-expressions.js` */
+/* eslint-env commonjs */
 module.exports = {
   'rules': {
     'newline': /^\n([ \t]*\n)*/,
@@ -4065,7 +4157,7 @@ module.exports = {
   }
 };
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -4076,6 +4168,8 @@ module.exports = {
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -4244,9 +4338,6 @@ var EXPRESSION_RIGHT_ALIGNMENT = /^[ \t]*-+:[ \t]*$/;
 var EXPRESSION_CENTER_ALIGNMENT = /^[ \t]*:-+:[ \t]*$/;
 var EXPRESSION_LEFT_ALIGNMENT = /^[ \t]*:-+[ \t]*$/;
 var EXPRESSION_TABLE_FENCE = /^[ \t]*|\|[ \t]*$/g;
-var EXPRESSION_TABLE_INITIAL = /^[ \t]*\|/g;
-var EXPRESSION_TABLE_CONTENT =
-    /[ \t]*?((?:\\[\s\S]|[^\|])+?)([ \t]?\|[ \t]?\n?|\n?$)/g;
 var EXPRESSION_TABLE_BORDER = /[ \t]*\|[ \t]*/;
 var EXPRESSION_BLOCK_QUOTE = /^[ \t]*>[ \t]?/gm;
 var EXPRESSION_BULLET = /^([ \t]*)([*+-]|\d+[.)])( {1,4}(?! )| |\t)([^\n]*)/;
@@ -5022,9 +5113,9 @@ tokenizeFootnoteDefinition.notInBlockquote = true;
  */
 function tokenizeTable(eat, $0, $1, $2, $3, $4, $5) {
     var self = this;
-    var node;
-    var index;
     var length;
+    var index;
+    var node;
 
     $0 = trimTrailingLines($0);
 
@@ -5033,56 +5124,6 @@ function tokenizeTable(eat, $0, $1, $2, $3, $4, $5) {
         'align': [],
         'children': []
     });
-
-    /**
-     * Eat a fence.  Returns an empty string so it can be
-     * passed to `String#replace()`.
-     *
-     * @param {string} value - Fence.
-     * @return {string} - Empty string.
-     */
-    function eatFence(value) {
-        eat(value);
-
-        return EMPTY;
-    }
-
-    /**
-     * Factory to eat a cell to a bound `row`.
-     *
-     * @param {Object} row - Parent to add cells to.
-     * @return {Function} - `eatCell` bound to `row`.
-     */
-    function eatCellFactory(row) {
-        /**
-         * Eat a cell.  Returns an empty string so it can be
-         * passed to `String#replace()`.
-         *
-         * @param {string} value - Complete match.
-         * @param {string} content - Cell content.
-         * @param {string} pipe - Fence.
-         * @return {string} - Empty string.
-         */
-        function eatCell(value, content, pipe) {
-            var cell = trim.left(content);
-            var diff = content.length - cell.length;
-            var now;
-
-            eat(content.slice(0, diff));
-
-            now = eat.now();
-
-            eat(cell)(self.renderInline(
-                TABLE_CELL, trim.right(cell), now
-            ), row);
-
-            eat(pipe);
-
-            return EMPTY;
-        }
-
-        return eatCell;
-    }
 
     /**
      * Eat a row of type `type`.
@@ -5094,10 +5135,97 @@ function tokenizeTable(eat, $0, $1, $2, $3, $4, $5) {
      */
     function renderRow(type, value) {
         var row = eat(value).reset(self.renderParent(type, []), node);
+        var length = value.length + 1;
+        var index = -1;
+        var queue = '';
+        var cell = '';
+        var preamble = true;
+        var count;
+        var opening;
+        var character;
+        var subvalue;
+        var now;
 
-        value
-            .replace(EXPRESSION_TABLE_INITIAL, eatFence)
-            .replace(EXPRESSION_TABLE_CONTENT, eatCellFactory(row));
+        while (++index < length) {
+            character = value.charAt(index);
+
+            if (character === '\t' || character === ' ') {
+                if (cell) {
+                    queue += character;
+                } else {
+                    eat(character);
+                }
+
+                continue;
+            }
+
+            if (character === '|' || character === '') {
+                if (preamble) {
+                    eat(character);
+                } else {
+                    if (character && opening) {
+                        // cell += queue + character;
+                        queue += character;
+                        continue;
+                    }
+
+                    if ((cell || character) && !preamble) {
+                        subvalue = cell;
+
+                        if (queue.length > 1) {
+                            if (character) {
+                                subvalue += queue.slice(0, queue.length - 1);
+                                queue = queue.charAt(queue.length - 1);
+                            } else {
+                                subvalue += queue;
+                                queue = '';
+                            }
+                        }
+
+                        now = eat.now();
+
+                        eat(subvalue)(
+                            self.renderInline(TABLE_CELL, cell, now), row
+                        );
+                    }
+
+                    eat(queue + character);
+
+                    queue = '';
+                    cell = '';
+                }
+            } else {
+                if (queue) {
+                    cell += queue;
+                    queue = '';
+                }
+
+                cell += character;
+
+                if (character === '\\' && index !== length - 2) {
+                    cell += value.charAt(index + 1);
+                    index++;
+                }
+
+                if (character === '`') {
+                    count = 1;
+
+                    while (value.charAt(index + 1) === character) {
+                        cell += character;
+                        index++;
+                        count++;
+                    }
+
+                    if (!opening) {
+                        opening = count;
+                    } else if (count >= opening) {
+                        opening = 0;
+                    }
+                }
+            }
+
+            preamble = false;
+        }
     }
 
     /*
@@ -6755,7 +6883,7 @@ Parser.prototype.tokenizeFactory = tokenizeFactory;
 
 module.exports = Parser;
 
-},{"./defaults.js":21,"./expressions.js":22,"./utilities.js":25,"extend.js":11,"he":12,"repeat-string":52,"trim":61,"trim-trailing-lines":60}],24:[function(require,module,exports){
+},{"./defaults.js":22,"./expressions.js":23,"./utilities.js":26,"extend.js":11,"he":13,"repeat-string":54,"trim":63,"trim-trailing-lines":62}],25:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -6766,6 +6894,8 @@ module.exports = Parser;
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -6796,6 +6926,8 @@ var MINIMUM_CODE_FENCE_LENGTH = 3;
 var YAML_FENCE_LENGTH = 3;
 var MINIMUM_RULE_LENGTH = 3;
 var MAILTO = 'mailto:';
+var ERROR_LIST_ITEM_INDENT = 'Cannot indent code properly. See ' +
+    'http://git.io/mdast-lii';
 
 /*
  * Expressions.
@@ -7871,17 +8003,33 @@ compilerPrototype.yaml = function (node) {
  * @param {Object} node - `code` node.
  * @return {string} - Markdown code block.
  */
-compilerPrototype.code = function (node) {
+compilerPrototype.code = function (node, parent) {
+    var self = this;
     var value = node.value;
-    var marker = this.options.fence;
-    var language = this.encode(node.lang || EMPTY, node);
+    var options = self.options;
+    var marker = options.fence;
+    var language = self.encode(node.lang || EMPTY, node);
     var fence;
 
     /*
-     * Probably pedantic.
+     * Without (needed) fences.
      */
 
-    if (!language && !this.options.fences && value) {
+    if (!language && !options.fences && value) {
+        /*
+         * Throw when pedantic, in a list item which
+         * isn’t compiled using a tab.
+         */
+
+        if (
+            parent &&
+            parent.type === 'listItem' &&
+            options.listItemIndent !== LIST_ITEM_TAB &&
+            options.pedantic
+        ) {
+            self.file.fail(ERROR_LIST_ITEM_INDENT, node.position);
+        }
+
         return pad(value, 1);
     }
 
@@ -8503,7 +8651,7 @@ compilerPrototype.tableCell = function (node) {
  * @example
  *   var file = new VFile('__Foo__');
  *
- *   file.namespace('mdast').ast = {
+ *   file.namespace('mdast').tree = {
  *     type: 'strong',
  *     children: [{
  *       type: 'text',
@@ -8518,7 +8666,7 @@ compilerPrototype.tableCell = function (node) {
  * @return {string} - Markdown document.
  */
 compilerPrototype.compile = function () {
-    return this.visit(this.file.namespace('mdast').ast);
+    return this.visit(this.file.namespace('mdast').tree);
 };
 
 /*
@@ -8527,7 +8675,7 @@ compilerPrototype.compile = function () {
 
 module.exports = Compiler;
 
-},{"./defaults.js":21,"./utilities.js":25,"ccount":7,"extend.js":11,"he":12,"longest-streak":16,"markdown-table":17,"repeat-string":52}],25:[function(require,module,exports){
+},{"./defaults.js":22,"./utilities.js":26,"ccount":7,"extend.js":11,"he":13,"longest-streak":17,"markdown-table":18,"repeat-string":54}],26:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -8538,6 +8686,8 @@ module.exports = Compiler;
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -8709,7 +8859,295 @@ exports.normalizeIdentifier = normalizeIdentifier;
 exports.clean = clean;
 exports.raise = raise;
 
-},{"collapse-white-space":10}],26:[function(require,module,exports){
+},{"collapse-white-space":10}],27:[function(require,module,exports){
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module unified
+ * @fileoverview Parse / Transform / Compile / Repeat.
+ */
+
+'use strict';
+
+/* eslint-env commonjs */
+
+/*
+ * Dependencies.
+ */
+
+var bail = require('bail');
+var ware = require('ware');
+var extend = require('extend');
+var AttachWare = require('attach-ware')(ware);
+var VFile = require('vfile');
+var unherit = require('unherit');
+
+/*
+ * Processing pipeline.
+ */
+
+var pipeline = ware()
+    .use(function (ctx) {
+        ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
+    })
+    .use(function (ctx, next) {
+        ctx.context.run(ctx.tree, ctx.file, next);
+    })
+    .use(function (ctx) {
+        ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
+    });
+
+/**
+ * Construct a new Processor class based on the
+ * given options.
+ *
+ * @param {Object} options - Configuration.
+ * @param {string} options.name - Private storage.
+ * @param {Function} options.Parser - Class to turn a
+ *   virtual file into a syntax tree.
+ * @param {Function} options.Compiler - Class to turn a
+ *   syntax tree into a string.
+ * @return {Processor} - A new constructor.
+ */
+function unified(options) {
+    var name = options.name;
+    var Parser = options.Parser;
+    var Compiler = options.Compiler;
+    var data = options.data;
+
+    /**
+     * Construct a Processor instance.
+     *
+     * @constructor
+     * @class {Processor}
+     */
+    function Processor(processor) {
+        var self = this;
+
+        if (!(self instanceof Processor)) {
+            return new Processor(processor);
+        }
+
+        self.ware = new AttachWare(processor && processor.ware);
+        self.ware.context = self;
+
+        self.Parser = unherit(Parser);
+        self.Compiler = unherit(Compiler);
+
+        if (self.data) {
+            self.data = extend(true, {}, self.data);
+        }
+    }
+
+    /**
+     * Either return `context` if its an instance
+     * of `Processor` or construct a new `Processor`
+     * instance.
+     *
+     * @private
+     * @param {Processor?} [context] - Context object.
+     * @return {Processor} - Either `context` or a new
+     *   Processor instance.
+     */
+    function instance(context) {
+        return context instanceof Processor ? context : new Processor();
+    }
+
+    /**
+     * Attach a plugin.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @return {Processor}
+     */
+    function use() {
+        var self = instance(this);
+
+        self.ware.use.apply(self.ware, arguments);
+
+        return self;
+    }
+
+    /**
+     * Transform.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Node} [node] - Syntax tree.
+     * @param {VFile?} [file] - Virtual file.
+     * @param {Function?} [done] - Callback.
+     * @return {Node} - `node`.
+     */
+    function run(node, file, done) {
+        var self = this;
+        var space;
+
+        if (typeof file === 'function') {
+            done = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space.tree || node;
+        } else if (!space.tree) {
+            space.tree = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        done = typeof done === 'function' ? done : bail;
+
+        /*
+         * Only run when this is an instance of Processor,
+         * and when there are transformers.
+         */
+
+        if (self.ware && self.ware.fns) {
+            self.ware.run(node, file, done);
+        } else {
+            done(null, node, file);
+        }
+
+        return node;
+    }
+
+    /**
+     * Parse a file.
+     *
+     * Patches the parsed node onto the `name`
+     * namespace on the `type` property.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to parse.
+     * @param {Object?} [settings] - Configuration.
+     * @return {Node} - `node`.
+     */
+    function parse(value, settings) {
+        var file = new VFile(value);
+        var CustomParser = (this && this.Parser) || Parser;
+        var node = new CustomParser(file, settings, instance(this)).parse();
+
+        file.namespace(name).tree = node;
+
+        return node;
+    }
+
+    /**
+     * Compile a file.
+     *
+     * Used the parsed node at the `name`
+     * namespace at `'tree'` when no node was given.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Object} [node] - Syntax tree.
+     * @param {VFile} [file] - File with syntax tree.
+     * @param {Object?} [settings] - Configuration.
+     * @return {string} - Compiled `file`.
+     */
+    function stringify(node, file, settings) {
+        var CustomCompiler = (this && this.Compiler) || Compiler;
+        var space;
+
+        if (settings === null || settings === undefined) {
+            settings = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space.tree || node;
+        } else if (!space.tree) {
+            space.tree = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        return new CustomCompiler(file, settings, instance(this)).compile();
+    }
+
+    /**
+     * Parse / Transform / Compile.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to process.
+     * @param {Object?} [settings] - Configuration.
+     * @param {Function?} [done] - Callback.
+     * @return {string?} - Parsed document, when
+     *   transformation was async.
+     */
+    function process(value, settings, done) {
+        var self = instance(this);
+        var file = new VFile(value);
+        var result = null;
+
+        if (typeof settings === 'function') {
+            done = settings;
+            settings = null;
+        }
+
+        pipeline.run({
+            'context': self,
+            'file': file,
+            'settings': settings || {}
+        }, function (err, res) {
+            result = res && res.result;
+
+            if (done) {
+                done(err, file, result);
+            } else if (err) {
+                bail(err);
+            }
+        });
+
+        return result;
+    }
+
+    /*
+     * Methods / functions.
+     */
+
+    var proto = Processor.prototype;
+
+    Processor.use = proto.use = use;
+    Processor.parse = proto.parse = parse;
+    Processor.run = proto.run = run;
+    Processor.stringify = proto.stringify = stringify;
+    Processor.process = proto.process = process;
+    Processor.data = proto.data = data || null;
+
+    return Processor;
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = unified;
+
+},{"attach-ware":3,"bail":4,"extend":12,"unherit":64,"vfile":69,"ware":70}],28:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9001,7 +9439,7 @@ function isLiteral(parent, index) {
 
 module.exports = isLiteral;
 
-},{"nlcst-to-string":27}],27:[function(require,module,exports){
+},{"nlcst-to-string":29}],29:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9056,7 +9494,7 @@ function nlcstToString(node) {
 
 module.exports = nlcstToString;
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -9180,7 +9618,7 @@ keysShim.shim = function shimObjectKeys() {
 
 module.exports = keysShim;
 
-},{"./isArguments":29}],29:[function(require,module,exports){
+},{"./isArguments":31}],31:[function(require,module,exports){
 'use strict';
 
 var toStr = Object.prototype.toString;
@@ -9199,7 +9637,7 @@ module.exports = function isArguments(value) {
 	return isArgs;
 };
 
-},{}],30:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9726,7 +10164,7 @@ parserPrototype.tokenizeParagraphPlugins =
 
 module.exports = ParseEnglish;
 
-},{"nlcst-to-string":27,"parse-latin":31,"unist-util-modify-children":64,"unist-util-visit-children":65}],31:[function(require,module,exports){
+},{"nlcst-to-string":29,"parse-latin":33,"unist-util-modify-children":65,"unist-util-visit-children":66}],33:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9741,7 +10179,7 @@ module.exports = ParseEnglish;
 
 module.exports = require('./lib/parse-latin');
 
-},{"./lib/parse-latin":33}],32:[function(require,module,exports){
+},{"./lib/parse-latin":35}],34:[function(require,module,exports){
 /* This module is generated by `script/build-expressions.js` */
 'use strict'
 /* eslint-env commonjs */
@@ -9759,7 +10197,7 @@ module.exports = {
     'whiteSpace': /^(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+$/
 };
 
-},{}],33:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10530,7 +10968,7 @@ parseLatinPrototype.use('tokenizeRoot', [
 
 module.exports = ParseLatin;
 
-},{"./expressions":32,"./parser":34,"./plugin/break-implicit-sentences":35,"./plugin/make-final-white-space-siblings":36,"./plugin/make-initial-white-space-siblings":37,"./plugin/merge-affix-exceptions":38,"./plugin/merge-affix-symbol":39,"./plugin/merge-final-word-symbol":40,"./plugin/merge-initial-lower-case-letter-sentences":41,"./plugin/merge-initial-word-symbol":42,"./plugin/merge-initialisms":43,"./plugin/merge-inner-word-symbol":44,"./plugin/merge-non-word-sentences":45,"./plugin/merge-prefix-exceptions":46,"./plugin/merge-remaining-full-stops":47,"./plugin/merge-words":48,"./plugin/patch-position":49,"./plugin/remove-empty-nodes":50}],34:[function(require,module,exports){
+},{"./expressions":34,"./parser":36,"./plugin/break-implicit-sentences":37,"./plugin/make-final-white-space-siblings":38,"./plugin/make-initial-white-space-siblings":39,"./plugin/merge-affix-exceptions":40,"./plugin/merge-affix-symbol":41,"./plugin/merge-final-word-symbol":42,"./plugin/merge-initial-lower-case-letter-sentences":43,"./plugin/merge-initial-word-symbol":44,"./plugin/merge-initialisms":45,"./plugin/merge-inner-word-symbol":46,"./plugin/merge-non-word-sentences":47,"./plugin/merge-prefix-exceptions":48,"./plugin/merge-remaining-full-stops":49,"./plugin/merge-words":50,"./plugin/patch-position":51,"./plugin/remove-empty-nodes":52}],36:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10577,7 +11015,7 @@ function parserFactory(options) {
 
 module.exports = parserFactory;
 
-},{"./tokenizer":51}],35:[function(require,module,exports){
+},{"./tokenizer":53}],37:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10682,7 +11120,7 @@ function breakImplicitSentences(child, index, parent) {
 
 module.exports = modifyChildren(breakImplicitSentences);
 
-},{"../expressions":32,"nlcst-to-string":27,"unist-util-modify-children":64}],36:[function(require,module,exports){
+},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],38:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10740,7 +11178,7 @@ function makeFinalWhiteSpaceSiblings(child, index, parent) {
 
 module.exports = modifyChildren(makeFinalWhiteSpaceSiblings);
 
-},{"unist-util-modify-children":64}],37:[function(require,module,exports){
+},{"unist-util-modify-children":65}],39:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10791,7 +11229,7 @@ function makeInitialWhiteSpaceSiblings(child, index, parent) {
 
 module.exports = visitChildren(makeInitialWhiteSpaceSiblings);
 
-},{"unist-util-visit-children":65}],38:[function(require,module,exports){
+},{"unist-util-visit-children":66}],40:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10881,7 +11319,7 @@ function mergeAffixExceptions(child, index, parent) {
 
 module.exports = modifyChildren(mergeAffixExceptions);
 
-},{"nlcst-to-string":27,"unist-util-modify-children":64}],39:[function(require,module,exports){
+},{"nlcst-to-string":29,"unist-util-modify-children":65}],41:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10976,7 +11414,7 @@ function mergeAffixSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeAffixSymbol);
 
-},{"../expressions":32,"nlcst-to-string":27,"unist-util-modify-children":64}],40:[function(require,module,exports){
+},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],42:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11070,7 +11508,7 @@ function mergeFinalWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeFinalWordSymbol);
 
-},{"nlcst-to-string":27,"unist-util-modify-children":64}],41:[function(require,module,exports){
+},{"nlcst-to-string":29,"unist-util-modify-children":65}],43:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11172,7 +11610,7 @@ function mergeInitialLowerCaseLetterSentences(child, index, parent) {
 
 module.exports = modifyChildren(mergeInitialLowerCaseLetterSentences);
 
-},{"../expressions":32,"nlcst-to-string":27,"unist-util-modify-children":64}],42:[function(require,module,exports){
+},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],44:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11273,7 +11711,7 @@ function mergeInitialWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeInitialWordSymbol);
 
-},{"nlcst-to-string":27,"unist-util-modify-children":64}],43:[function(require,module,exports){
+},{"nlcst-to-string":29,"unist-util-modify-children":65}],45:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11405,7 +11843,7 @@ function mergeInitialisms(child, index, parent) {
 
 module.exports = modifyChildren(mergeInitialisms);
 
-},{"../expressions":32,"nlcst-to-string":27,"unist-util-modify-children":64}],44:[function(require,module,exports){
+},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],46:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11549,7 +11987,7 @@ function mergeInnerWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeInnerWordSymbol);
 
-},{"../expressions":32,"nlcst-to-string":27,"unist-util-modify-children":64}],45:[function(require,module,exports){
+},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],47:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11646,7 +12084,7 @@ function mergeNonWordSentences(child, index, parent) {
 
 module.exports = modifyChildren(mergeNonWordSentences);
 
-},{"unist-util-modify-children":64}],46:[function(require,module,exports){
+},{"unist-util-modify-children":65}],48:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11761,7 +12199,7 @@ function mergePrefixExceptions(child, index, parent) {
 
 module.exports = modifyChildren(mergePrefixExceptions);
 
-},{"nlcst-to-string":27,"unist-util-modify-children":64}],47:[function(require,module,exports){
+},{"nlcst-to-string":29,"unist-util-modify-children":65}],49:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11927,7 +12365,7 @@ function mergeRemainingFullStops(child) {
 
 module.exports = visitChildren(mergeRemainingFullStops);
 
-},{"../expressions":32,"nlcst-to-string":27,"unist-util-visit-children":65}],48:[function(require,module,exports){
+},{"../expressions":34,"nlcst-to-string":29,"unist-util-visit-children":66}],50:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12001,7 +12439,7 @@ function mergeFinalWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeFinalWordSymbol);
 
-},{"unist-util-modify-children":64}],49:[function(require,module,exports){
+},{"unist-util-modify-children":65}],51:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12069,7 +12507,7 @@ function patchPosition(child, index, node) {
 
 module.exports = visitChildren(patchPosition);
 
-},{"unist-util-visit-children":65}],50:[function(require,module,exports){
+},{"unist-util-visit-children":66}],52:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12116,7 +12554,7 @@ function removeEmptyNodes(child, index, parent) {
 
 module.exports = modifyChildren(removeEmptyNodes);
 
-},{"unist-util-modify-children":64}],51:[function(require,module,exports){
+},{"unist-util-modify-children":65}],53:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12204,7 +12642,7 @@ function tokenizerFactory(childType, expression) {
 
 module.exports = tokenizerFactory;
 
-},{"nlcst-to-string":27}],52:[function(require,module,exports){
+},{"nlcst-to-string":29}],54:[function(require,module,exports){
 /*!
  * repeat-string <https://github.com/jonschlinkert/repeat-string>
  *
@@ -12272,7 +12710,7 @@ function repeat(str, num) {
 var res = '';
 var cache;
 
-},{}],53:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12306,12 +12744,12 @@ function attacher(processor) {
 
 module.exports = attacher;
 
-},{"parse-english":30}],54:[function(require,module,exports){
+},{"parse-english":32}],56:[function(require,module,exports){
 'use strict';
 
 module.exports = require('./lib/equality.js');
 
-},{"./lib/equality.js":55}],55:[function(require,module,exports){
+},{"./lib/equality.js":57}],57:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12894,7 +13332,7 @@ function attacher() {
 
 module.exports = attacher;
 
-},{"./patterns.json":56,"nlcst-is-literal":26,"nlcst-to-string":27,"object-keys":28,"unist-util-visit":66}],56:[function(require,module,exports){
+},{"./patterns.json":58,"nlcst-is-literal":28,"nlcst-to-string":29,"object-keys":30,"unist-util-visit":67}],58:[function(require,module,exports){
 module.exports=[
   {
     "id": 0,
@@ -16112,7 +16550,9 @@ module.exports=[
       "male"
     ],
     "considerate": {
-      "maniac": "a"
+      "fanatic": "a",
+      "zealot": "a",
+      "enthusiast": "a"
     },
     "inconsiderate": {
       "madman": "male",
@@ -16343,7 +16783,11 @@ module.exports=[
       "lunacy": "a",
       "lunatic": "a",
       "mentally ill": "a",
-      "psychopathology": "a"
+      "psychopathology": "a",
+      "mental defective": "a",
+      "moron": "a",
+      "moronic": "a",
+      "nuts": "a"
     },
     "note": "Source: http://ncdj.org/style-guide/"
   },
@@ -16509,7 +16953,8 @@ module.exports=[
     "inconsiderate": {
       "asylum": "a",
       "bedlam": "a",
-      "madhouse": "a"
+      "madhouse": "a",
+      "loony bin": "a"
     }
   },
   {
@@ -16625,6 +17070,7 @@ module.exports=[
     },
     "inconsiderate": {
       "confined to a wheelchair": "a",
+      "bound to a wheelchair": "a",
       "restricted to a wheelchair": "a",
       "wheelchair bound": "a"
     }
@@ -17054,7 +17500,8 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "stupid": "a",
+      "foolish": "a",
+      "ludicrous": "a",
       "speechless": "a",
       "silent": "a"
     },
@@ -17070,6 +17517,25 @@ module.exports=[
       "a"
     ],
     "considerate": {
+      "foolish": "a",
+      "ludicrous": "a",
+      "unintelligent": "a"
+    },
+    "inconsiderate": {
+      "simpleton": "a",
+      "stupid": "a",
+      "wacko": "a",
+      "whacko": "a"
+    },
+    "note": "Source: http://www.mmonjejr.com/2014/02/deconstructing-stupid.html"
+  },
+  {
+    "id": 262,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
       "fit of terror": "a",
       "scare": "a"
     },
@@ -17078,7 +17544,7 @@ module.exports=[
     }
   },
   {
-    "id": 262,
+    "id": 263,
     "type": "simple",
     "categories": [
       "a"
@@ -17092,7 +17558,7 @@ module.exports=[
     }
   },
   {
-    "id": 263,
+    "id": 264,
     "type": "simple",
     "categories": [
       "a"
@@ -17111,7 +17577,7 @@ module.exports=[
     "note": "Source: http://english.stackexchange.com/questions/247550/"
   },
   {
-    "id": 264,
+    "id": 265,
     "type": "simple",
     "categories": [
       "a"
@@ -17125,7 +17591,7 @@ module.exports=[
     }
   },
   {
-    "id": 265,
+    "id": 266,
     "type": "simple",
     "categories": [
       "a"
@@ -17138,7 +17604,7 @@ module.exports=[
     }
   },
   {
-    "id": 266,
+    "id": 267,
     "type": "simple",
     "categories": [
       "a"
@@ -17151,7 +17617,172 @@ module.exports=[
     }
   },
   {
-    "id": 267,
+    "id": 268,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "empty": "a",
+      "sterile": "a",
+      "infertile": "a"
+    },
+    "inconsiderate": {
+      "barren": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 269,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "careless": "a",
+      "heartless": "a",
+      "indifferent": "a",
+      "insensitive": "a"
+    },
+    "inconsiderate": {
+      "blind to": "a",
+      "blind eye to": "a",
+      "blinded by": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 270,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "careless": "a",
+      "heartless": "a",
+      "indifferent": "a",
+      "insensitive": "a"
+    },
+    "inconsiderate": {
+      "blind to": "a",
+      "blind eye to": "a",
+      "blinded by": "a",
+      "deaf to": "a",
+      "deaf ear to": "a",
+      "deafened by": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 271,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "creep": "a",
+      "fool": "a"
+    },
+    "inconsiderate": {
+      "cretin": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 272,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "absurd": "a",
+      "foolish": "a"
+    },
+    "inconsiderate": {
+      "daft": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 273,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "foolish": "a",
+      "ludicrous": "a",
+      "silly": "a"
+    },
+    "inconsiderate": {
+      "feebleminded": "a",
+      "feeble minded": "a",
+      "idiot": "a",
+      "imbecile": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 274,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "person with a cleft-lip and palate": "a"
+    },
+    "inconsiderate": {
+      "harelipped": "a",
+      "cleftlipped": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 275,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "cleft-lip and palate": "a"
+    },
+    "inconsiderate": {
+      "harelip": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 276,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "cleft-lip and palate": "a"
+    },
+    "inconsiderate": {
+      "harelip": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 277,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "fanatic": "a",
+      "zealot": "a",
+      "enthusiast": "a"
+    },
+    "inconsiderate": {
+      "maniac": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 278,
     "type": "simple",
     "categories": [
       "a"
@@ -17165,7 +17796,7 @@ module.exports=[
     }
   },
   {
-    "id": 268,
+    "id": 279,
     "type": "simple",
     "categories": [
       "a"
@@ -17179,7 +17810,7 @@ module.exports=[
     }
   },
   {
-    "id": 269,
+    "id": 280,
     "type": "simple",
     "categories": [
       "a"
@@ -17196,7 +17827,7 @@ module.exports=[
     }
   },
   {
-    "id": 270,
+    "id": 281,
     "type": "simple",
     "categories": [
       "a"
@@ -17215,7 +17846,7 @@ module.exports=[
     }
   },
   {
-    "id": 271,
+    "id": 282,
     "type": "simple",
     "categories": [
       "a"
@@ -17228,7 +17859,7 @@ module.exports=[
     }
   },
   {
-    "id": 272,
+    "id": 283,
     "type": "simple",
     "categories": [
       "a"
@@ -17241,7 +17872,7 @@ module.exports=[
     }
   },
   {
-    "id": 273,
+    "id": 284,
     "type": "simple",
     "categories": [
       "a"
@@ -17255,7 +17886,7 @@ module.exports=[
     }
   },
   {
-    "id": 274,
+    "id": 285,
     "type": "simple",
     "categories": [
       "a"
@@ -17269,7 +17900,7 @@ module.exports=[
     }
   },
   {
-    "id": 275,
+    "id": 286,
     "type": "simple",
     "categories": [
       "a"
@@ -17283,7 +17914,7 @@ module.exports=[
     }
   },
   {
-    "id": 276,
+    "id": 287,
     "type": "simple",
     "categories": [
       "a"
@@ -17297,7 +17928,7 @@ module.exports=[
     }
   },
   {
-    "id": 277,
+    "id": 288,
     "type": "simple",
     "categories": [
       "a"
@@ -17310,7 +17941,7 @@ module.exports=[
     }
   },
   {
-    "id": 278,
+    "id": 289,
     "type": "simple",
     "categories": [
       "a"
@@ -17324,7 +17955,7 @@ module.exports=[
     }
   },
   {
-    "id": 279,
+    "id": 290,
     "type": "simple",
     "categories": [
       "a"
@@ -17340,7 +17971,7 @@ module.exports=[
     }
   },
   {
-    "id": 280,
+    "id": 291,
     "type": "simple",
     "categories": [
       "a"
@@ -17356,7 +17987,7 @@ module.exports=[
     }
   },
   {
-    "id": 281,
+    "id": 292,
     "type": "simple",
     "categories": [
       "a"
@@ -17372,7 +18003,7 @@ module.exports=[
     }
   },
   {
-    "id": 282,
+    "id": 293,
     "type": "simple",
     "categories": [
       "a"
@@ -17390,7 +18021,7 @@ module.exports=[
     }
   },
   {
-    "id": 283,
+    "id": 294,
     "type": "simple",
     "categories": [
       "a"
@@ -17403,7 +18034,7 @@ module.exports=[
     }
   },
   {
-    "id": 284,
+    "id": 295,
     "type": "simple",
     "categories": [
       "a"
@@ -17416,7 +18047,7 @@ module.exports=[
     }
   },
   {
-    "id": 285,
+    "id": 296,
     "type": "simple",
     "categories": [
       "a"
@@ -17432,7 +18063,7 @@ module.exports=[
     }
   },
   {
-    "id": 286,
+    "id": 297,
     "type": "simple",
     "categories": [
       "a"
@@ -17448,7 +18079,7 @@ module.exports=[
     }
   },
   {
-    "id": 287,
+    "id": 298,
     "type": "simple",
     "categories": [
       "a"
@@ -17462,7 +18093,7 @@ module.exports=[
     }
   },
   {
-    "id": 288,
+    "id": 299,
     "type": "simple",
     "categories": [
       "a"
@@ -17476,7 +18107,7 @@ module.exports=[
     }
   },
   {
-    "id": 289,
+    "id": 300,
     "type": "simple",
     "categories": [
       "a"
@@ -17490,7 +18121,7 @@ module.exports=[
     }
   },
   {
-    "id": 290,
+    "id": 301,
     "type": "simple",
     "categories": [
       "a"
@@ -17504,7 +18135,7 @@ module.exports=[
     }
   },
   {
-    "id": 291,
+    "id": 302,
     "type": "simple",
     "categories": [
       "a"
@@ -17518,7 +18149,7 @@ module.exports=[
     }
   },
   {
-    "id": 292,
+    "id": 303,
     "type": "simple",
     "categories": [
       "a"
@@ -17532,7 +18163,7 @@ module.exports=[
     }
   },
   {
-    "id": 293,
+    "id": 304,
     "type": "simple",
     "categories": [
       "a"
@@ -17545,7 +18176,7 @@ module.exports=[
     }
   },
   {
-    "id": 294,
+    "id": 305,
     "type": "simple",
     "categories": [
       "a"
@@ -17558,7 +18189,7 @@ module.exports=[
     }
   },
   {
-    "id": 295,
+    "id": 306,
     "type": "simple",
     "categories": [
       "a"
@@ -17571,7 +18202,7 @@ module.exports=[
     }
   },
   {
-    "id": 296,
+    "id": 307,
     "type": "simple",
     "categories": [
       "a"
@@ -17591,7 +18222,7 @@ module.exports=[
     }
   },
   {
-    "id": 297,
+    "id": 308,
     "type": "simple",
     "categories": [
       "a"
@@ -17610,7 +18241,7 @@ module.exports=[
     }
   },
   {
-    "id": 298,
+    "id": 309,
     "type": "simple",
     "categories": [
       "a"
@@ -17623,7 +18254,7 @@ module.exports=[
     }
   },
   {
-    "id": 299,
+    "id": 310,
     "type": "simple",
     "categories": [
       "a"
@@ -17636,7 +18267,7 @@ module.exports=[
     }
   },
   {
-    "id": 300,
+    "id": 311,
     "type": "simple",
     "categories": [
       "a"
@@ -17649,7 +18280,7 @@ module.exports=[
     }
   },
   {
-    "id": 301,
+    "id": 312,
     "type": "simple",
     "categories": [
       "a"
@@ -17662,7 +18293,7 @@ module.exports=[
     }
   },
   {
-    "id": 302,
+    "id": 313,
     "type": "simple",
     "categories": [
       "a"
@@ -17675,7 +18306,7 @@ module.exports=[
     }
   },
   {
-    "id": 303,
+    "id": 314,
     "type": "simple",
     "categories": [
       "a"
@@ -17688,7 +18319,7 @@ module.exports=[
     }
   },
   {
-    "id": 304,
+    "id": 315,
     "type": "simple",
     "categories": [
       "a"
@@ -17701,7 +18332,7 @@ module.exports=[
     }
   },
   {
-    "id": 305,
+    "id": 316,
     "type": "simple",
     "categories": [
       "a"
@@ -17714,7 +18345,7 @@ module.exports=[
     }
   },
   {
-    "id": 306,
+    "id": 317,
     "type": "simple",
     "categories": [
       "a"
@@ -17729,7 +18360,7 @@ module.exports=[
     }
   },
   {
-    "id": 307,
+    "id": 318,
     "type": "simple",
     "categories": [
       "a"
@@ -17744,7 +18375,7 @@ module.exports=[
     }
   },
   {
-    "id": 308,
+    "id": 319,
     "type": "simple",
     "categories": [
       "a"
@@ -17757,7 +18388,7 @@ module.exports=[
     }
   },
   {
-    "id": 309,
+    "id": 320,
     "type": "simple",
     "categories": [
       "a"
@@ -17770,7 +18401,7 @@ module.exports=[
     }
   },
   {
-    "id": 310,
+    "id": 321,
     "type": "simple",
     "categories": [
       "a"
@@ -17783,7 +18414,7 @@ module.exports=[
     }
   },
   {
-    "id": 311,
+    "id": 322,
     "type": "simple",
     "categories": [
       "a"
@@ -17796,7 +18427,7 @@ module.exports=[
     }
   },
   {
-    "id": 312,
+    "id": 323,
     "type": "simple",
     "categories": [
       "a"
@@ -17809,7 +18440,7 @@ module.exports=[
     }
   },
   {
-    "id": 313,
+    "id": 324,
     "type": "simple",
     "categories": [
       "a"
@@ -17822,7 +18453,7 @@ module.exports=[
     }
   },
   {
-    "id": 314,
+    "id": 325,
     "type": "simple",
     "categories": [
       "a"
@@ -17837,7 +18468,7 @@ module.exports=[
     }
   },
   {
-    "id": 315,
+    "id": 326,
     "type": "simple",
     "categories": [
       "a"
@@ -17854,7 +18485,7 @@ module.exports=[
     }
   },
   {
-    "id": 316,
+    "id": 327,
     "type": "simple",
     "categories": [
       "a"
@@ -17877,7 +18508,7 @@ module.exports=[
     }
   },
   {
-    "id": 317,
+    "id": 328,
     "type": "simple",
     "categories": [
       "a"
@@ -17895,7 +18526,7 @@ module.exports=[
     }
   },
   {
-    "id": 318,
+    "id": 329,
     "type": "simple",
     "categories": [
       "a"
@@ -17915,7 +18546,7 @@ module.exports=[
     }
   },
   {
-    "id": 319,
+    "id": 330,
     "type": "simple",
     "categories": [
       "a"
@@ -17935,7 +18566,7 @@ module.exports=[
     }
   },
   {
-    "id": 320,
+    "id": 331,
     "type": "simple",
     "categories": [
       "a"
@@ -17948,7 +18579,7 @@ module.exports=[
     }
   },
   {
-    "id": 321,
+    "id": 332,
     "type": "simple",
     "categories": [
       "a"
@@ -17970,7 +18601,7 @@ module.exports=[
     }
   },
   {
-    "id": 322,
+    "id": 333,
     "type": "simple",
     "categories": [
       "a"
@@ -17989,7 +18620,7 @@ module.exports=[
     }
   },
   {
-    "id": 323,
+    "id": 334,
     "type": "simple",
     "categories": [
       "a"
@@ -18008,7 +18639,7 @@ module.exports=[
     }
   },
   {
-    "id": 324,
+    "id": 335,
     "type": "simple",
     "categories": [
       "a"
@@ -18027,7 +18658,7 @@ module.exports=[
     }
   },
   {
-    "id": 325,
+    "id": 336,
     "type": "simple",
     "categories": [
       "a"
@@ -18099,7 +18730,7 @@ module.exports=[
     }
   },
   {
-    "id": 326,
+    "id": 337,
     "type": "simple",
     "categories": [
       "a"
@@ -18174,7 +18805,7 @@ module.exports=[
     }
   },
   {
-    "id": 327,
+    "id": 338,
     "type": "simple",
     "categories": [
       "a"
@@ -18190,7 +18821,7 @@ module.exports=[
     }
   },
   {
-    "id": 328,
+    "id": 339,
     "type": "simple",
     "categories": [
       "a"
@@ -18206,7 +18837,7 @@ module.exports=[
     }
   },
   {
-    "id": 329,
+    "id": 340,
     "type": "simple",
     "categories": [
       "a"
@@ -18225,7 +18856,7 @@ module.exports=[
     }
   },
   {
-    "id": 330,
+    "id": 341,
     "type": "simple",
     "categories": [
       "a"
@@ -18244,7 +18875,7 @@ module.exports=[
     }
   },
   {
-    "id": 331,
+    "id": 342,
     "type": "simple",
     "categories": [
       "a"
@@ -18262,7 +18893,7 @@ module.exports=[
     }
   },
   {
-    "id": 332,
+    "id": 343,
     "type": "simple",
     "categories": [
       "a"
@@ -18281,7 +18912,7 @@ module.exports=[
     }
   },
   {
-    "id": 333,
+    "id": 344,
     "type": "simple",
     "categories": [
       "a"
@@ -18302,7 +18933,7 @@ module.exports=[
     }
   },
   {
-    "id": 334,
+    "id": 345,
     "type": "simple",
     "categories": [
       "a"
@@ -18323,7 +18954,7 @@ module.exports=[
     }
   },
   {
-    "id": 335,
+    "id": 346,
     "type": "simple",
     "categories": [
       "a"
@@ -18359,7 +18990,7 @@ module.exports=[
     }
   },
   {
-    "id": 336,
+    "id": 347,
     "type": "simple",
     "categories": [
       "a"
@@ -18396,7 +19027,7 @@ module.exports=[
     }
   },
   {
-    "id": 337,
+    "id": 348,
     "type": "simple",
     "categories": [
       "a"
@@ -18414,7 +19045,7 @@ module.exports=[
     }
   },
   {
-    "id": 338,
+    "id": 349,
     "type": "simple",
     "categories": [
       "a"
@@ -18427,7 +19058,7 @@ module.exports=[
     }
   },
   {
-    "id": 339,
+    "id": 350,
     "type": "simple",
     "categories": [
       "a"
@@ -18442,7 +19073,7 @@ module.exports=[
     }
   },
   {
-    "id": 340,
+    "id": 351,
     "type": "simple",
     "categories": [
       "a"
@@ -18457,7 +19088,7 @@ module.exports=[
     }
   },
   {
-    "id": 341,
+    "id": 352,
     "type": "simple",
     "categories": [
       "a"
@@ -18476,7 +19107,7 @@ module.exports=[
     }
   },
   {
-    "id": 342,
+    "id": 353,
     "type": "simple",
     "categories": [
       "a"
@@ -18495,7 +19126,7 @@ module.exports=[
     }
   },
   {
-    "id": 343,
+    "id": 354,
     "type": "simple",
     "categories": [
       "a"
@@ -18519,7 +19150,7 @@ module.exports=[
     }
   },
   {
-    "id": 344,
+    "id": 355,
     "type": "simple",
     "categories": [
       "a"
@@ -18543,7 +19174,7 @@ module.exports=[
     }
   },
   {
-    "id": 345,
+    "id": 356,
     "type": "simple",
     "categories": [
       "a"
@@ -18570,7 +19201,7 @@ module.exports=[
     }
   },
   {
-    "id": 346,
+    "id": 357,
     "type": "simple",
     "categories": [
       "a"
@@ -18597,7 +19228,7 @@ module.exports=[
     }
   },
   {
-    "id": 347,
+    "id": 358,
     "type": "and",
     "categories": [
       "a",
@@ -18618,7 +19249,7 @@ module.exports=[
   }
 ]
 
-},{}],57:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer.
@@ -18650,7 +19281,7 @@ module.exports = unified({
     'Compiler': Compiler
 });
 
-},{"./lib/compile.js":58,"parse-latin":31,"unified":59}],58:[function(require,module,exports){
+},{"./lib/compile.js":60,"parse-latin":33,"unified":61}],60:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -18749,288 +19380,9 @@ Compiler.prototype.compile = compile;
 
 module.exports = Compiler;
 
-},{"nlcst-to-string":27}],59:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module unified
- * @fileoverview Parse / Transform / Compile / Repeat.
- */
-
-'use strict';
-
-/* eslint-env commonjs */
-
-/*
- * Dependencies.
- */
-
-var bail = require('bail');
-var ware = require('ware');
-var AttachWare = require('attach-ware')(ware);
-var VFile = require('vfile');
-var unherit = require('unherit');
-
-/*
- * Processing pipeline.
- */
-
-var pipeline = ware()
-    .use(function (ctx) {
-        ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
-    })
-    .use(function (ctx, next) {
-        ctx.context.run(ctx.tree, ctx.file, next);
-    })
-    .use(function (ctx) {
-        ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
-    });
-
-/**
- * Construct a new Processor class based on the
- * given options.
- *
- * @param {Object} options - Configuration.
- * @param {string} options.name - Private storage.
- * @param {Function} options.Parser - Class to turn a
- *   virtual file into a syntax tree.
- * @param {Function} options.Compiler - Class to turn a
- *   syntax tree into a string.
- * @return {Processor} - A new constructor.
- */
-function unified(options) {
-    var name = options.name;
-    var Parser = options.Parser;
-    var Compiler = options.Compiler;
-
-    /**
-     * Construct a Processor instance.
-     *
-     * @constructor
-     * @class {Processor}
-     */
-    function Processor(processor) {
-        var self = this;
-
-        if (!(self instanceof Processor)) {
-            return new Processor(processor);
-        }
-
-        self.ware = new AttachWare(processor && processor.ware);
-        self.ware.context = self;
-
-        self.Parser = unherit(Parser);
-        self.Compiler = unherit(Compiler);
-    }
-
-    /**
-     * Either return `context` if its an instance
-     * of `Processor` or construct a new `Processor`
-     * instance.
-     *
-     * @private
-     * @param {Processor?} [context] - Context object.
-     * @return {Processor} - Either `context` or a new
-     *   Processor instance.
-     */
-    function instance(context) {
-        return context instanceof Processor ? context : new Processor();
-    }
-
-    /**
-     * Attach a plugin.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @return {Processor}
-     */
-    function use() {
-        var self = instance(this);
-
-        self.ware.use.apply(self.ware, arguments);
-
-        return self;
-    }
-
-    /**
-     * Transform.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Node} [node] - Syntax tree.
-     * @param {VFile?} [file] - Virtual file.
-     * @param {Function?} [done] - Callback.
-     * @return {Node} - `node`.
-     */
-    function run(node, file, done) {
-        var self = this;
-        var space;
-
-        if (typeof file === 'function') {
-            done = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space.tree || node;
-        } else if (!space.tree) {
-            space.tree = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        done = typeof done === 'function' ? done : bail;
-
-        /*
-         * Only run when this is an instance of Processor,
-         * and when there are transformers.
-         */
-
-        if (self.ware && self.ware.fns) {
-            self.ware.run(node, file, done);
-        } else {
-            done(null, node, file);
-        }
-
-        return node;
-    }
-
-    /**
-     * Parse a file.
-     *
-     * Patches the parsed node onto the `name`
-     * namespace on the `type` property.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to parse.
-     * @param {Object?} [settings] - Configuration.
-     * @return {Node} - `node`.
-     */
-    function parse(value, settings) {
-        var file = new VFile(value);
-        var CustomParser = (this && this.Parser) || Parser;
-        var node = new CustomParser(file, settings).parse();
-
-        file.namespace(name).tree = node;
-
-        return node;
-    }
-
-    /**
-     * Compile a file.
-     *
-     * Used the parsed node at the `name`
-     * namespace at `'tree'` when no node was given.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Object} [node] - Syntax tree.
-     * @param {VFile} [file] - File with syntax tree.
-     * @param {Object?} [settings] - Configuration.
-     * @return {string} - Compiled `file`.
-     */
-    function stringify(node, file, settings) {
-        var CustomCompiler = (this && this.Compiler) || Compiler;
-        var space;
-
-        if (settings === null || settings === undefined) {
-            settings = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space.tree || node;
-        } else if (!space.tree) {
-            space.tree = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        return new CustomCompiler(file, settings).compile();
-    }
-
-    /**
-     * Parse / Transform / Compile.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to process.
-     * @param {Object?} [settings] - Configuration.
-     * @param {Function?} [done] - Callback.
-     * @return {string?} - Parsed document, when
-     *   transformation was async.
-     */
-    function process(value, settings, done) {
-        var self = instance(this);
-        var file = new VFile(value);
-        var result = null;
-
-        if (typeof settings === 'function') {
-            done = settings;
-            settings = null;
-        }
-
-        pipeline.run({
-            'context': self,
-            'file': file,
-            'settings': settings || {}
-        }, function (err, res) {
-            result = res && res.result;
-
-            if (done) {
-                done(err, file, result);
-            } else if (err) {
-                bail(err);
-            }
-        });
-
-        return result;
-    }
-
-    /*
-     * Methods / functions.
-     */
-
-    var proto = Processor.prototype;
-
-    Processor.use = proto.use = use;
-    Processor.parse = proto.parse = parse;
-    Processor.run = proto.run = run;
-    Processor.stringify = proto.stringify = stringify;
-    Processor.process = proto.process = process;
-
-    return Processor;
-}
-
-/*
- * Expose.
- */
-
-module.exports = unified;
-
-},{"attach-ware":3,"bail":4,"unherit":62,"vfile":68,"ware":69}],60:[function(require,module,exports){
+},{"nlcst-to-string":29}],61:[function(require,module,exports){
+arguments[4][27][0].apply(exports,arguments)
+},{"attach-ware":3,"bail":4,"dup":27,"extend":12,"unherit":64,"vfile":69,"ware":70}],62:[function(require,module,exports){
 'use strict';
 
 /*
@@ -19068,7 +19420,7 @@ function trimTrailingLines(value) {
 
 module.exports = trimTrailingLines;
 
-},{}],61:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -19084,7 +19436,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],62:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19171,288 +19523,7 @@ function unherit(Super) {
 
 module.exports = unherit;
 
-},{"clone":8,"inherits":14}],63:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module unified
- * @fileoverview Parse / Transform / Compile / Repeat.
- */
-
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var bail = require('bail');
-var ware = require('ware');
-var AttachWare = require('attach-ware')(ware);
-var VFile = require('vfile');
-var unherit = require('unherit');
-
-/*
- * Processing pipeline.
- */
-
-var pipeline = ware()
-    .use(function (ctx) {
-        ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
-    })
-    .use(function (ctx, next) {
-        ctx.context.run(ctx.tree, ctx.file, next);
-    })
-    .use(function (ctx) {
-        ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
-    });
-
-/**
- * Construct a new Processor class based on the
- * given options.
- *
- * @param {Object} options - Configuration.
- * @param {string} options.name - Private storage.
- * @param {string} options.type - Type of syntax tree.
- * @param {Function} options.Parser - Class to turn a
- *   virtual file into a syntax tree.
- * @param {Function} options.Compiler - Class to turn a
- *   syntax tree into a string.
- * @return {Processor} - A new constructor.
- */
-function unified(options) {
-    var name = options.name;
-    var type = options.type;
-    var Parser = options.Parser;
-    var Compiler = options.Compiler;
-
-    /**
-     * Construct a Processor instance.
-     *
-     * @constructor
-     * @class {Processor}
-     */
-    function Processor(processor) {
-        var self = this;
-
-        if (!(self instanceof Processor)) {
-            return new Processor(processor);
-        }
-
-        self.ware = new AttachWare(processor && processor.ware);
-        self.ware.context = self;
-
-        self.Parser = unherit(Parser);
-        self.Compiler = unherit(Compiler);
-    }
-
-    /**
-     * Either return `context` if its an instance
-     * of `Processor` or construct a new `Processor`
-     * instance.
-     *
-     * @private
-     * @param {Processor?} [context] - Context object.
-     * @return {Processor} - Either `context` or a new
-     *   Processor instance.
-     */
-    function instance(context) {
-        return context instanceof Processor ? context : new Processor();
-    }
-
-    /**
-     * Attach a plugin.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @return {Processor}
-     */
-    function use() {
-        var self = instance(this);
-
-        self.ware.use.apply(self.ware, arguments);
-
-        return self;
-    }
-
-    /**
-     * Transform.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Node} [node] - Syntax tree.
-     * @param {VFile?} [file] - Virtual file.
-     * @param {Function?} [done] - Callback.
-     * @return {Node} - `node`.
-     */
-    function run(node, file, done) {
-        var self = this;
-        var space;
-
-        if (typeof file === 'function') {
-            done = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space[type] || node;
-        } else if (!space[type]) {
-            space[type] = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        done = typeof done === 'function' ? done : bail;
-
-        /*
-         * Only run when this is an instance of Processor,
-         * and when there are transformers.
-         */
-
-        if (self.ware && self.ware.fns) {
-            self.ware.run(node, file, done);
-        } else {
-            done(null, node, file);
-        }
-
-        return node;
-    }
-
-    /**
-     * Parse a file.
-     *
-     * Patches the parsed node onto the `name`
-     * namespace on the `type` property.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to parse.
-     * @param {Object?} [settings] - Configuration.
-     * @return {Node} - `node`.
-     */
-    function parse(value, settings) {
-        var file = new VFile(value);
-        var CustomParser = (this && this.Parser) || Parser;
-        var node = new CustomParser(file, settings).parse();
-
-        file.namespace(name)[type] = node;
-
-        return node;
-    }
-
-    /**
-     * Compile a file.
-     *
-     * Used the parsed node at the `name`
-     * namespace at `type` when no node was given.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Object} [node] - Syntax tree.
-     * @param {VFile} [file] - File with syntax tree.
-     * @param {Object?} [settings] - Configuration.
-     * @return {string} - Compiled `file`.
-     */
-    function stringify(node, file, settings) {
-        var CustomCompiler = (this && this.Compiler) || Compiler;
-        var space;
-
-        if (settings === null || settings === undefined) {
-            settings = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space[type] || node;
-        } else if (!space[type]) {
-            space[type] = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        return new CustomCompiler(file, settings).compile();
-    }
-
-    /**
-     * Parse / Transform / Compile.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to process.
-     * @param {Object?} [settings] - Configuration.
-     * @param {Function?} [done] - Callback.
-     * @return {string?} - Parsed document, when
-     *   transformation was async.
-     */
-    function process(value, settings, done) {
-        var self = instance(this);
-        var file = new VFile(value);
-        var result = null;
-
-        if (typeof settings === 'function') {
-            done = settings;
-            settings = null;
-        }
-
-        pipeline.run({
-            'context': self,
-            'file': file,
-            'settings': settings || {}
-        }, function (err, res) {
-            result = res && res.result;
-
-            if (done) {
-                done(err, file, result);
-            } else if (err) {
-                bail(err);
-            }
-        });
-
-        return result;
-    }
-
-    /*
-     * Methods / functions.
-     */
-
-    var proto = Processor.prototype;
-
-    Processor.use = proto.use = use;
-    Processor.parse = proto.parse = parse;
-    Processor.run = proto.run = run;
-    Processor.stringify = proto.stringify = stringify;
-    Processor.process = proto.process = process;
-
-    return Processor;
-}
-
-/*
- * Expose.
- */
-
-module.exports = unified;
-
-},{"attach-ware":3,"bail":4,"unherit":62,"vfile":68,"ware":69}],64:[function(require,module,exports){
+},{"clone":8,"inherits":15}],65:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19541,7 +19612,7 @@ function modifierFactory(callback) {
 
 module.exports = modifierFactory;
 
-},{"array-iterate":2}],65:[function(require,module,exports){
+},{"array-iterate":2}],66:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19598,7 +19669,7 @@ function visitorFactory(callback) {
 
 module.exports = visitorFactory;
 
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -19713,7 +19784,7 @@ function visit(tree, type, callback, reverse) {
 
 module.exports = visit;
 
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19764,7 +19835,7 @@ function sort(file) {
 
 module.exports = sort;
 
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -20312,7 +20383,7 @@ vFilePrototype.namespace = namespace;
 
 module.exports = VFile;
 
-},{}],69:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 /**
  * Module Dependencies
  */
@@ -20405,7 +20476,7 @@ Ware.prototype.run = function () {
   return this;
 };
 
-},{"wrap-fn":70}],70:[function(require,module,exports){
+},{"wrap-fn":71}],71:[function(require,module,exports){
 /**
  * Module Dependencies
  */
