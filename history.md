@@ -2,6 +2,12 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+1.4.0 / 2015-10-11
+==================
+
+*   Update mdast, retext-equality ([e550762](https://github.com/wooorm/alex/commit/e550762))
+*   Fix type: `iof` > `if` ([801c4ae](https://github.com/wooorm/alex/commit/801c4ae))
+
 1.3.0 / 2015-10-07
 ==================
 
