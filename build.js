@@ -289,6 +289,7 @@ onchange();
  * Dependencies.
  */
 
+var VFile = require('vfile');
 var bail = require('bail');
 var mdast = require('mdast');
 var bridge = require('mdast-util-to-nlcst');
@@ -347,1328 +348,35 @@ function alex(value) {
   return result;
 }
 
+/**
+ * alex, but just for plain-text.
+ *
+ * Useful if you would rather not have things like
+ * (inline or block-level) code be ignored.
+ *
+ * @param {string|VFile} value - Content
+ * @return {VFile} - Result.
+ */
+function text(value) {
+  var file = new VFile(value);
+
+  english.run(english.parse(file), file, bail);
+
+  sort(file);
+
+  return file;
+}
+
 /*
  * Expose.
  */
+
+alex.text = text;
+alex.markdown = alex;
 
 module.exports = alex;
-}, {"bail":5,"mdast":6,"mdast-util-to-nlcst":7,"retext":8,"retext-english":9,"retext-equality":10,"vfile-sort":11}],
+}, {"vfile":5,"bail":6,"mdast":7,"mdast-util-to-nlcst":8,"retext":9,"retext-english":10,"retext-equality":11,"vfile-sort":12}],
 5: [function(require, module, exports) {
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer. All rights reserved.
- * @module bail
- * @fileoverview Throw a given error.
- */
-
-'use strict';
-
-/**
- * Throw a given error.
- *
- * @example
- *   bail();
- *
- * @example
- *   bail(new Error('failure'));
- *   // Error: failure
- *   //     at repl:1:6
- *   //     at REPLServer.defaultEval (repl.js:154:27)
- *   //     ...
- *
- * @param {Error?} [err] - Optional error.
- * @throws {Error} - `err`, when given.
- */
-function bail(err) {
-  if (err) {
-    throw err;
-  }
-}
-
-/*
- * Expose.
- */
-
-module.exports = bail;
-}, {}],
-6: [function(require, module, exports) {
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module mdast
- * @fileoverview Markdown processor powered by plugins.
- */
-
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var unified = require('unified');
-var Parser = require('./lib/parse.js');
-var Compiler = require('./lib/stringify.js');
-
-/*
- * Exports.
- */
-
-module.exports = unified({
-  'name': 'mdast',
-  'type': 'ast',
-  'Parser': Parser,
-  'Compiler': Compiler
-});
-}, {"unified":12,"./lib/parse.js":13,"./lib/stringify.js":14}],
-12: [function(require, module, exports) {
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module unified
- * @fileoverview Parse / Transform / Compile / Repeat.
- */
-
-'use strict';
-
-/*
- * Dependencies.
- */
-
-var bail = require('bail');
-var ware = require('ware');
-var AttachWare = require('attach-ware')(ware);
-var VFile = require('vfile');
-var unherit = require('unherit');
-
-/*
- * Processing pipeline.
- */
-
-var pipeline = ware().use(function (ctx) {
-    ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
-}).use(function (ctx, next) {
-    ctx.context.run(ctx.tree, ctx.file, next);
-}).use(function (ctx) {
-    ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
-});
-
-/**
- * Construct a new Processor class based on the
- * given options.
- *
- * @param {Object} options - Configuration.
- * @param {string} options.name - Private storage.
- * @param {string} options.type - Type of syntax tree.
- * @param {Function} options.Parser - Class to turn a
- *   virtual file into a syntax tree.
- * @param {Function} options.Compiler - Class to turn a
- *   syntax tree into a string.
- * @return {Processor} - A new constructor.
- */
-function unified(options) {
-    var name = options.name;
-    var type = options.type;
-    var Parser = options.Parser;
-    var Compiler = options.Compiler;
-
-    /**
-     * Construct a Processor instance.
-     *
-     * @constructor
-     * @class {Processor}
-     */
-    function Processor(processor) {
-        var self = this;
-
-        if (!(self instanceof Processor)) {
-            return new Processor(processor);
-        }
-
-        self.ware = new AttachWare(processor && processor.ware);
-        self.ware.context = self;
-
-        self.Parser = unherit(Parser);
-        self.Compiler = unherit(Compiler);
-    }
-
-    /**
-     * Either return `context` if its an instance
-     * of `Processor` or construct a new `Processor`
-     * instance.
-     *
-     * @private
-     * @param {Processor?} [context] - Context object.
-     * @return {Processor} - Either `context` or a new
-     *   Processor instance.
-     */
-    function instance(context) {
-        return context instanceof Processor ? context : new Processor();
-    }
-
-    /**
-     * Attach a plugin.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @return {Processor}
-     */
-    function use() {
-        var self = instance(this);
-
-        self.ware.use.apply(self.ware, arguments);
-
-        return self;
-    }
-
-    /**
-     * Transform.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Node} [node] - Syntax tree.
-     * @param {VFile?} [file] - Virtual file.
-     * @param {Function?} [done] - Callback.
-     * @return {Node} - `node`.
-     */
-    function run(node, file, done) {
-        var self = this;
-        var space;
-
-        if (typeof file === 'function') {
-            done = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space[type] || node;
-        } else if (!space[type]) {
-            space[type] = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        done = typeof done === 'function' ? done : bail;
-
-        /*
-         * Only run when this is an instance of Processor,
-         * and when there are transformers.
-         */
-
-        if (self.ware && self.ware.fns) {
-            self.ware.run(node, file, done);
-        } else {
-            done(null, node, file);
-        }
-
-        return node;
-    }
-
-    /**
-     * Parse a file.
-     *
-     * Patches the parsed node onto the `name`
-     * namespace on the `type` property.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to parse.
-     * @param {Object?} [settings] - Configuration.
-     * @return {Node} - `node`.
-     */
-    function parse(value, settings) {
-        var file = new VFile(value);
-        var CustomParser = this && this.Parser || Parser;
-        var node = new CustomParser(file, settings).parse();
-
-        file.namespace(name)[type] = node;
-
-        return node;
-    }
-
-    /**
-     * Compile a file.
-     *
-     * Used the parsed node at the `name`
-     * namespace at `type` when no node was given.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Object} [node] - Syntax tree.
-     * @param {VFile} [file] - File with syntax tree.
-     * @param {Object?} [settings] - Configuration.
-     * @return {string} - Compiled `file`.
-     */
-    function stringify(node, file, settings) {
-        var CustomCompiler = this && this.Compiler || Compiler;
-        var space;
-
-        if (settings === null || settings === undefined) {
-            settings = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space[type] || node;
-        } else if (!space[type]) {
-            space[type] = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        return new CustomCompiler(file, settings).compile();
-    }
-
-    /**
-     * Parse / Transform / Compile.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to process.
-     * @param {Object?} [settings] - Configuration.
-     * @param {Function?} [done] - Callback.
-     * @return {string?} - Parsed document, when
-     *   transformation was async.
-     */
-    function process(value, settings, done) {
-        var self = instance(this);
-        var file = new VFile(value);
-        var result = null;
-
-        if (typeof settings === 'function') {
-            done = settings;
-            settings = null;
-        }
-
-        pipeline.run({
-            'context': self,
-            'file': file,
-            'settings': settings || {}
-        }, function (err, res) {
-            result = res && res.result;
-
-            if (done) {
-                done(err, file, result);
-            } else if (err) {
-                bail(err);
-            }
-        });
-
-        return result;
-    }
-
-    /*
-     * Methods / functions.
-     */
-
-    var proto = Processor.prototype;
-
-    Processor.use = proto.use = use;
-    Processor.parse = proto.parse = parse;
-    Processor.run = proto.run = run;
-    Processor.stringify = proto.stringify = stringify;
-    Processor.process = proto.process = process;
-
-    return Processor;
-}
-
-/*
- * Expose.
- */
-
-module.exports = unified;
-}, {"bail":5,"ware":15,"attach-ware":16,"vfile":17,"unherit":18}],
-15: [function(require, module, exports) {
-/**
- * Module Dependencies
- */
-
-'use strict';
-
-var slice = [].slice;
-var wrap = require('wrap-fn');
-
-/**
- * Expose `Ware`.
- */
-
-module.exports = Ware;
-
-/**
- * Throw an error.
- *
- * @param {Error} error
- */
-
-function fail(err) {
-  throw err;
-}
-
-/**
- * Initialize a new `Ware` manager, with optional `fns`.
- *
- * @param {Function or Array or Ware} fn (optional)
- */
-
-function Ware(fn) {
-  if (!(this instanceof Ware)) return new Ware(fn);
-  this.fns = [];
-  if (fn) this.use(fn);
-}
-
-/**
- * Use a middleware `fn`.
- *
- * @param {Function or Array or Ware} fn
- * @return {Ware}
- */
-
-Ware.prototype.use = function (fn) {
-  if (fn instanceof Ware) {
-    return this.use(fn.fns);
-  }
-
-  if (fn instanceof Array) {
-    for (var i = 0, f; f = fn[i++];) this.use(f);
-    return this;
-  }
-
-  this.fns.push(fn);
-  return this;
-};
-
-/**
- * Run through the middleware with the given `args` and optional `callback`.
- *
- * @param {Mixed} args...
- * @param {Function} callback (optional)
- * @return {Ware}
- */
-
-Ware.prototype.run = function () {
-  var fns = this.fns;
-  var ctx = this;
-  var i = 0;
-  var last = arguments[arguments.length - 1];
-  var done = 'function' == typeof last && last;
-  var args = done ? slice.call(arguments, 0, arguments.length - 1) : slice.call(arguments);
-
-  // next step
-  function next(err) {
-    if (err) return (done || fail)(err);
-    var fn = fns[i++];
-    var arr = slice.call(args);
-
-    if (!fn) {
-      return done && done.apply(null, [null].concat(args));
-    }
-
-    wrap(fn, next).apply(ctx, arr);
-  }
-
-  next();
-
-  return this;
-};
-}, {"wrap-fn":19}],
-19: [function(require, module, exports) {
-/**
- * Module Dependencies
- */
-
-'use strict';
-
-var noop = function noop() {};
-var co = require('co');
-
-/**
- * Export `wrap-fn`
- */
-
-module.exports = wrap;
-
-/**
- * Wrap a function to support
- * sync, async, and gen functions.
- *
- * @param {Function} fn
- * @param {Function} done
- * @return {Function}
- * @api public
- */
-
-function wrap(fn, done) {
-  done = once(done || noop);
-
-  return function () {
-    // prevents arguments leakage
-    // see https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
-    var i = arguments.length;
-    var args = new Array(i);
-    while (i--) args[i] = arguments[i];
-
-    var ctx = this;
-
-    // done
-    if (!fn) {
-      return done.apply(ctx, [null].concat(args));
-    }
-
-    // async
-    if (fn.length > args.length) {
-      // NOTE: this only handles uncaught synchronous errors
-      try {
-        return fn.apply(ctx, args.concat(done));
-      } catch (e) {
-        return done(e);
-      }
-    }
-
-    // generator
-    if (generator(fn)) {
-      return co(fn).apply(ctx, args.concat(done));
-    }
-
-    // sync
-    return sync(fn, done).apply(ctx, args);
-  };
-}
-
-/**
- * Wrap a synchronous function execution.
- *
- * @param {Function} fn
- * @param {Function} done
- * @return {Function}
- * @api private
- */
-
-function sync(fn, done) {
-  return function () {
-    var ret;
-
-    try {
-      ret = fn.apply(this, arguments);
-    } catch (err) {
-      return done(err);
-    }
-
-    if (promise(ret)) {
-      ret.then(function (value) {
-        done(null, value);
-      }, done);
-    } else {
-      ret instanceof Error ? done(ret) : done(null, ret);
-    }
-  };
-}
-
-/**
- * Is `value` a generator?
- *
- * @param {Mixed} value
- * @return {Boolean}
- * @api private
- */
-
-function generator(value) {
-  return value && value.constructor && 'GeneratorFunction' == value.constructor.name;
-}
-
-/**
- * Is `value` a promise?
- *
- * @param {Mixed} value
- * @return {Boolean}
- * @api private
- */
-
-function promise(value) {
-  return value && 'function' == typeof value.then;
-}
-
-/**
- * Once
- */
-
-function once(fn) {
-  return function () {
-    var ret = fn.apply(this, arguments);
-    fn = noop;
-    return ret;
-  };
-}
-}, {"co":20}],
-20: [function(require, module, exports) {
-
-/**
- * slice() reference.
- */
-
-'use strict';
-
-var slice = Array.prototype.slice;
-
-/**
- * Expose `co`.
- */
-
-module.exports = co;
-
-/**
- * Wrap the given generator `fn` and
- * return a thunk.
- *
- * @param {Function} fn
- * @return {Function}
- * @api public
- */
-
-function co(fn) {
-  var isGenFun = isGeneratorFunction(fn);
-
-  return function (done) {
-    var ctx = this;
-
-    // in toThunk() below we invoke co()
-    // with a generator, so optimize for
-    // this case
-    var gen = fn;
-
-    // we only need to parse the arguments
-    // if gen is a generator function.
-    if (isGenFun) {
-      var args = slice.call(arguments),
-          len = args.length;
-      var hasCallback = len && 'function' == typeof args[len - 1];
-      done = hasCallback ? args.pop() : error;
-      gen = fn.apply(this, args);
-    } else {
-      done = done || error;
-    }
-
-    next();
-
-    // #92
-    // wrap the callback in a setImmediate
-    // so that any of its errors aren't caught by `co`
-    function exit(err, res) {
-      setImmediate(function () {
-        done.call(ctx, err, res);
-      });
-    }
-
-    function next(err, res) {
-      var ret;
-
-      // multiple args
-      if (arguments.length > 2) res = slice.call(arguments, 1);
-
-      // error
-      if (err) {
-        try {
-          ret = gen['throw'](err);
-        } catch (e) {
-          return exit(e);
-        }
-      }
-
-      // ok
-      if (!err) {
-        try {
-          ret = gen.next(res);
-        } catch (e) {
-          return exit(e);
-        }
-      }
-
-      // done
-      if (ret.done) return exit(null, ret.value);
-
-      // normalize
-      ret.value = toThunk(ret.value, ctx);
-
-      // run
-      if ('function' == typeof ret.value) {
-        var called = false;
-        try {
-          ret.value.call(ctx, function () {
-            if (called) return;
-            called = true;
-            next.apply(ctx, arguments);
-          });
-        } catch (e) {
-          setImmediate(function () {
-            if (called) return;
-            called = true;
-            next(e);
-          });
-        }
-        return;
-      }
-
-      // invalid
-      next(new TypeError('You may only yield a function, promise, generator, array, or object, ' + 'but the following was passed: "' + String(ret.value) + '"'));
-    }
-  };
-}
-
-/**
- * Convert `obj` into a normalized thunk.
- *
- * @param {Mixed} obj
- * @param {Mixed} ctx
- * @return {Function}
- * @api private
- */
-
-function toThunk(obj, ctx) {
-
-  if (isGeneratorFunction(obj)) {
-    return co(obj.call(ctx));
-  }
-
-  if (isGenerator(obj)) {
-    return co(obj);
-  }
-
-  if (isPromise(obj)) {
-    return promiseToThunk(obj);
-  }
-
-  if ('function' == typeof obj) {
-    return obj;
-  }
-
-  if (isObject(obj) || Array.isArray(obj)) {
-    return objectToThunk.call(ctx, obj);
-  }
-
-  return obj;
-}
-
-/**
- * Convert an object of yieldables to a thunk.
- *
- * @param {Object} obj
- * @return {Function}
- * @api private
- */
-
-function objectToThunk(obj) {
-  var ctx = this;
-  var isArray = Array.isArray(obj);
-
-  return function (done) {
-    var keys = Object.keys(obj);
-    var pending = keys.length;
-    var results = isArray ? new Array(pending) // predefine the array length
-    : new obj.constructor();
-    var finished;
-
-    if (!pending) {
-      setImmediate(function () {
-        done(null, results);
-      });
-      return;
-    }
-
-    // prepopulate object keys to preserve key ordering
-    if (!isArray) {
-      for (var i = 0; i < pending; i++) {
-        results[keys[i]] = undefined;
-      }
-    }
-
-    for (var i = 0; i < keys.length; i++) {
-      run(obj[keys[i]], keys[i]);
-    }
-
-    function run(fn, key) {
-      if (finished) return;
-      try {
-        fn = toThunk(fn, ctx);
-
-        if ('function' != typeof fn) {
-          results[key] = fn;
-          return --pending || done(null, results);
-        }
-
-        fn.call(ctx, function (err, res) {
-          if (finished) return;
-
-          if (err) {
-            finished = true;
-            return done(err);
-          }
-
-          results[key] = res;
-          --pending || done(null, results);
-        });
-      } catch (err) {
-        finished = true;
-        done(err);
-      }
-    }
-  };
-}
-
-/**
- * Convert `promise` to a thunk.
- *
- * @param {Object} promise
- * @return {Function}
- * @api private
- */
-
-function promiseToThunk(promise) {
-  return function (fn) {
-    promise.then(function (res) {
-      fn(null, res);
-    }, fn);
-  };
-}
-
-/**
- * Check if `obj` is a promise.
- *
- * @param {Object} obj
- * @return {Boolean}
- * @api private
- */
-
-function isPromise(obj) {
-  return obj && 'function' == typeof obj.then;
-}
-
-/**
- * Check if `obj` is a generator.
- *
- * @param {Mixed} obj
- * @return {Boolean}
- * @api private
- */
-
-function isGenerator(obj) {
-  return obj && 'function' == typeof obj.next && 'function' == typeof obj['throw'];
-}
-
-/**
- * Check if `obj` is a generator function.
- *
- * @param {Mixed} obj
- * @return {Boolean}
- * @api private
- */
-
-function isGeneratorFunction(obj) {
-  return obj && obj.constructor && 'GeneratorFunction' == obj.constructor.name;
-}
-
-/**
- * Check for plain object.
- *
- * @param {Mixed} val
- * @return {Boolean}
- * @api private
- */
-
-function isObject(val) {
-  return val && Object == val.constructor;
-}
-
-/**
- * Throw `err` in a new stack.
- *
- * This is used when co() is invoked
- * without supplying a callback, which
- * should only be for demonstrational
- * purposes.
- *
- * @param {Error} err
- * @api private
- */
-
-function error(err) {
-  if (!err) return;
-  setImmediate(function () {
-    throw err;
-  });
-}
-}, {}],
-16: [function(require, module, exports) {
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module attach-ware
- * @fileoverview Middleware with configuration.
- * @example
- *   var ware = require('attach-ware')(require('ware'));
- *
- *   var middleware = ware()
- *     .use(function (context, options) {
- *         if (!options.condition) return;
- *
- *         return function (req, res, next) {
- *           res.x = 'hello';
- *           next();
- *         };
- *     }, {
- *         'condition': true
- *     })
- *     .use(function (context, options) {
- *         if (!options.condition) return;
- *
- *         return function (req, res, next) {
- *           res.y = 'world';
- *           next();
- *         };
- *     }, {
- *         'condition': false
- *     });
- *
- *   middleware.run({}, {}, function (err, req, res) {
- *     res.x; // "hello"
- *     res.y; // undefined
- *   });
- */
-
-'use strict';
-
-var slice = [].slice;
-var unherit = require('unherit');
-
-/**
- * Clone `Ware` without affecting the super-class and
- * turn it into configurable middleware.
- *
- * @param {Function} Ware - Ware-like constructor.
- * @return {Function} AttachWare - Configurable middleware.
- */
-function patch(Ware) {
-  /*
-   * Methods.
-   */
-
-  var useFn = Ware.prototype.use;
-
-  /**
-   * @constructor
-   * @class {AttachWare}
-   */
-  var AttachWare = unherit(Ware);
-
-  AttachWare.prototype.foo = true;
-
-  /**
-   * Attach configurable middleware.
-   *
-   * @memberof {AttachWare}
-   * @this {AttachWare}
-   * @param {Function} attach
-   * @return {AttachWare} - `this`.
-   */
-  function use(attach) {
-    var self = this;
-    var params = slice.call(arguments, 1);
-    var index;
-    var length;
-    var fn;
-
-    /*
-     * Accept other `AttachWare`.
-     */
-
-    if (attach instanceof AttachWare) {
-      if (attach.attachers) {
-        return self.use(attach.attachers);
-      }
-
-      return self;
-    }
-
-    /*
-     * Accept normal ware.
-     */
-
-    if (attach instanceof Ware) {
-      self.fns = self.fns.concat(attach.fns);
-      return self;
-    }
-
-    /*
-     * Multiple attachers.
-     */
-
-    if ('length' in attach && typeof attach !== 'function') {
-      index = -1;
-      length = attach.length;
-
-      while (++index < length) {
-        self.use.apply(self, [attach[index]].concat(params));
-      }
-
-      return self;
-    }
-
-    /*
-     * Single attacher.
-     */
-
-    fn = attach.apply(null, [self.context || self].concat(params));
-
-    /*
-     * Store the attacher to not break `new Ware(otherWare)`
-     * functionality.
-     */
-
-    if (!self.attachers) {
-      self.attachers = [];
-    }
-
-    self.attachers.push(attach);
-
-    /*
-     * Pass `fn` to the original `Ware#use()`.
-     */
-
-    if (fn) {
-      useFn.call(self, fn);
-    }
-
-    return self;
-  }
-
-  AttachWare.prototype.use = use;
-
-  return function (fn) {
-    return new AttachWare(fn);
-  };
-}
-
-module.exports = patch;
-}, {"unherit":18}],
-18: [function(require, module, exports) {
-"use strict";
-
-(function (f) {
-  if (typeof exports === "object" && typeof module !== "undefined") {
-    module.exports = f();
-  } else if (typeof define === "function" && define.amd) {
-    define([], f);
-  } else {
-    var g;if (typeof window !== "undefined") {
-      g = window;
-    } else if (typeof global !== "undefined") {
-      g = global;
-    } else if (typeof self !== "undefined") {
-      g = self;
-    } else {
-      g = this;
-    }g.unherit = f();
-  }
-})(function () {
-  var define, module, exports;return (function e(t, n, r) {
-    function s(o, u) {
-      if (!n[o]) {
-        if (!t[o]) {
-          var a = typeof require == "function" && require;if (!u && a) return a(o, !0);if (i) return i(o, !0);var f = new Error("Cannot find module '" + o + "'");throw (f.code = "MODULE_NOT_FOUND", f);
-        }var l = n[o] = { exports: {} };t[o][0].call(l.exports, function (e) {
-          var n = t[o][1][e];return s(n ? n : e);
-        }, l, l.exports, e, t, n, r);
-      }return n[o].exports;
-    }var i = typeof require == "function" && require;for (var o = 0; o < r.length; o++) s(r[o]);return s;
-  })({ 1: [function (require, module, exports) {
-      /**
-       * @author Titus Wormer
-       * @copyright 2015 Titus Wormer
-       * @license MIT
-       * @module unherit
-       * @fileoverview Create a custom constructor which can be modified
-       *   without affecting the original class.
-       * @example
-       *   var EventEmitter = require('events').EventEmitter;
-       *   var Emitter = unherit(EventEmitter);
-       *   // Create a private class which acts just like
-       *   // `EventEmitter`.
-       *
-       *   Emitter.prototype.defaultMaxListeners = 0;
-       *   // Now, all instances of `Emitter` have no maximum
-       *   // listeners, without affecting other `EventEmitter`s.
-       */
-
-      'use strict';
-
-      /*
-       * Dependencies.
-       */
-
-      var clone = require('clone');
-      var inherits = require('inherits');
-
-      /**
-       * Create a custom constructor which can be modified
-       * without affecting the original class.
-       *
-       * @param {Function} Super - Super-class.
-       * @return {Function} - Constructor acting like `Super`,
-       *   which can be modified without affecting the original
-       *   class.
-       */
-      function unherit(Super) {
-        var base = clone(Super.prototype);
-        var result;
-        var key;
-
-        /**
-         * Constructor accepting a single argument,
-         * which itself is an `arguments` object.
-         */
-        function From(parameters) {
-          return Super.apply(this, parameters);
-        }
-
-        /**
-         * Constructor accepting variadic arguments.
-         */
-        function Of() {
-          if (!(this instanceof Of)) {
-            return new From(arguments);
-          }
-
-          return Super.apply(this, arguments);
-        }
-
-        inherits(Of, Super);
-        inherits(From, Of);
-
-        /*
-         * Both do duplicate work. However, cloning the
-         * prototype ensures clonable things are cloned
-         * and thus used. The `inherits` call ensures
-         * `instanceof` still thinks an instance subclasses
-         * `Super`.
-         */
-
-        result = Of.prototype;
-
-        for (key in base) {
-          result[key] = base[key];
-        }
-
-        return Of;
-      }
-
-      /*
-       * Expose.
-       */
-
-      module.exports = unherit;
-    }, { "clone": 2, "inherits": 3 }], 2: [function (require, module, exports) {
-      var clone = (function () {
-        'use strict';
-
-        /**
-         * Clones (copies) an Object using deep copying.
-         *
-         * This function supports circular references by default, but if you are certain
-         * there are no circular references in your object, you can save some CPU time
-         * by calling clone(obj, false).
-         *
-         * Caution: if `circular` is false and `parent` contains circular references,
-         * your program may enter an infinite loop and crash.
-         *
-         * @param `parent` - the object to be cloned
-         * @param `circular` - set to true if the object to be cloned may contain
-         *    circular references. (optional - true by default)
-         * @param `depth` - set to a number if the object is only to be cloned to
-         *    a particular depth. (optional - defaults to Infinity)
-         * @param `prototype` - sets the prototype to be used when cloning an object.
-         *    (optional - defaults to parent prototype).
-        */
-        function clone(parent, circular, depth, prototype) {
-          var filter;
-          if (typeof circular === 'object') {
-            depth = circular.depth;
-            prototype = circular.prototype;
-            filter = circular.filter;
-            circular = circular.circular;
-          }
-          // maintain two arrays for circular references, where corresponding parents
-          // and children have the same index
-          var allParents = [];
-          var allChildren = [];
-
-          var useBuffer = typeof Buffer != 'undefined';
-
-          if (typeof circular == 'undefined') circular = true;
-
-          if (typeof depth == 'undefined') depth = Infinity;
-
-          // recurse this function so we don't reset allParents and allChildren
-          function _clone(parent, depth) {
-            // cloning null always returns null
-            if (parent === null) return null;
-
-            if (depth == 0) return parent;
-
-            var child;
-            var proto;
-            if (typeof parent != 'object') {
-              return parent;
-            }
-
-            if (clone.__isArray(parent)) {
-              child = [];
-            } else if (clone.__isRegExp(parent)) {
-              child = new RegExp(parent.source, __getRegExpFlags(parent));
-              if (parent.lastIndex) child.lastIndex = parent.lastIndex;
-            } else if (clone.__isDate(parent)) {
-              child = new Date(parent.getTime());
-            } else if (useBuffer && Buffer.isBuffer(parent)) {
-              child = new Buffer(parent.length);
-              parent.copy(child);
-              return child;
-            } else {
-              if (typeof prototype == 'undefined') {
-                proto = Object.getPrototypeOf(parent);
-                child = Object.create(proto);
-              } else {
-                child = Object.create(prototype);
-                proto = prototype;
-              }
-            }
-
-            if (circular) {
-              var index = allParents.indexOf(parent);
-
-              if (index != -1) {
-                return allChildren[index];
-              }
-              allParents.push(parent);
-              allChildren.push(child);
-            }
-
-            for (var i in parent) {
-              var attrs;
-              if (proto) {
-                attrs = Object.getOwnPropertyDescriptor(proto, i);
-              }
-
-              if (attrs && attrs.set == null) {
-                continue;
-              }
-              child[i] = _clone(parent[i], depth - 1);
-            }
-
-            return child;
-          }
-
-          return _clone(parent, depth);
-        }
-
-        /**
-         * Simple flat clone using prototype, accepts only objects, usefull for property
-         * override on FLAT configuration object (no nested props).
-         *
-         * USE WITH CAUTION! This may not behave as you wish if you do not know how this
-         * works.
-         */
-        clone.clonePrototype = function clonePrototype(parent) {
-          if (parent === null) return null;
-
-          var c = function c() {};
-          c.prototype = parent;
-          return new c();
-        };
-
-        // private utility functions
-
-        function __objToStr(o) {
-          return Object.prototype.toString.call(o);
-        };
-        clone.__objToStr = __objToStr;
-
-        function __isDate(o) {
-          return typeof o === 'object' && __objToStr(o) === '[object Date]';
-        };
-        clone.__isDate = __isDate;
-
-        function __isArray(o) {
-          return typeof o === 'object' && __objToStr(o) === '[object Array]';
-        };
-        clone.__isArray = __isArray;
-
-        function __isRegExp(o) {
-          return typeof o === 'object' && __objToStr(o) === '[object RegExp]';
-        };
-        clone.__isRegExp = __isRegExp;
-
-        function __getRegExpFlags(re) {
-          var flags = '';
-          if (re.global) flags += 'g';
-          if (re.ignoreCase) flags += 'i';
-          if (re.multiline) flags += 'm';
-          return flags;
-        };
-        clone.__getRegExpFlags = __getRegExpFlags;
-
-        return clone;
-      })();
-
-      if (typeof module === 'object' && module.exports) {
-        module.exports = clone;
-      }
-    }, {}], 3: [function (require, module, exports) {
-      if (typeof Object.create === 'function') {
-        // implementation from standard node.js 'util' module
-        module.exports = function inherits(ctor, superCtor) {
-          ctor.super_ = superCtor;
-          ctor.prototype = Object.create(superCtor.prototype, {
-            constructor: {
-              value: ctor,
-              enumerable: false,
-              writable: true,
-              configurable: true
-            }
-          });
-        };
-      } else {
-        // old school shim for old browsers
-        module.exports = function inherits(ctor, superCtor) {
-          ctor.super_ = superCtor;
-          var TempCtor = function TempCtor() {};
-          TempCtor.prototype = superCtor.prototype;
-          ctor.prototype = new TempCtor();
-          ctor.prototype.constructor = ctor;
-        };
-      }
-    }, {}] }, {}, [1])(1);
-});
-}, {}],
-17: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -2039,8 +747,12 @@ function message(reason, position) {
     err.name = (filePath ? filePath + ':' : '') + range;
     err.file = filePath;
     err.reason = reason.message || reason;
-    err.line = position ? position.line : null;
-    err.column = position ? position.column : null;
+
+    try {
+        err.line = position ? position.line : null;
+        err.column = position ? position.column : null;
+    } catch (e) {/* Handle Safari 9 :( */}
+
     err.location = location;
 
     if (reason.stack) {
@@ -2210,7 +922,1427 @@ vFilePrototype.namespace = namespace;
 
 module.exports = VFile;
 }, {}],
+6: [function(require, module, exports) {
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer. All rights reserved.
+ * @module bail
+ * @fileoverview Throw a given error.
+ */
+
+'use strict';
+
+/**
+ * Throw a given error.
+ *
+ * @example
+ *   bail();
+ *
+ * @example
+ *   bail(new Error('failure'));
+ *   // Error: failure
+ *   //     at repl:1:6
+ *   //     at REPLServer.defaultEval (repl.js:154:27)
+ *   //     ...
+ *
+ * @param {Error?} [err] - Optional error.
+ * @throws {Error} - `err`, when given.
+ */
+function bail(err) {
+  if (err) {
+    throw err;
+  }
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = bail;
+}, {}],
+7: [function(require, module, exports) {
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module mdast
+ * @fileoverview Markdown processor powered by plugins.
+ */
+
+'use strict';
+
+/* eslint-env commonjs */
+
+/*
+ * Dependencies.
+ */
+
+var unified = require('unified');
+var Parser = require('./lib/parse.js');
+var Compiler = require('./lib/stringify.js');
+
+/*
+ * Exports.
+ */
+
+module.exports = unified({
+  'name': 'mdast',
+  'Parser': Parser,
+  'Compiler': Compiler
+});
+}, {"unified":13,"./lib/parse.js":14,"./lib/stringify.js":15}],
 13: [function(require, module, exports) {
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module unified
+ * @fileoverview Parse / Transform / Compile / Repeat.
+ */
+
+'use strict';
+
+/* eslint-env commonjs */
+
+/*
+ * Dependencies.
+ */
+
+var bail = require('bail');
+var ware = require('ware');
+var extend;
+try {
+    extend = require('extend');
+} catch (e) {
+    extend = require('node-extend');
+}
+var AttachWare = require('attach-ware')(ware);
+var VFile = require('vfile');
+var unherit = require('unherit');
+
+/*
+ * Processing pipeline.
+ */
+
+var pipeline = ware().use(function (ctx) {
+    ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
+}).use(function (ctx, next) {
+    ctx.context.run(ctx.tree, ctx.file, next);
+}).use(function (ctx) {
+    ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
+});
+
+/**
+ * Construct a new Processor class based on the
+ * given options.
+ *
+ * @param {Object} options - Configuration.
+ * @param {string} options.name - Private storage.
+ * @param {Function} options.Parser - Class to turn a
+ *   virtual file into a syntax tree.
+ * @param {Function} options.Compiler - Class to turn a
+ *   syntax tree into a string.
+ * @return {Processor} - A new constructor.
+ */
+function unified(options) {
+    var name = options.name;
+    var Parser = options.Parser;
+    var Compiler = options.Compiler;
+    var data = options.data;
+
+    /**
+     * Construct a Processor instance.
+     *
+     * @constructor
+     * @class {Processor}
+     */
+    function Processor(processor) {
+        var self = this;
+
+        if (!(self instanceof Processor)) {
+            return new Processor(processor);
+        }
+
+        self.ware = new AttachWare(processor && processor.ware);
+        self.ware.context = self;
+
+        self.Parser = unherit(Parser);
+        self.Compiler = unherit(Compiler);
+
+        if (self.data) {
+            self.data = extend(true, {}, self.data);
+        }
+    }
+
+    /**
+     * Either return `context` if its an instance
+     * of `Processor` or construct a new `Processor`
+     * instance.
+     *
+     * @private
+     * @param {Processor?} [context] - Context object.
+     * @return {Processor} - Either `context` or a new
+     *   Processor instance.
+     */
+    function instance(context) {
+        return context instanceof Processor ? context : new Processor();
+    }
+
+    /**
+     * Attach a plugin.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @return {Processor}
+     */
+    function use() {
+        var self = instance(this);
+
+        self.ware.use.apply(self.ware, arguments);
+
+        return self;
+    }
+
+    /**
+     * Transform.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Node} [node] - Syntax tree.
+     * @param {VFile?} [file] - Virtual file.
+     * @param {Function?} [done] - Callback.
+     * @return {Node} - `node`.
+     */
+    function run(node, file, done) {
+        var self = this;
+        var space;
+
+        if (typeof file === 'function') {
+            done = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space.tree || node;
+        } else if (!space.tree) {
+            space.tree = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        done = typeof done === 'function' ? done : bail;
+
+        /*
+         * Only run when this is an instance of Processor,
+         * and when there are transformers.
+         */
+
+        if (self.ware && self.ware.fns) {
+            self.ware.run(node, file, done);
+        } else {
+            done(null, node, file);
+        }
+
+        return node;
+    }
+
+    /**
+     * Parse a file.
+     *
+     * Patches the parsed node onto the `name`
+     * namespace on the `type` property.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to parse.
+     * @param {Object?} [settings] - Configuration.
+     * @return {Node} - `node`.
+     */
+    function parse(value, settings) {
+        var file = new VFile(value);
+        var CustomParser = this && this.Parser || Parser;
+        var node = new CustomParser(file, settings, instance(this)).parse();
+
+        file.namespace(name).tree = node;
+
+        return node;
+    }
+
+    /**
+     * Compile a file.
+     *
+     * Used the parsed node at the `name`
+     * namespace at `'tree'` when no node was given.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Object} [node] - Syntax tree.
+     * @param {VFile} [file] - File with syntax tree.
+     * @param {Object?} [settings] - Configuration.
+     * @return {string} - Compiled `file`.
+     */
+    function stringify(node, file, settings) {
+        var CustomCompiler = this && this.Compiler || Compiler;
+        var space;
+
+        if (settings === null || settings === undefined) {
+            settings = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space.tree || node;
+        } else if (!space.tree) {
+            space.tree = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        return new CustomCompiler(file, settings, instance(this)).compile();
+    }
+
+    /**
+     * Parse / Transform / Compile.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to process.
+     * @param {Object?} [settings] - Configuration.
+     * @param {Function?} [done] - Callback.
+     * @return {string?} - Parsed document, when
+     *   transformation was async.
+     */
+    function process(value, settings, done) {
+        var self = instance(this);
+        var file = new VFile(value);
+        var result = null;
+
+        if (typeof settings === 'function') {
+            done = settings;
+            settings = null;
+        }
+
+        pipeline.run({
+            'context': self,
+            'file': file,
+            'settings': settings || {}
+        }, function (err, res) {
+            result = res && res.result;
+
+            if (done) {
+                done(err, file, result);
+            } else if (err) {
+                bail(err);
+            }
+        });
+
+        return result;
+    }
+
+    /*
+     * Methods / functions.
+     */
+
+    var proto = Processor.prototype;
+
+    Processor.use = proto.use = use;
+    Processor.parse = proto.parse = parse;
+    Processor.run = proto.run = run;
+    Processor.stringify = proto.stringify = stringify;
+    Processor.process = proto.process = process;
+    Processor.data = proto.data = data || null;
+
+    return Processor;
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = unified;
+}, {"bail":6,"ware":16,"node-extend":17,"attach-ware":18,"vfile":5,"unherit":19}],
+16: [function(require, module, exports) {
+/**
+ * Module Dependencies
+ */
+
+'use strict';
+
+var slice = [].slice;
+var wrap = require('wrap-fn');
+
+/**
+ * Expose `Ware`.
+ */
+
+module.exports = Ware;
+
+/**
+ * Throw an error.
+ *
+ * @param {Error} error
+ */
+
+function fail(err) {
+  throw err;
+}
+
+/**
+ * Initialize a new `Ware` manager, with optional `fns`.
+ *
+ * @param {Function or Array or Ware} fn (optional)
+ */
+
+function Ware(fn) {
+  if (!(this instanceof Ware)) return new Ware(fn);
+  this.fns = [];
+  if (fn) this.use(fn);
+}
+
+/**
+ * Use a middleware `fn`.
+ *
+ * @param {Function or Array or Ware} fn
+ * @return {Ware}
+ */
+
+Ware.prototype.use = function (fn) {
+  if (fn instanceof Ware) {
+    return this.use(fn.fns);
+  }
+
+  if (fn instanceof Array) {
+    for (var i = 0, f; f = fn[i++];) this.use(f);
+    return this;
+  }
+
+  this.fns.push(fn);
+  return this;
+};
+
+/**
+ * Run through the middleware with the given `args` and optional `callback`.
+ *
+ * @param {Mixed} args...
+ * @param {Function} callback (optional)
+ * @return {Ware}
+ */
+
+Ware.prototype.run = function () {
+  var fns = this.fns;
+  var ctx = this;
+  var i = 0;
+  var last = arguments[arguments.length - 1];
+  var done = 'function' == typeof last && last;
+  var args = done ? slice.call(arguments, 0, arguments.length - 1) : slice.call(arguments);
+
+  // next step
+  function next(err) {
+    if (err) return (done || fail)(err);
+    var fn = fns[i++];
+    var arr = slice.call(args);
+
+    if (!fn) {
+      return done && done.apply(null, [null].concat(args));
+    }
+
+    wrap(fn, next).apply(ctx, arr);
+  }
+
+  next();
+
+  return this;
+};
+}, {"wrap-fn":20}],
+20: [function(require, module, exports) {
+/**
+ * Module Dependencies
+ */
+
+'use strict';
+
+var noop = function noop() {};
+var co = require('co');
+
+/**
+ * Export `wrap-fn`
+ */
+
+module.exports = wrap;
+
+/**
+ * Wrap a function to support
+ * sync, async, and gen functions.
+ *
+ * @param {Function} fn
+ * @param {Function} done
+ * @return {Function}
+ * @api public
+ */
+
+function wrap(fn, done) {
+  done = once(done || noop);
+
+  return function () {
+    // prevents arguments leakage
+    // see https://github.com/petkaantonov/bluebird/wiki/Optimization-killers#3-managing-arguments
+    var i = arguments.length;
+    var args = new Array(i);
+    while (i--) args[i] = arguments[i];
+
+    var ctx = this;
+
+    // done
+    if (!fn) {
+      return done.apply(ctx, [null].concat(args));
+    }
+
+    // async
+    if (fn.length > args.length) {
+      // NOTE: this only handles uncaught synchronous errors
+      try {
+        return fn.apply(ctx, args.concat(done));
+      } catch (e) {
+        return done(e);
+      }
+    }
+
+    // generator
+    if (generator(fn)) {
+      return co(fn).apply(ctx, args.concat(done));
+    }
+
+    // sync
+    return sync(fn, done).apply(ctx, args);
+  };
+}
+
+/**
+ * Wrap a synchronous function execution.
+ *
+ * @param {Function} fn
+ * @param {Function} done
+ * @return {Function}
+ * @api private
+ */
+
+function sync(fn, done) {
+  return function () {
+    var ret;
+
+    try {
+      ret = fn.apply(this, arguments);
+    } catch (err) {
+      return done(err);
+    }
+
+    if (promise(ret)) {
+      ret.then(function (value) {
+        done(null, value);
+      }, done);
+    } else {
+      ret instanceof Error ? done(ret) : done(null, ret);
+    }
+  };
+}
+
+/**
+ * Is `value` a generator?
+ *
+ * @param {Mixed} value
+ * @return {Boolean}
+ * @api private
+ */
+
+function generator(value) {
+  return value && value.constructor && 'GeneratorFunction' == value.constructor.name;
+}
+
+/**
+ * Is `value` a promise?
+ *
+ * @param {Mixed} value
+ * @return {Boolean}
+ * @api private
+ */
+
+function promise(value) {
+  return value && 'function' == typeof value.then;
+}
+
+/**
+ * Once
+ */
+
+function once(fn) {
+  return function () {
+    var ret = fn.apply(this, arguments);
+    fn = noop;
+    return ret;
+  };
+}
+}, {"co":21}],
+21: [function(require, module, exports) {
+
+/**
+ * slice() reference.
+ */
+
+'use strict';
+
+var slice = Array.prototype.slice;
+
+/**
+ * Expose `co`.
+ */
+
+module.exports = co;
+
+/**
+ * Wrap the given generator `fn` and
+ * return a thunk.
+ *
+ * @param {Function} fn
+ * @return {Function}
+ * @api public
+ */
+
+function co(fn) {
+  var isGenFun = isGeneratorFunction(fn);
+
+  return function (done) {
+    var ctx = this;
+
+    // in toThunk() below we invoke co()
+    // with a generator, so optimize for
+    // this case
+    var gen = fn;
+
+    // we only need to parse the arguments
+    // if gen is a generator function.
+    if (isGenFun) {
+      var args = slice.call(arguments),
+          len = args.length;
+      var hasCallback = len && 'function' == typeof args[len - 1];
+      done = hasCallback ? args.pop() : error;
+      gen = fn.apply(this, args);
+    } else {
+      done = done || error;
+    }
+
+    next();
+
+    // #92
+    // wrap the callback in a setImmediate
+    // so that any of its errors aren't caught by `co`
+    function exit(err, res) {
+      setImmediate(function () {
+        done.call(ctx, err, res);
+      });
+    }
+
+    function next(err, res) {
+      var ret;
+
+      // multiple args
+      if (arguments.length > 2) res = slice.call(arguments, 1);
+
+      // error
+      if (err) {
+        try {
+          ret = gen['throw'](err);
+        } catch (e) {
+          return exit(e);
+        }
+      }
+
+      // ok
+      if (!err) {
+        try {
+          ret = gen.next(res);
+        } catch (e) {
+          return exit(e);
+        }
+      }
+
+      // done
+      if (ret.done) return exit(null, ret.value);
+
+      // normalize
+      ret.value = toThunk(ret.value, ctx);
+
+      // run
+      if ('function' == typeof ret.value) {
+        var called = false;
+        try {
+          ret.value.call(ctx, function () {
+            if (called) return;
+            called = true;
+            next.apply(ctx, arguments);
+          });
+        } catch (e) {
+          setImmediate(function () {
+            if (called) return;
+            called = true;
+            next(e);
+          });
+        }
+        return;
+      }
+
+      // invalid
+      next(new TypeError('You may only yield a function, promise, generator, array, or object, ' + 'but the following was passed: "' + String(ret.value) + '"'));
+    }
+  };
+}
+
+/**
+ * Convert `obj` into a normalized thunk.
+ *
+ * @param {Mixed} obj
+ * @param {Mixed} ctx
+ * @return {Function}
+ * @api private
+ */
+
+function toThunk(obj, ctx) {
+
+  if (isGeneratorFunction(obj)) {
+    return co(obj.call(ctx));
+  }
+
+  if (isGenerator(obj)) {
+    return co(obj);
+  }
+
+  if (isPromise(obj)) {
+    return promiseToThunk(obj);
+  }
+
+  if ('function' == typeof obj) {
+    return obj;
+  }
+
+  if (isObject(obj) || Array.isArray(obj)) {
+    return objectToThunk.call(ctx, obj);
+  }
+
+  return obj;
+}
+
+/**
+ * Convert an object of yieldables to a thunk.
+ *
+ * @param {Object} obj
+ * @return {Function}
+ * @api private
+ */
+
+function objectToThunk(obj) {
+  var ctx = this;
+  var isArray = Array.isArray(obj);
+
+  return function (done) {
+    var keys = Object.keys(obj);
+    var pending = keys.length;
+    var results = isArray ? new Array(pending) // predefine the array length
+    : new obj.constructor();
+    var finished;
+
+    if (!pending) {
+      setImmediate(function () {
+        done(null, results);
+      });
+      return;
+    }
+
+    // prepopulate object keys to preserve key ordering
+    if (!isArray) {
+      for (var i = 0; i < pending; i++) {
+        results[keys[i]] = undefined;
+      }
+    }
+
+    for (var i = 0; i < keys.length; i++) {
+      run(obj[keys[i]], keys[i]);
+    }
+
+    function run(fn, key) {
+      if (finished) return;
+      try {
+        fn = toThunk(fn, ctx);
+
+        if ('function' != typeof fn) {
+          results[key] = fn;
+          return --pending || done(null, results);
+        }
+
+        fn.call(ctx, function (err, res) {
+          if (finished) return;
+
+          if (err) {
+            finished = true;
+            return done(err);
+          }
+
+          results[key] = res;
+          --pending || done(null, results);
+        });
+      } catch (err) {
+        finished = true;
+        done(err);
+      }
+    }
+  };
+}
+
+/**
+ * Convert `promise` to a thunk.
+ *
+ * @param {Object} promise
+ * @return {Function}
+ * @api private
+ */
+
+function promiseToThunk(promise) {
+  return function (fn) {
+    promise.then(function (res) {
+      fn(null, res);
+    }, fn);
+  };
+}
+
+/**
+ * Check if `obj` is a promise.
+ *
+ * @param {Object} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isPromise(obj) {
+  return obj && 'function' == typeof obj.then;
+}
+
+/**
+ * Check if `obj` is a generator.
+ *
+ * @param {Mixed} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isGenerator(obj) {
+  return obj && 'function' == typeof obj.next && 'function' == typeof obj['throw'];
+}
+
+/**
+ * Check if `obj` is a generator function.
+ *
+ * @param {Mixed} obj
+ * @return {Boolean}
+ * @api private
+ */
+
+function isGeneratorFunction(obj) {
+  return obj && obj.constructor && 'GeneratorFunction' == obj.constructor.name;
+}
+
+/**
+ * Check for plain object.
+ *
+ * @param {Mixed} val
+ * @return {Boolean}
+ * @api private
+ */
+
+function isObject(val) {
+  return val && Object == val.constructor;
+}
+
+/**
+ * Throw `err` in a new stack.
+ *
+ * This is used when co() is invoked
+ * without supplying a callback, which
+ * should only be for demonstrational
+ * purposes.
+ *
+ * @param {Error} err
+ * @api private
+ */
+
+function error(err) {
+  if (!err) return;
+  setImmediate(function () {
+    throw err;
+  });
+}
+}, {}],
+17: [function(require, module, exports) {
+'use strict';
+
+var hasOwn = Object.prototype.hasOwnProperty;
+var toStr = Object.prototype.toString;
+
+var isArray = function isArray(arr) {
+	if (typeof Array.isArray === 'function') {
+		return Array.isArray(arr);
+	}
+
+	return toStr.call(arr) === '[object Array]';
+};
+
+var isPlainObject = function isPlainObject(obj) {
+	if (!obj || toStr.call(obj) !== '[object Object]') {
+		return false;
+	}
+
+	var hasOwnConstructor = hasOwn.call(obj, 'constructor');
+	var hasIsPrototypeOf = obj.constructor && obj.constructor.prototype && hasOwn.call(obj.constructor.prototype, 'isPrototypeOf');
+	// Not own constructor property must be Object
+	if (obj.constructor && !hasOwnConstructor && !hasIsPrototypeOf) {
+		return false;
+	}
+
+	// Own properties are enumerated firstly, so to speed up,
+	// if last one is own, then all properties are own.
+	var key;
+	for (key in obj) {/**/}
+
+	return typeof key === 'undefined' || hasOwn.call(obj, key);
+};
+
+module.exports = function extend() {
+	var options,
+	    name,
+	    src,
+	    copy,
+	    copyIsArray,
+	    clone,
+	    target = arguments[0],
+	    i = 1,
+	    length = arguments.length,
+	    deep = false;
+
+	// Handle a deep copy situation
+	if (typeof target === 'boolean') {
+		deep = target;
+		target = arguments[1] || {};
+		// skip the boolean and the target
+		i = 2;
+	} else if (typeof target !== 'object' && typeof target !== 'function' || target == null) {
+		target = {};
+	}
+
+	for (; i < length; ++i) {
+		options = arguments[i];
+		// Only deal with non-null/undefined values
+		if (options != null) {
+			// Extend the base object
+			for (name in options) {
+				src = target[name];
+				copy = options[name];
+
+				// Prevent never-ending loop
+				if (target !== copy) {
+					// Recurse if we're merging plain objects or arrays
+					if (deep && copy && (isPlainObject(copy) || (copyIsArray = isArray(copy)))) {
+						if (copyIsArray) {
+							copyIsArray = false;
+							clone = src && isArray(src) ? src : [];
+						} else {
+							clone = src && isPlainObject(src) ? src : {};
+						}
+
+						// Never move original objects, clone them
+						target[name] = extend(deep, clone, copy);
+
+						// Don't bring in undefined values
+					} else if (typeof copy !== 'undefined') {
+							target[name] = copy;
+						}
+				}
+			}
+		}
+	}
+
+	// Return the modified object
+	return target;
+};
+}, {}],
+18: [function(require, module, exports) {
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module attach-ware
+ * @fileoverview Middleware with configuration.
+ * @example
+ *   var ware = require('attach-ware')(require('ware'));
+ *
+ *   var middleware = ware()
+ *     .use(function (context, options) {
+ *         if (!options.condition) return;
+ *
+ *         return function (req, res, next) {
+ *           res.x = 'hello';
+ *           next();
+ *         };
+ *     }, {
+ *         'condition': true
+ *     })
+ *     .use(function (context, options) {
+ *         if (!options.condition) return;
+ *
+ *         return function (req, res, next) {
+ *           res.y = 'world';
+ *           next();
+ *         };
+ *     }, {
+ *         'condition': false
+ *     });
+ *
+ *   middleware.run({}, {}, function (err, req, res) {
+ *     res.x; // "hello"
+ *     res.y; // undefined
+ *   });
+ */
+
+'use strict';
+
+var slice = [].slice;
+var unherit = require('unherit');
+
+/**
+ * Clone `Ware` without affecting the super-class and
+ * turn it into configurable middleware.
+ *
+ * @param {Function} Ware - Ware-like constructor.
+ * @return {Function} AttachWare - Configurable middleware.
+ */
+function patch(Ware) {
+  /*
+   * Methods.
+   */
+
+  var useFn = Ware.prototype.use;
+
+  /**
+   * @constructor
+   * @class {AttachWare}
+   */
+  var AttachWare = unherit(Ware);
+
+  AttachWare.prototype.foo = true;
+
+  /**
+   * Attach configurable middleware.
+   *
+   * @memberof {AttachWare}
+   * @this {AttachWare}
+   * @param {Function} attach
+   * @return {AttachWare} - `this`.
+   */
+  function use(attach) {
+    var self = this;
+    var params = slice.call(arguments, 1);
+    var index;
+    var length;
+    var fn;
+
+    /*
+     * Accept other `AttachWare`.
+     */
+
+    if (attach instanceof AttachWare) {
+      if (attach.attachers) {
+        return self.use(attach.attachers);
+      }
+
+      return self;
+    }
+
+    /*
+     * Accept normal ware.
+     */
+
+    if (attach instanceof Ware) {
+      self.fns = self.fns.concat(attach.fns);
+      return self;
+    }
+
+    /*
+     * Multiple attachers.
+     */
+
+    if ('length' in attach && typeof attach !== 'function') {
+      index = -1;
+      length = attach.length;
+
+      while (++index < length) {
+        self.use.apply(self, [attach[index]].concat(params));
+      }
+
+      return self;
+    }
+
+    /*
+     * Single attacher.
+     */
+
+    fn = attach.apply(null, [self.context || self].concat(params));
+
+    /*
+     * Store the attacher to not break `new Ware(otherWare)`
+     * functionality.
+     */
+
+    if (!self.attachers) {
+      self.attachers = [];
+    }
+
+    self.attachers.push(attach);
+
+    /*
+     * Pass `fn` to the original `Ware#use()`.
+     */
+
+    if (fn) {
+      useFn.call(self, fn);
+    }
+
+    return self;
+  }
+
+  AttachWare.prototype.use = use;
+
+  return function (fn) {
+    return new AttachWare(fn);
+  };
+}
+
+module.exports = patch;
+}, {"unherit":19}],
+19: [function(require, module, exports) {
+"use strict";
+
+(function (f) {
+  if (typeof exports === "object" && typeof module !== "undefined") {
+    module.exports = f();
+  } else if (typeof define === "function" && define.amd) {
+    define([], f);
+  } else {
+    var g;if (typeof window !== "undefined") {
+      g = window;
+    } else if (typeof global !== "undefined") {
+      g = global;
+    } else if (typeof self !== "undefined") {
+      g = self;
+    } else {
+      g = this;
+    }g.unherit = f();
+  }
+})(function () {
+  var define, module, exports;return (function e(t, n, r) {
+    function s(o, u) {
+      if (!n[o]) {
+        if (!t[o]) {
+          var a = typeof require == "function" && require;if (!u && a) return a(o, !0);if (i) return i(o, !0);var f = new Error("Cannot find module '" + o + "'");throw (f.code = "MODULE_NOT_FOUND", f);
+        }var l = n[o] = { exports: {} };t[o][0].call(l.exports, function (e) {
+          var n = t[o][1][e];return s(n ? n : e);
+        }, l, l.exports, e, t, n, r);
+      }return n[o].exports;
+    }var i = typeof require == "function" && require;for (var o = 0; o < r.length; o++) s(r[o]);return s;
+  })({ 1: [function (require, module, exports) {
+      /**
+       * @author Titus Wormer
+       * @copyright 2015 Titus Wormer
+       * @license MIT
+       * @module unherit
+       * @fileoverview Create a custom constructor which can be modified
+       *   without affecting the original class.
+       * @example
+       *   var EventEmitter = require('events').EventEmitter;
+       *   var Emitter = unherit(EventEmitter);
+       *   // Create a private class which acts just like
+       *   // `EventEmitter`.
+       *
+       *   Emitter.prototype.defaultMaxListeners = 0;
+       *   // Now, all instances of `Emitter` have no maximum
+       *   // listeners, without affecting other `EventEmitter`s.
+       */
+
+      'use strict';
+
+      /*
+       * Dependencies.
+       */
+
+      var clone = require('clone');
+      var inherits = require('inherits');
+
+      /**
+       * Create a custom constructor which can be modified
+       * without affecting the original class.
+       *
+       * @param {Function} Super - Super-class.
+       * @return {Function} - Constructor acting like `Super`,
+       *   which can be modified without affecting the original
+       *   class.
+       */
+      function unherit(Super) {
+        var base = clone(Super.prototype);
+        var result;
+        var key;
+
+        /**
+         * Constructor accepting a single argument,
+         * which itself is an `arguments` object.
+         */
+        function From(parameters) {
+          return Super.apply(this, parameters);
+        }
+
+        /**
+         * Constructor accepting variadic arguments.
+         */
+        function Of() {
+          if (!(this instanceof Of)) {
+            return new From(arguments);
+          }
+
+          return Super.apply(this, arguments);
+        }
+
+        inherits(Of, Super);
+        inherits(From, Of);
+
+        /*
+         * Both do duplicate work. However, cloning the
+         * prototype ensures clonable things are cloned
+         * and thus used. The `inherits` call ensures
+         * `instanceof` still thinks an instance subclasses
+         * `Super`.
+         */
+
+        result = Of.prototype;
+
+        for (key in base) {
+          result[key] = base[key];
+        }
+
+        return Of;
+      }
+
+      /*
+       * Expose.
+       */
+
+      module.exports = unherit;
+    }, { "clone": 2, "inherits": 3 }], 2: [function (require, module, exports) {
+      var clone = (function () {
+        'use strict';
+
+        /**
+         * Clones (copies) an Object using deep copying.
+         *
+         * This function supports circular references by default, but if you are certain
+         * there are no circular references in your object, you can save some CPU time
+         * by calling clone(obj, false).
+         *
+         * Caution: if `circular` is false and `parent` contains circular references,
+         * your program may enter an infinite loop and crash.
+         *
+         * @param `parent` - the object to be cloned
+         * @param `circular` - set to true if the object to be cloned may contain
+         *    circular references. (optional - true by default)
+         * @param `depth` - set to a number if the object is only to be cloned to
+         *    a particular depth. (optional - defaults to Infinity)
+         * @param `prototype` - sets the prototype to be used when cloning an object.
+         *    (optional - defaults to parent prototype).
+        */
+        function clone(parent, circular, depth, prototype) {
+          var filter;
+          if (typeof circular === 'object') {
+            depth = circular.depth;
+            prototype = circular.prototype;
+            filter = circular.filter;
+            circular = circular.circular;
+          }
+          // maintain two arrays for circular references, where corresponding parents
+          // and children have the same index
+          var allParents = [];
+          var allChildren = [];
+
+          var useBuffer = typeof Buffer != 'undefined';
+
+          if (typeof circular == 'undefined') circular = true;
+
+          if (typeof depth == 'undefined') depth = Infinity;
+
+          // recurse this function so we don't reset allParents and allChildren
+          function _clone(parent, depth) {
+            // cloning null always returns null
+            if (parent === null) return null;
+
+            if (depth == 0) return parent;
+
+            var child;
+            var proto;
+            if (typeof parent != 'object') {
+              return parent;
+            }
+
+            if (clone.__isArray(parent)) {
+              child = [];
+            } else if (clone.__isRegExp(parent)) {
+              child = new RegExp(parent.source, __getRegExpFlags(parent));
+              if (parent.lastIndex) child.lastIndex = parent.lastIndex;
+            } else if (clone.__isDate(parent)) {
+              child = new Date(parent.getTime());
+            } else if (useBuffer && Buffer.isBuffer(parent)) {
+              child = new Buffer(parent.length);
+              parent.copy(child);
+              return child;
+            } else {
+              if (typeof prototype == 'undefined') {
+                proto = Object.getPrototypeOf(parent);
+                child = Object.create(proto);
+              } else {
+                child = Object.create(prototype);
+                proto = prototype;
+              }
+            }
+
+            if (circular) {
+              var index = allParents.indexOf(parent);
+
+              if (index != -1) {
+                return allChildren[index];
+              }
+              allParents.push(parent);
+              allChildren.push(child);
+            }
+
+            for (var i in parent) {
+              var attrs;
+              if (proto) {
+                attrs = Object.getOwnPropertyDescriptor(proto, i);
+              }
+
+              if (attrs && attrs.set == null) {
+                continue;
+              }
+              child[i] = _clone(parent[i], depth - 1);
+            }
+
+            return child;
+          }
+
+          return _clone(parent, depth);
+        }
+
+        /**
+         * Simple flat clone using prototype, accepts only objects, usefull for property
+         * override on FLAT configuration object (no nested props).
+         *
+         * USE WITH CAUTION! This may not behave as you wish if you do not know how this
+         * works.
+         */
+        clone.clonePrototype = function clonePrototype(parent) {
+          if (parent === null) return null;
+
+          var c = function c() {};
+          c.prototype = parent;
+          return new c();
+        };
+
+        // private utility functions
+
+        function __objToStr(o) {
+          return Object.prototype.toString.call(o);
+        };
+        clone.__objToStr = __objToStr;
+
+        function __isDate(o) {
+          return typeof o === 'object' && __objToStr(o) === '[object Date]';
+        };
+        clone.__isDate = __isDate;
+
+        function __isArray(o) {
+          return typeof o === 'object' && __objToStr(o) === '[object Array]';
+        };
+        clone.__isArray = __isArray;
+
+        function __isRegExp(o) {
+          return typeof o === 'object' && __objToStr(o) === '[object RegExp]';
+        };
+        clone.__isRegExp = __isRegExp;
+
+        function __getRegExpFlags(re) {
+          var flags = '';
+          if (re.global) flags += 'g';
+          if (re.ignoreCase) flags += 'i';
+          if (re.multiline) flags += 'm';
+          return flags;
+        };
+        clone.__getRegExpFlags = __getRegExpFlags;
+
+        return clone;
+      })();
+
+      if (typeof module === 'object' && module.exports) {
+        module.exports = clone;
+      }
+    }, {}], 3: [function (require, module, exports) {
+      if (typeof Object.create === 'function') {
+        // implementation from standard node.js 'util' module
+        module.exports = function inherits(ctor, superCtor) {
+          ctor.super_ = superCtor;
+          ctor.prototype = Object.create(superCtor.prototype, {
+            constructor: {
+              value: ctor,
+              enumerable: false,
+              writable: true,
+              configurable: true
+            }
+          });
+        };
+      } else {
+        // old school shim for old browsers
+        module.exports = function inherits(ctor, superCtor) {
+          ctor.super_ = superCtor;
+          var TempCtor = function TempCtor() {};
+          TempCtor.prototype = superCtor.prototype;
+          ctor.prototype = new TempCtor();
+          ctor.prototype.constructor = ctor;
+        };
+      }
+    }, {}] }, {}, [1])(1);
+});
+}, {}],
+14: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -2221,6 +2353,8 @@ module.exports = VFile;
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -2387,8 +2521,6 @@ var EXPRESSION_RIGHT_ALIGNMENT = /^[ \t]*-+:[ \t]*$/;
 var EXPRESSION_CENTER_ALIGNMENT = /^[ \t]*:-+:[ \t]*$/;
 var EXPRESSION_LEFT_ALIGNMENT = /^[ \t]*:-+[ \t]*$/;
 var EXPRESSION_TABLE_FENCE = /^[ \t]*|\|[ \t]*$/g;
-var EXPRESSION_TABLE_INITIAL = /^[ \t]*\|/g;
-var EXPRESSION_TABLE_CONTENT = /[ \t]*?((?:\\[\s\S]|[^\|])+?)([ \t]?\|[ \t]?\n?|\n?$)/g;
 var EXPRESSION_TABLE_BORDER = /[ \t]*\|[ \t]*/;
 var EXPRESSION_BLOCK_QUOTE = /^[ \t]*>[ \t]?/gm;
 var EXPRESSION_BULLET = /^([ \t]*)([*+-]|\d+[.)])( {1,4}(?! )| |\t)([^\n]*)/;
@@ -3139,9 +3271,9 @@ tokenizeFootnoteDefinition.notInBlockquote = true;
  */
 function tokenizeTable(eat, $0, $1, $2, $3, $4, $5) {
     var self = this;
-    var node;
-    var index;
     var length;
+    var index;
+    var node;
 
     $0 = trimTrailingLines($0);
 
@@ -3150,54 +3282,6 @@ function tokenizeTable(eat, $0, $1, $2, $3, $4, $5) {
         'align': [],
         'children': []
     });
-
-    /**
-     * Eat a fence.  Returns an empty string so it can be
-     * passed to `String#replace()`.
-     *
-     * @param {string} value - Fence.
-     * @return {string} - Empty string.
-     */
-    function eatFence(value) {
-        eat(value);
-
-        return EMPTY;
-    }
-
-    /**
-     * Factory to eat a cell to a bound `row`.
-     *
-     * @param {Object} row - Parent to add cells to.
-     * @return {Function} - `eatCell` bound to `row`.
-     */
-    function eatCellFactory(row) {
-        /**
-         * Eat a cell.  Returns an empty string so it can be
-         * passed to `String#replace()`.
-         *
-         * @param {string} value - Complete match.
-         * @param {string} content - Cell content.
-         * @param {string} pipe - Fence.
-         * @return {string} - Empty string.
-         */
-        function eatCell(value, content, pipe) {
-            var cell = trim.left(content);
-            var diff = content.length - cell.length;
-            var now;
-
-            eat(content.slice(0, diff));
-
-            now = eat.now();
-
-            eat(cell)(self.renderInline(TABLE_CELL, trim.right(cell), now), row);
-
-            eat(pipe);
-
-            return EMPTY;
-        }
-
-        return eatCell;
-    }
 
     /**
      * Eat a row of type `type`.
@@ -3209,8 +3293,95 @@ function tokenizeTable(eat, $0, $1, $2, $3, $4, $5) {
      */
     function renderRow(type, value) {
         var row = eat(value).reset(self.renderParent(type, []), node);
+        var length = value.length + 1;
+        var index = -1;
+        var queue = '';
+        var cell = '';
+        var preamble = true;
+        var count;
+        var opening;
+        var character;
+        var subvalue;
+        var now;
 
-        value.replace(EXPRESSION_TABLE_INITIAL, eatFence).replace(EXPRESSION_TABLE_CONTENT, eatCellFactory(row));
+        while (++index < length) {
+            character = value.charAt(index);
+
+            if (character === '\t' || character === ' ') {
+                if (cell) {
+                    queue += character;
+                } else {
+                    eat(character);
+                }
+
+                continue;
+            }
+
+            if (character === '|' || character === '') {
+                if (preamble) {
+                    eat(character);
+                } else {
+                    if (character && opening) {
+                        // cell += queue + character;
+                        queue += character;
+                        continue;
+                    }
+
+                    if ((cell || character) && !preamble) {
+                        subvalue = cell;
+
+                        if (queue.length > 1) {
+                            if (character) {
+                                subvalue += queue.slice(0, queue.length - 1);
+                                queue = queue.charAt(queue.length - 1);
+                            } else {
+                                subvalue += queue;
+                                queue = '';
+                            }
+                        }
+
+                        now = eat.now();
+
+                        eat(subvalue)(self.renderInline(TABLE_CELL, cell, now), row);
+                    }
+
+                    eat(queue + character);
+
+                    queue = '';
+                    cell = '';
+                }
+            } else {
+                if (queue) {
+                    cell += queue;
+                    queue = '';
+                }
+
+                cell += character;
+
+                if (character === '\\' && index !== length - 2) {
+                    cell += value.charAt(index + 1);
+                    index++;
+                }
+
+                if (character === '`') {
+                    count = 1;
+
+                    while (value.charAt(index + 1) === character) {
+                        cell += character;
+                        index++;
+                        count++;
+                    }
+
+                    if (!opening) {
+                        opening = count;
+                    } else if (count >= opening) {
+                        opening = 0;
+                    }
+                }
+            }
+
+            preamble = false;
+        }
     }
 
     /*
@@ -4806,8 +4977,8 @@ Parser.prototype.tokenizeFactory = tokenizeFactory;
  */
 
 module.exports = Parser;
-}, {"he":21,"repeat-string":22,"trim":23,"trim-trailing-lines":24,"extend.js":25,"./utilities.js":26,"./expressions.js":27,"./defaults.js":28}],
-21: [function(require, module, exports) {
+}, {"he":22,"repeat-string":23,"trim":24,"trim-trailing-lines":25,"extend.js":26,"./utilities.js":27,"./expressions.js":28,"./defaults.js":29}],
+22: [function(require, module, exports) {
 /*! http://mths.be/he v0.5.0 by @mathias | MIT license */
 'use strict';
 
@@ -5128,7 +5299,7 @@ module.exports = Parser;
 	}
 })(undefined);
 }, {}],
-22: [function(require, module, exports) {
+23: [function(require, module, exports) {
 /*!
  * repeat-string <https://github.com/jonschlinkert/repeat-string>
  *
@@ -5196,7 +5367,7 @@ function repeat(str, num) {
 var res = '';
 var cache;
 }, {}],
-23: [function(require, module, exports) {
+24: [function(require, module, exports) {
 'use strict';
 
 exports = module.exports = trim;
@@ -5216,7 +5387,7 @@ exports.right = function (str) {
   return str.replace(/\s*$/, '');
 };
 }, {}],
-24: [function(require, module, exports) {
+25: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -5254,7 +5425,7 @@ function trimTrailingLines(value) {
 
 module.exports = trimTrailingLines;
 }, {}],
-25: [function(require, module, exports) {
+26: [function(require, module, exports) {
 /**
  * Extend an object with another.
  *
@@ -5279,7 +5450,7 @@ module.exports = function (src) {
   return src;
 };
 }, {}],
-26: [function(require, module, exports) {
+27: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5290,6 +5461,8 @@ module.exports = function (src) {
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -5454,8 +5627,8 @@ exports.validate = {
 exports.normalizeIdentifier = normalizeIdentifier;
 exports.clean = clean;
 exports.raise = raise;
-}, {"collapse-white-space":29}],
-29: [function(require, module, exports) {
+}, {"collapse-white-space":30}],
+30: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -5485,8 +5658,9 @@ function collapse(value) {
 
 module.exports = collapse;
 }, {}],
-27: [function(require, module, exports) {
+28: [function(require, module, exports) {
 /* This file is generated by `script/build-expressions.js` */
+/* eslint-env commonjs */
 'use strict';
 
 module.exports = {
@@ -5562,7 +5736,7 @@ module.exports = {
   }
 };
 }, {}],
-28: [function(require, module, exports) {
+29: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5573,6 +5747,8 @@ module.exports = {
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Note that `stringify.entities` is a string.
@@ -5607,7 +5783,7 @@ module.exports = {
     }
 };
 }, {}],
-14: [function(require, module, exports) {
+15: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -5618,6 +5794,8 @@ module.exports = {
  */
 
 'use strict';
+
+/* eslint-env commonjs */
 
 /*
  * Dependencies.
@@ -5648,6 +5826,7 @@ var MINIMUM_CODE_FENCE_LENGTH = 3;
 var YAML_FENCE_LENGTH = 3;
 var MINIMUM_RULE_LENGTH = 3;
 var MAILTO = 'mailto:';
+var ERROR_LIST_ITEM_INDENT = 'Cannot indent code properly. See ' + 'http://git.io/mdast-lii';
 
 /*
  * Expressions.
@@ -6703,17 +6882,28 @@ compilerPrototype.yaml = function (node) {
  * @param {Object} node - `code` node.
  * @return {string} - Markdown code block.
  */
-compilerPrototype.code = function (node) {
+compilerPrototype.code = function (node, parent) {
+    var self = this;
     var value = node.value;
-    var marker = this.options.fence;
-    var language = this.encode(node.lang || EMPTY, node);
+    var options = self.options;
+    var marker = options.fence;
+    var language = self.encode(node.lang || EMPTY, node);
     var fence;
 
     /*
-     * Probably pedantic.
+     * Without (needed) fences.
      */
 
-    if (!language && !this.options.fences && value) {
+    if (!language && !options.fences && value) {
+        /*
+         * Throw when pedantic, in a list item which
+         * isn’t compiled using a tab.
+         */
+
+        if (parent && parent.type === 'listItem' && options.listItemIndent !== LIST_ITEM_TAB && options.pedantic) {
+            self.file.fail(ERROR_LIST_ITEM_INDENT, node.position);
+        }
+
         return pad(value, 1);
     }
 
@@ -7321,7 +7511,7 @@ compilerPrototype.tableCell = function (node) {
  * @example
  *   var file = new VFile('__Foo__');
  *
- *   file.namespace('mdast').ast = {
+ *   file.namespace('mdast').tree = {
  *     type: 'strong',
  *     children: [{
  *       type: 'text',
@@ -7336,7 +7526,7 @@ compilerPrototype.tableCell = function (node) {
  * @return {string} - Markdown document.
  */
 compilerPrototype.compile = function () {
-    return this.visit(this.file.namespace('mdast').ast);
+    return this.visit(this.file.namespace('mdast').tree);
 };
 
 /*
@@ -7344,8 +7534,8 @@ compilerPrototype.compile = function () {
  */
 
 module.exports = Compiler;
-}, {"he":21,"markdown-table":30,"repeat-string":22,"extend.js":25,"ccount":31,"longest-streak":32,"./utilities.js":26,"./defaults.js":28}],
-30: [function(require, module, exports) {
+}, {"he":22,"markdown-table":31,"repeat-string":23,"extend.js":26,"ccount":32,"longest-streak":33,"./utilities.js":27,"./defaults.js":29}],
+31: [function(require, module, exports) {
 'use strict';
 
 /*
@@ -7629,7 +7819,7 @@ function markdownTable(table, options) {
 
 module.exports = markdownTable;
 }, {}],
-31: [function(require, module, exports) {
+32: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -7680,7 +7870,7 @@ function ccount(value, character) {
 
 module.exports = ccount;
 }, {}],
-32: [function(require, module, exports) {
+33: [function(require, module, exports) {
 'use strict';
 
 /**
@@ -7733,7 +7923,7 @@ function longestStreak(value, character) {
 
 module.exports = longestStreak;
 }, {}],
-7: [function(require, module, exports) {
+8: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -7997,8 +8187,8 @@ function toNLCST(file, Parser) {
  */
 
 module.exports = toNLCST;
-}, {"mdast-range":33,"nlcst-to-string":34}],
-33: [function(require, module, exports) {
+}, {"mdast-range":34,"nlcst-to-string":35}],
+34: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -8177,8 +8367,8 @@ function attacher() {
  */
 
 module.exports = attacher;
-}, {"unist-util-visit":35}],
-35: [function(require, module, exports) {
+}, {"unist-util-visit":36}],
+36: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -8293,7 +8483,7 @@ function visit(tree, type, callback, reverse) {
 
 module.exports = visit;
 }, {}],
-34: [function(require, module, exports) {
+35: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -8348,7 +8538,7 @@ function nlcstToString(node) {
 
 module.exports = nlcstToString;
 }, {}],
-8: [function(require, module, exports) {
+9: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer.
@@ -8379,8 +8569,286 @@ module.exports = unified({
   'Parser': Parser,
   'Compiler': Compiler
 });
-}, {"unified":12,"parse-latin":36,"./lib/compile.js":37}],
-36: [function(require, module, exports) {
+}, {"unified":37,"parse-latin":38,"./lib/compile.js":39}],
+37: [function(require, module, exports) {
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module unified
+ * @fileoverview Parse / Transform / Compile / Repeat.
+ */
+
+'use strict';
+
+/*
+ * Dependencies.
+ */
+
+var bail = require('bail');
+var ware = require('ware');
+var AttachWare = require('attach-ware')(ware);
+var VFile = require('vfile');
+var unherit = require('unherit');
+
+/*
+ * Processing pipeline.
+ */
+
+var pipeline = ware().use(function (ctx) {
+    ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
+}).use(function (ctx, next) {
+    ctx.context.run(ctx.tree, ctx.file, next);
+}).use(function (ctx) {
+    ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
+});
+
+/**
+ * Construct a new Processor class based on the
+ * given options.
+ *
+ * @param {Object} options - Configuration.
+ * @param {string} options.name - Private storage.
+ * @param {string} options.type - Type of syntax tree.
+ * @param {Function} options.Parser - Class to turn a
+ *   virtual file into a syntax tree.
+ * @param {Function} options.Compiler - Class to turn a
+ *   syntax tree into a string.
+ * @return {Processor} - A new constructor.
+ */
+function unified(options) {
+    var name = options.name;
+    var type = options.type;
+    var Parser = options.Parser;
+    var Compiler = options.Compiler;
+
+    /**
+     * Construct a Processor instance.
+     *
+     * @constructor
+     * @class {Processor}
+     */
+    function Processor(processor) {
+        var self = this;
+
+        if (!(self instanceof Processor)) {
+            return new Processor(processor);
+        }
+
+        self.ware = new AttachWare(processor && processor.ware);
+        self.ware.context = self;
+
+        self.Parser = unherit(Parser);
+        self.Compiler = unherit(Compiler);
+    }
+
+    /**
+     * Either return `context` if its an instance
+     * of `Processor` or construct a new `Processor`
+     * instance.
+     *
+     * @private
+     * @param {Processor?} [context] - Context object.
+     * @return {Processor} - Either `context` or a new
+     *   Processor instance.
+     */
+    function instance(context) {
+        return context instanceof Processor ? context : new Processor();
+    }
+
+    /**
+     * Attach a plugin.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @return {Processor}
+     */
+    function use() {
+        var self = instance(this);
+
+        self.ware.use.apply(self.ware, arguments);
+
+        return self;
+    }
+
+    /**
+     * Transform.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Node} [node] - Syntax tree.
+     * @param {VFile?} [file] - Virtual file.
+     * @param {Function?} [done] - Callback.
+     * @return {Node} - `node`.
+     */
+    function run(node, file, done) {
+        var self = this;
+        var space;
+
+        if (typeof file === 'function') {
+            done = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space[type] || node;
+        } else if (!space[type]) {
+            space[type] = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        done = typeof done === 'function' ? done : bail;
+
+        /*
+         * Only run when this is an instance of Processor,
+         * and when there are transformers.
+         */
+
+        if (self.ware && self.ware.fns) {
+            self.ware.run(node, file, done);
+        } else {
+            done(null, node, file);
+        }
+
+        return node;
+    }
+
+    /**
+     * Parse a file.
+     *
+     * Patches the parsed node onto the `name`
+     * namespace on the `type` property.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to parse.
+     * @param {Object?} [settings] - Configuration.
+     * @return {Node} - `node`.
+     */
+    function parse(value, settings) {
+        var file = new VFile(value);
+        var CustomParser = this && this.Parser || Parser;
+        var node = new CustomParser(file, settings).parse();
+
+        file.namespace(name)[type] = node;
+
+        return node;
+    }
+
+    /**
+     * Compile a file.
+     *
+     * Used the parsed node at the `name`
+     * namespace at `type` when no node was given.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Object} [node] - Syntax tree.
+     * @param {VFile} [file] - File with syntax tree.
+     * @param {Object?} [settings] - Configuration.
+     * @return {string} - Compiled `file`.
+     */
+    function stringify(node, file, settings) {
+        var CustomCompiler = this && this.Compiler || Compiler;
+        var space;
+
+        if (settings === null || settings === undefined) {
+            settings = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space[type] || node;
+        } else if (!space[type]) {
+            space[type] = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        return new CustomCompiler(file, settings).compile();
+    }
+
+    /**
+     * Parse / Transform / Compile.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to process.
+     * @param {Object?} [settings] - Configuration.
+     * @param {Function?} [done] - Callback.
+     * @return {string?} - Parsed document, when
+     *   transformation was async.
+     */
+    function process(value, settings, done) {
+        var self = instance(this);
+        var file = new VFile(value);
+        var result = null;
+
+        if (typeof settings === 'function') {
+            done = settings;
+            settings = null;
+        }
+
+        pipeline.run({
+            'context': self,
+            'file': file,
+            'settings': settings || {}
+        }, function (err, res) {
+            result = res && res.result;
+
+            if (done) {
+                done(err, file, result);
+            } else if (err) {
+                bail(err);
+            }
+        });
+
+        return result;
+    }
+
+    /*
+     * Methods / functions.
+     */
+
+    var proto = Processor.prototype;
+
+    Processor.use = proto.use = use;
+    Processor.parse = proto.parse = parse;
+    Processor.run = proto.run = run;
+    Processor.stringify = proto.stringify = stringify;
+    Processor.process = proto.process = process;
+
+    return Processor;
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = unified;
+}, {"bail":6,"ware":16,"attach-ware":18,"vfile":5,"unherit":19}],
+38: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -8394,8 +8862,8 @@ module.exports = unified({
 /* eslint-env commonjs */
 
 module.exports = require('./lib/parse-latin');
-}, {"./lib/parse-latin":38}],
-38: [function(require, module, exports) {
+}, {"./lib/parse-latin":40}],
+40: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9134,8 +9602,8 @@ parseLatinPrototype.use('tokenizeRoot', [require('./plugin/make-initial-white-sp
  */
 
 module.exports = ParseLatin;
-}, {"./parser":39,"./expressions":40,"./plugin/merge-initial-word-symbol":41,"./plugin/merge-final-word-symbol":42,"./plugin/merge-inner-word-symbol":43,"./plugin/merge-initialisms":44,"./plugin/merge-words":45,"./plugin/patch-position":46,"./plugin/merge-non-word-sentences":47,"./plugin/merge-affix-symbol":48,"./plugin/merge-initial-lower-case-letter-sentences":49,"./plugin/merge-prefix-exceptions":50,"./plugin/merge-affix-exceptions":51,"./plugin/merge-remaining-full-stops":52,"./plugin/make-initial-white-space-siblings":53,"./plugin/make-final-white-space-siblings":54,"./plugin/break-implicit-sentences":55,"./plugin/remove-empty-nodes":56}],
-39: [function(require, module, exports) {
+}, {"./parser":41,"./expressions":42,"./plugin/merge-initial-word-symbol":43,"./plugin/merge-final-word-symbol":44,"./plugin/merge-inner-word-symbol":45,"./plugin/merge-initialisms":46,"./plugin/merge-words":47,"./plugin/patch-position":48,"./plugin/merge-non-word-sentences":49,"./plugin/merge-affix-symbol":50,"./plugin/merge-initial-lower-case-letter-sentences":51,"./plugin/merge-prefix-exceptions":52,"./plugin/merge-affix-exceptions":53,"./plugin/merge-remaining-full-stops":54,"./plugin/make-initial-white-space-siblings":55,"./plugin/make-final-white-space-siblings":56,"./plugin/break-implicit-sentences":57,"./plugin/remove-empty-nodes":58}],
+41: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9181,8 +9649,8 @@ function parserFactory(options) {
  */
 
 module.exports = parserFactory;
-}, {"./tokenizer":57}],
-57: [function(require, module, exports) {
+}, {"./tokenizer":59}],
+59: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9263,8 +9731,8 @@ function tokenizerFactory(childType, expression) {
  */
 
 module.exports = tokenizerFactory;
-}, {"nlcst-to-string":34}],
-40: [function(require, module, exports) {
+}, {"nlcst-to-string":35}],
+42: [function(require, module, exports) {
 /* This module is generated by `script/build-expressions.js` */
 'use strict';
 /* eslint-env commonjs */
@@ -9282,7 +9750,7 @@ module.exports = {
     'whiteSpace': /^(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+$/
 };
 }, {}],
-41: [function(require, module, exports) {
+43: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9367,8 +9835,8 @@ function mergeInitialWordSymbol(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeInitialWordSymbol);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58}],
-58: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60}],
+60: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -9456,8 +9924,8 @@ function modifierFactory(callback) {
  */
 
 module.exports = modifierFactory;
-}, {"array-iterate":59}],
-59: [function(require, module, exports) {
+}, {"array-iterate":61}],
+61: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -9552,7 +10020,7 @@ function iterate(values, callback, context) {
 
 module.exports = iterate;
 }, {}],
-42: [function(require, module, exports) {
+44: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9629,8 +10097,8 @@ function mergeFinalWordSymbol(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeFinalWordSymbol);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58}],
-43: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60}],
+45: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9761,8 +10229,8 @@ function mergeInnerWordSymbol(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeInnerWordSymbol);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58,"../expressions":40}],
-44: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60,"../expressions":42}],
+46: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9886,8 +10354,8 @@ function mergeInitialisms(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeInitialisms);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58,"../expressions":40}],
-45: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60,"../expressions":42}],
+47: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9960,8 +10428,8 @@ function mergeFinalWordSymbol(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeFinalWordSymbol);
-}, {"unist-util-modify-children":58}],
-46: [function(require, module, exports) {
+}, {"unist-util-modify-children":60}],
+48: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10022,8 +10490,8 @@ function patchPosition(child, index, node) {
  */
 
 module.exports = visitChildren(patchPosition);
-}, {"unist-util-visit-children":60}],
-60: [function(require, module, exports) {
+}, {"unist-util-visit-children":62}],
+62: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -10080,7 +10548,7 @@ function visitorFactory(callback) {
 
 module.exports = visitorFactory;
 }, {}],
-47: [function(require, module, exports) {
+49: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10176,8 +10644,8 @@ function mergeNonWordSentences(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeNonWordSentences);
-}, {"unist-util-modify-children":58}],
-48: [function(require, module, exports) {
+}, {"unist-util-modify-children":60}],
+50: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10261,8 +10729,8 @@ function mergeAffixSymbol(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeAffixSymbol);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58,"../expressions":40}],
-49: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60,"../expressions":42}],
+51: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10356,8 +10824,8 @@ function mergeInitialLowerCaseLetterSentences(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeInitialLowerCaseLetterSentences);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58,"../expressions":40}],
-50: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60,"../expressions":42}],
+52: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10452,8 +10920,8 @@ function mergePrefixExceptions(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergePrefixExceptions);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58}],
-51: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60}],
+53: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10539,8 +11007,8 @@ function mergeAffixExceptions(child, index, parent) {
  */
 
 module.exports = modifyChildren(mergeAffixExceptions);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58}],
-52: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60}],
+54: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10697,8 +11165,8 @@ function mergeRemainingFullStops(child) {
  */
 
 module.exports = visitChildren(mergeRemainingFullStops);
-}, {"nlcst-to-string":34,"unist-util-visit-children":60,"../expressions":40}],
-53: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-visit-children":62,"../expressions":42}],
+55: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10744,8 +11212,8 @@ function makeInitialWhiteSpaceSiblings(child, index, parent) {
  */
 
 module.exports = visitChildren(makeInitialWhiteSpaceSiblings);
-}, {"unist-util-visit-children":60}],
-54: [function(require, module, exports) {
+}, {"unist-util-visit-children":62}],
+56: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10798,8 +11266,8 @@ function makeFinalWhiteSpaceSiblings(child, index, parent) {
  */
 
 module.exports = modifyChildren(makeFinalWhiteSpaceSiblings);
-}, {"unist-util-modify-children":58}],
-55: [function(require, module, exports) {
+}, {"unist-util-modify-children":60}],
+57: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10900,8 +11368,8 @@ function breakImplicitSentences(child, index, parent) {
  */
 
 module.exports = modifyChildren(breakImplicitSentences);
-}, {"nlcst-to-string":34,"unist-util-modify-children":58,"../expressions":40}],
-56: [function(require, module, exports) {
+}, {"nlcst-to-string":35,"unist-util-modify-children":60,"../expressions":42}],
+58: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10947,8 +11415,8 @@ function removeEmptyNodes(child, index, parent) {
  */
 
 module.exports = modifyChildren(removeEmptyNodes);
-}, {"unist-util-modify-children":58}],
-37: [function(require, module, exports) {
+}, {"unist-util-modify-children":60}],
+39: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -11046,8 +11514,8 @@ Compiler.prototype.compile = compile;
  */
 
 module.exports = Compiler;
-}, {"nlcst-to-string":34}],
-9: [function(require, module, exports) {
+}, {"nlcst-to-string":35}],
+10: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11080,8 +11548,8 @@ function attacher(processor) {
  */
 
 module.exports = attacher;
-}, {"parse-english":61}],
-61: [function(require, module, exports) {
+}, {"parse-english":63}],
+63: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11540,13 +12008,13 @@ parserPrototype.tokenizeParagraphPlugins = [modifyChildren(mergeEnglishPrefixExc
  */
 
 module.exports = ParseEnglish;
-}, {"parse-latin":36,"nlcst-to-string":34,"unist-util-visit-children":60,"unist-util-modify-children":58}],
-10: [function(require, module, exports) {
+}, {"parse-latin":38,"nlcst-to-string":35,"unist-util-visit-children":62,"unist-util-modify-children":60}],
+11: [function(require, module, exports) {
 'use strict';
 
 module.exports = require('./lib/equality.js');
-}, {"./lib/equality.js":62}],
-62: [function(require, module, exports) {
+}, {"./lib/equality.js":64}],
+64: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12110,8 +12578,8 @@ function attacher() {
  */
 
 module.exports = attacher;
-}, {"object-keys":63,"unist-util-visit":35,"nlcst-to-string":34,"nlcst-is-literal":64,"./patterns.json":65}],
-63: [function(require, module, exports) {
+}, {"object-keys":65,"unist-util-visit":36,"nlcst-to-string":35,"nlcst-is-literal":66,"./patterns.json":67}],
+65: [function(require, module, exports) {
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -12228,8 +12696,8 @@ keysShim.shim = function shimObjectKeys() {
 };
 
 module.exports = keysShim;
-}, {"./isArguments":66}],
-66: [function(require, module, exports) {
+}, {"./isArguments":68}],
+68: [function(require, module, exports) {
 'use strict';
 
 var toStr = Object.prototype.toString;
@@ -12243,7 +12711,7 @@ module.exports = function isArguments(value) {
 	return isArgs;
 };
 }, {}],
-64: [function(require, module, exports) {
+66: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12530,8 +12998,8 @@ function isLiteral(parent, index) {
  */
 
 module.exports = isLiteral;
-}, {"nlcst-to-string":34}],
-65: [function(require, module, exports) {
+}, {"nlcst-to-string":35}],
+67: [function(require, module, exports) {
 module.exports = [
   {
     "id": 0,
@@ -14329,7 +14797,8 @@ module.exports = [
       "male"
     ],
     "considerate": {
-      "presenter": "a"
+      "presenter": "a",
+      "entertainer": "a"
     },
     "inconsiderate": {
       "hostess": "female",
@@ -14344,7 +14813,8 @@ module.exports = [
       "male"
     ],
     "considerate": {
-      "presenters": "a"
+      "presenters": "a",
+      "entertainers": "a"
     },
     "inconsiderate": {
       "hostesses": "female",
@@ -14678,8 +15148,8 @@ module.exports = [
       "gigantic": "a"
     },
     "inconsiderate": {
-      "queen-size": "female",
-      "king-size": "male"
+      "queensize": "female",
+      "kingsize": "male"
     }
   },
   {
@@ -15747,7 +16217,9 @@ module.exports = [
       "male"
     ],
     "considerate": {
-      "maniac": "a"
+      "fanatic": "a",
+      "zealot": "a",
+      "enthusiast": "a"
     },
     "inconsiderate": {
       "madman": "male",
@@ -15978,7 +16450,11 @@ module.exports = [
       "lunacy": "a",
       "lunatic": "a",
       "mentally ill": "a",
-      "psychopathology": "a"
+      "psychopathology": "a",
+      "mental defective": "a",
+      "moron": "a",
+      "moronic": "a",
+      "nuts": "a"
     },
     "note": "Source: http://ncdj.org/style-guide/"
   },
@@ -15991,10 +16467,10 @@ module.exports = [
     "considerate": {
       "fluctuating": "a",
       "person with schizophrenia": "a",
-      "person with bi-polar disorder": "a"
+      "person with bipolar disorder": "a"
     },
     "inconsiderate": {
-      "bi-polar": "a",
+      "bipolar": "a",
       "schizophrenic": "a",
       "schizo": "a",
       "suffers from schizophrenia": "a",
@@ -16144,7 +16620,8 @@ module.exports = [
     "inconsiderate": {
       "asylum": "a",
       "bedlam": "a",
-      "madhouse": "a"
+      "madhouse": "a",
+      "loony bin": "a"
     }
   },
   {
@@ -16157,7 +16634,7 @@ module.exports = [
       "Down Syndrome": "a"
     },
     "inconsiderate": {
-      "down’s syndrome": "a"
+      "downs syndrome": "a"
     },
     "note": "Source: http://www.specialolympics.org/uploadedFiles/Fact%20Sheet_Terminology%20Guide.pdf"
   },
@@ -16260,6 +16737,7 @@ module.exports = [
     },
     "inconsiderate": {
       "confined to a wheelchair": "a",
+      "bound to a wheelchair": "a",
       "restricted to a wheelchair": "a",
       "wheelchair bound": "a"
     }
@@ -16290,7 +16768,7 @@ module.exports = [
       "non-disabled": "a"
     },
     "inconsiderate": {
-      "able-bodied": "a"
+      "ablebodied": "a"
     },
     "note": "Sometimes `typical` can be used. (source: http://ncdj.org/style-guide/)"
   },
@@ -16378,27 +16856,12 @@ module.exports = [
     },
     "inconsiderate": {
       "deaf and dumb": "a",
-      "deaf-mute": "a"
+      "deafmute": "a"
     },
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
     "id": 241,
-    "type": "simple",
-    "categories": [
-      "a"
-    ],
-    "considerate": {
-      "deaf": "a"
-    },
-    "inconsiderate": {
-      "deaf and dumb": "a",
-      "deaf-mute": "a"
-    },
-    "note": "Source: http://ncdj.org/style-guide/"
-  },
-  {
-    "id": 242,
     "type": "simple",
     "categories": [
       "a"
@@ -16413,12 +16876,15 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 243,
+    "id": 242,
     "type": "simple",
     "categories": [
       "a"
     ],
     "considerate": {
+      "sad": "a",
+      "blue": "a",
+      "bummed out": "a",
       "person with seasonal affective disorder": "a",
       "person with psychotic depression": "a",
       "person with postpartum depression": "a"
@@ -16429,7 +16895,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 244,
+    "id": 243,
     "type": "simple",
     "categories": [
       "a"
@@ -16444,7 +16910,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 245,
+    "id": 244,
     "type": "simple",
     "categories": [
       "a"
@@ -16458,7 +16924,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 246,
+    "id": 245,
     "type": "simple",
     "categories": [
       "a"
@@ -16472,7 +16938,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 247,
+    "id": 246,
     "type": "simple",
     "categories": [
       "a"
@@ -16490,7 +16956,7 @@ module.exports = [
     "note": "When possible, ask the person what they prefer. (source: http://ncdj.org/style-guide/)"
   },
   {
-    "id": 248,
+    "id": 247,
     "type": "simple",
     "categories": [
       "a"
@@ -16511,7 +16977,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 249,
+    "id": 248,
     "type": "simple",
     "categories": [
       "a"
@@ -16530,7 +16996,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 250,
+    "id": 249,
     "type": "simple",
     "categories": [
       "a"
@@ -16549,7 +17015,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 251,
+    "id": 250,
     "type": "simple",
     "categories": [
       "a"
@@ -16563,7 +17029,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 252,
+    "id": 251,
     "type": "simple",
     "categories": [
       "a"
@@ -16577,7 +17043,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 253,
+    "id": 252,
     "type": "simple",
     "categories": [
       "a"
@@ -16592,7 +17058,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 254,
+    "id": 253,
     "type": "simple",
     "categories": [
       "a"
@@ -16606,7 +17072,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 255,
+    "id": 254,
     "type": "simple",
     "categories": [
       "a"
@@ -16620,7 +17086,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 256,
+    "id": 255,
     "type": "simple",
     "categories": [
       "a"
@@ -16635,7 +17101,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 257,
+    "id": 256,
     "type": "simple",
     "categories": [
       "a"
@@ -16650,7 +17116,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 258,
+    "id": 257,
     "type": "simple",
     "categories": [
       "a"
@@ -16665,7 +17131,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 259,
+    "id": 258,
     "type": "simple",
     "categories": [
       "a"
@@ -16680,7 +17146,7 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
-    "id": 260,
+    "id": 259,
     "type": "simple",
     "categories": [
       "a"
@@ -16695,7 +17161,295 @@ module.exports = [
     "note": "Source: http://ncdj.org/style-guide/"
   },
   {
+    "id": 260,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "foolish": "a",
+      "ludicrous": "a",
+      "speechless": "a",
+      "silent": "a"
+    },
+    "inconsiderate": {
+      "dumb": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
     "id": 261,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "foolish": "a",
+      "ludicrous": "a",
+      "unintelligent": "a"
+    },
+    "inconsiderate": {
+      "simpleton": "a",
+      "stupid": "a",
+      "wacko": "a",
+      "whacko": "a"
+    },
+    "note": "Source: http://www.mmonjejr.com/2014/02/deconstructing-stupid.html"
+  },
+  {
+    "id": 262,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "fit of terror": "a",
+      "scare": "a"
+    },
+    "inconsiderate": {
+      "panic attack": "a"
+    }
+  },
+  {
+    "id": 263,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "thin": "a",
+      "slim": "a"
+    },
+    "inconsiderate": {
+      "anorexic": "a"
+    }
+  },
+  {
+    "id": 264,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "obsesive": "a",
+      "pedantic": "a",
+      "niggly": "a",
+      "picky": "a"
+    },
+    "inconsiderate": {
+      "ocd": "a",
+      "o.c.d": "a",
+      "o.c.d.": "a"
+    },
+    "note": "Source: http://english.stackexchange.com/questions/247550/"
+  },
+  {
+    "id": 265,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "restlessness": "a",
+      "sleeplessness": "a"
+    },
+    "inconsiderate": {
+      "insomnia": "a"
+    }
+  },
+  {
+    "id": 266,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "person who has insomnia": "a"
+    },
+    "inconsiderate": {
+      "insomniac": "a"
+    }
+  },
+  {
+    "id": 267,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "people who have insomnia": "a"
+    },
+    "inconsiderate": {
+      "insomniacs": "a"
+    }
+  },
+  {
+    "id": 268,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "empty": "a",
+      "sterile": "a",
+      "infertile": "a"
+    },
+    "inconsiderate": {
+      "barren": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 269,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "careless": "a",
+      "heartless": "a",
+      "indifferent": "a",
+      "insensitive": "a"
+    },
+    "inconsiderate": {
+      "blind to": "a",
+      "blind eye to": "a",
+      "blinded by": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 270,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "careless": "a",
+      "heartless": "a",
+      "indifferent": "a",
+      "insensitive": "a"
+    },
+    "inconsiderate": {
+      "blind to": "a",
+      "blind eye to": "a",
+      "blinded by": "a",
+      "deaf to": "a",
+      "deaf ear to": "a",
+      "deafened by": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 271,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "creep": "a",
+      "fool": "a"
+    },
+    "inconsiderate": {
+      "cretin": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 272,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "absurd": "a",
+      "foolish": "a"
+    },
+    "inconsiderate": {
+      "daft": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 273,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "foolish": "a",
+      "ludicrous": "a",
+      "silly": "a"
+    },
+    "inconsiderate": {
+      "feebleminded": "a",
+      "feeble minded": "a",
+      "idiot": "a",
+      "imbecile": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 274,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "person with a cleft-lip and palate": "a"
+    },
+    "inconsiderate": {
+      "harelipped": "a",
+      "cleftlipped": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 275,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "cleft-lip and palate": "a"
+    },
+    "inconsiderate": {
+      "harelip": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 276,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "cleft-lip and palate": "a"
+    },
+    "inconsiderate": {
+      "harelip": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 277,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "fanatic": "a",
+      "zealot": "a",
+      "enthusiast": "a"
+    },
+    "inconsiderate": {
+      "maniac": "a"
+    },
+    "note": "Source: http://www.autistichoya.com/p/ableist-words-and-terms-to-avoid.html"
+  },
+  {
+    "id": 278,
     "type": "simple",
     "categories": [
       "a"
@@ -16709,7 +17463,7 @@ module.exports = [
     }
   },
   {
-    "id": 262,
+    "id": 279,
     "type": "simple",
     "categories": [
       "a"
@@ -16723,7 +17477,7 @@ module.exports = [
     }
   },
   {
-    "id": 263,
+    "id": 280,
     "type": "simple",
     "categories": [
       "a"
@@ -16740,7 +17494,7 @@ module.exports = [
     }
   },
   {
-    "id": 264,
+    "id": 281,
     "type": "simple",
     "categories": [
       "a"
@@ -16759,7 +17513,7 @@ module.exports = [
     }
   },
   {
-    "id": 265,
+    "id": 282,
     "type": "simple",
     "categories": [
       "a"
@@ -16772,7 +17526,7 @@ module.exports = [
     }
   },
   {
-    "id": 266,
+    "id": 283,
     "type": "simple",
     "categories": [
       "a"
@@ -16785,7 +17539,7 @@ module.exports = [
     }
   },
   {
-    "id": 267,
+    "id": 284,
     "type": "simple",
     "categories": [
       "a"
@@ -16799,7 +17553,7 @@ module.exports = [
     }
   },
   {
-    "id": 268,
+    "id": 285,
     "type": "simple",
     "categories": [
       "a"
@@ -16813,7 +17567,7 @@ module.exports = [
     }
   },
   {
-    "id": 269,
+    "id": 286,
     "type": "simple",
     "categories": [
       "a"
@@ -16827,7 +17581,7 @@ module.exports = [
     }
   },
   {
-    "id": 270,
+    "id": 287,
     "type": "simple",
     "categories": [
       "a"
@@ -16841,7 +17595,7 @@ module.exports = [
     }
   },
   {
-    "id": 271,
+    "id": 288,
     "type": "simple",
     "categories": [
       "a"
@@ -16854,7 +17608,7 @@ module.exports = [
     }
   },
   {
-    "id": 272,
+    "id": 289,
     "type": "simple",
     "categories": [
       "a"
@@ -16868,7 +17622,7 @@ module.exports = [
     }
   },
   {
-    "id": 273,
+    "id": 290,
     "type": "simple",
     "categories": [
       "a"
@@ -16884,7 +17638,7 @@ module.exports = [
     }
   },
   {
-    "id": 274,
+    "id": 291,
     "type": "simple",
     "categories": [
       "a"
@@ -16900,7 +17654,7 @@ module.exports = [
     }
   },
   {
-    "id": 275,
+    "id": 292,
     "type": "simple",
     "categories": [
       "a"
@@ -16916,7 +17670,7 @@ module.exports = [
     }
   },
   {
-    "id": 276,
+    "id": 293,
     "type": "simple",
     "categories": [
       "a"
@@ -16934,7 +17688,7 @@ module.exports = [
     }
   },
   {
-    "id": 277,
+    "id": 294,
     "type": "simple",
     "categories": [
       "a"
@@ -16947,7 +17701,7 @@ module.exports = [
     }
   },
   {
-    "id": 278,
+    "id": 295,
     "type": "simple",
     "categories": [
       "a"
@@ -16960,7 +17714,7 @@ module.exports = [
     }
   },
   {
-    "id": 279,
+    "id": 296,
     "type": "simple",
     "categories": [
       "a"
@@ -16976,7 +17730,7 @@ module.exports = [
     }
   },
   {
-    "id": 280,
+    "id": 297,
     "type": "simple",
     "categories": [
       "a"
@@ -16992,7 +17746,7 @@ module.exports = [
     }
   },
   {
-    "id": 281,
+    "id": 298,
     "type": "simple",
     "categories": [
       "a"
@@ -17006,7 +17760,7 @@ module.exports = [
     }
   },
   {
-    "id": 282,
+    "id": 299,
     "type": "simple",
     "categories": [
       "a"
@@ -17020,7 +17774,7 @@ module.exports = [
     }
   },
   {
-    "id": 283,
+    "id": 300,
     "type": "simple",
     "categories": [
       "a"
@@ -17034,7 +17788,7 @@ module.exports = [
     }
   },
   {
-    "id": 284,
+    "id": 301,
     "type": "simple",
     "categories": [
       "a"
@@ -17048,7 +17802,7 @@ module.exports = [
     }
   },
   {
-    "id": 285,
+    "id": 302,
     "type": "simple",
     "categories": [
       "a"
@@ -17062,7 +17816,7 @@ module.exports = [
     }
   },
   {
-    "id": 286,
+    "id": 303,
     "type": "simple",
     "categories": [
       "a"
@@ -17076,7 +17830,7 @@ module.exports = [
     }
   },
   {
-    "id": 287,
+    "id": 304,
     "type": "simple",
     "categories": [
       "a"
@@ -17089,7 +17843,7 @@ module.exports = [
     }
   },
   {
-    "id": 288,
+    "id": 305,
     "type": "simple",
     "categories": [
       "a"
@@ -17102,7 +17856,7 @@ module.exports = [
     }
   },
   {
-    "id": 289,
+    "id": 306,
     "type": "simple",
     "categories": [
       "a"
@@ -17115,7 +17869,7 @@ module.exports = [
     }
   },
   {
-    "id": 290,
+    "id": 307,
     "type": "simple",
     "categories": [
       "a"
@@ -17135,7 +17889,7 @@ module.exports = [
     }
   },
   {
-    "id": 291,
+    "id": 308,
     "type": "simple",
     "categories": [
       "a"
@@ -17154,7 +17908,7 @@ module.exports = [
     }
   },
   {
-    "id": 292,
+    "id": 309,
     "type": "simple",
     "categories": [
       "a"
@@ -17167,7 +17921,7 @@ module.exports = [
     }
   },
   {
-    "id": 293,
+    "id": 310,
     "type": "simple",
     "categories": [
       "a"
@@ -17180,7 +17934,7 @@ module.exports = [
     }
   },
   {
-    "id": 294,
+    "id": 311,
     "type": "simple",
     "categories": [
       "a"
@@ -17193,7 +17947,7 @@ module.exports = [
     }
   },
   {
-    "id": 295,
+    "id": 312,
     "type": "simple",
     "categories": [
       "a"
@@ -17206,7 +17960,7 @@ module.exports = [
     }
   },
   {
-    "id": 296,
+    "id": 313,
     "type": "simple",
     "categories": [
       "a"
@@ -17219,7 +17973,7 @@ module.exports = [
     }
   },
   {
-    "id": 297,
+    "id": 314,
     "type": "simple",
     "categories": [
       "a"
@@ -17232,7 +17986,7 @@ module.exports = [
     }
   },
   {
-    "id": 298,
+    "id": 315,
     "type": "simple",
     "categories": [
       "a"
@@ -17245,7 +17999,7 @@ module.exports = [
     }
   },
   {
-    "id": 299,
+    "id": 316,
     "type": "simple",
     "categories": [
       "a"
@@ -17258,7 +18012,7 @@ module.exports = [
     }
   },
   {
-    "id": 300,
+    "id": 317,
     "type": "simple",
     "categories": [
       "a"
@@ -17273,7 +18027,7 @@ module.exports = [
     }
   },
   {
-    "id": 301,
+    "id": 318,
     "type": "simple",
     "categories": [
       "a"
@@ -17288,7 +18042,7 @@ module.exports = [
     }
   },
   {
-    "id": 302,
+    "id": 319,
     "type": "simple",
     "categories": [
       "a"
@@ -17301,7 +18055,7 @@ module.exports = [
     }
   },
   {
-    "id": 303,
+    "id": 320,
     "type": "simple",
     "categories": [
       "a"
@@ -17314,7 +18068,7 @@ module.exports = [
     }
   },
   {
-    "id": 304,
+    "id": 321,
     "type": "simple",
     "categories": [
       "a"
@@ -17327,7 +18081,7 @@ module.exports = [
     }
   },
   {
-    "id": 305,
+    "id": 322,
     "type": "simple",
     "categories": [
       "a"
@@ -17340,7 +18094,7 @@ module.exports = [
     }
   },
   {
-    "id": 306,
+    "id": 323,
     "type": "simple",
     "categories": [
       "a"
@@ -17353,7 +18107,7 @@ module.exports = [
     }
   },
   {
-    "id": 307,
+    "id": 324,
     "type": "simple",
     "categories": [
       "a"
@@ -17366,7 +18120,7 @@ module.exports = [
     }
   },
   {
-    "id": 308,
+    "id": 325,
     "type": "simple",
     "categories": [
       "a"
@@ -17381,7 +18135,7 @@ module.exports = [
     }
   },
   {
-    "id": 309,
+    "id": 326,
     "type": "simple",
     "categories": [
       "a"
@@ -17398,7 +18152,7 @@ module.exports = [
     }
   },
   {
-    "id": 310,
+    "id": 327,
     "type": "simple",
     "categories": [
       "a"
@@ -17421,7 +18175,7 @@ module.exports = [
     }
   },
   {
-    "id": 311,
+    "id": 328,
     "type": "simple",
     "categories": [
       "a"
@@ -17439,7 +18193,7 @@ module.exports = [
     }
   },
   {
-    "id": 312,
+    "id": 329,
     "type": "simple",
     "categories": [
       "a"
@@ -17459,7 +18213,7 @@ module.exports = [
     }
   },
   {
-    "id": 313,
+    "id": 330,
     "type": "simple",
     "categories": [
       "a"
@@ -17479,7 +18233,7 @@ module.exports = [
     }
   },
   {
-    "id": 314,
+    "id": 331,
     "type": "simple",
     "categories": [
       "a"
@@ -17492,7 +18246,7 @@ module.exports = [
     }
   },
   {
-    "id": 315,
+    "id": 332,
     "type": "simple",
     "categories": [
       "a"
@@ -17514,7 +18268,7 @@ module.exports = [
     }
   },
   {
-    "id": 316,
+    "id": 333,
     "type": "simple",
     "categories": [
       "a"
@@ -17533,7 +18287,7 @@ module.exports = [
     }
   },
   {
-    "id": 317,
+    "id": 334,
     "type": "simple",
     "categories": [
       "a"
@@ -17552,7 +18306,7 @@ module.exports = [
     }
   },
   {
-    "id": 318,
+    "id": 335,
     "type": "simple",
     "categories": [
       "a"
@@ -17571,7 +18325,7 @@ module.exports = [
     }
   },
   {
-    "id": 319,
+    "id": 336,
     "type": "simple",
     "categories": [
       "a"
@@ -17643,7 +18397,7 @@ module.exports = [
     }
   },
   {
-    "id": 320,
+    "id": 337,
     "type": "simple",
     "categories": [
       "a"
@@ -17718,7 +18472,7 @@ module.exports = [
     }
   },
   {
-    "id": 321,
+    "id": 338,
     "type": "simple",
     "categories": [
       "a"
@@ -17734,7 +18488,7 @@ module.exports = [
     }
   },
   {
-    "id": 322,
+    "id": 339,
     "type": "simple",
     "categories": [
       "a"
@@ -17750,7 +18504,7 @@ module.exports = [
     }
   },
   {
-    "id": 323,
+    "id": 340,
     "type": "simple",
     "categories": [
       "a"
@@ -17769,7 +18523,7 @@ module.exports = [
     }
   },
   {
-    "id": 324,
+    "id": 341,
     "type": "simple",
     "categories": [
       "a"
@@ -17788,7 +18542,7 @@ module.exports = [
     }
   },
   {
-    "id": 325,
+    "id": 342,
     "type": "simple",
     "categories": [
       "a"
@@ -17806,7 +18560,7 @@ module.exports = [
     }
   },
   {
-    "id": 326,
+    "id": 343,
     "type": "simple",
     "categories": [
       "a"
@@ -17825,7 +18579,7 @@ module.exports = [
     }
   },
   {
-    "id": 327,
+    "id": 344,
     "type": "simple",
     "categories": [
       "a"
@@ -17846,7 +18600,7 @@ module.exports = [
     }
   },
   {
-    "id": 328,
+    "id": 345,
     "type": "simple",
     "categories": [
       "a"
@@ -17867,7 +18621,7 @@ module.exports = [
     }
   },
   {
-    "id": 329,
+    "id": 346,
     "type": "simple",
     "categories": [
       "a"
@@ -17903,7 +18657,7 @@ module.exports = [
     }
   },
   {
-    "id": 330,
+    "id": 347,
     "type": "simple",
     "categories": [
       "a"
@@ -17940,7 +18694,7 @@ module.exports = [
     }
   },
   {
-    "id": 331,
+    "id": 348,
     "type": "simple",
     "categories": [
       "a"
@@ -17958,7 +18712,7 @@ module.exports = [
     }
   },
   {
-    "id": 332,
+    "id": 349,
     "type": "simple",
     "categories": [
       "a"
@@ -17971,7 +18725,7 @@ module.exports = [
     }
   },
   {
-    "id": 333,
+    "id": 350,
     "type": "simple",
     "categories": [
       "a"
@@ -17986,7 +18740,7 @@ module.exports = [
     }
   },
   {
-    "id": 334,
+    "id": 351,
     "type": "simple",
     "categories": [
       "a"
@@ -18001,7 +18755,7 @@ module.exports = [
     }
   },
   {
-    "id": 335,
+    "id": 352,
     "type": "simple",
     "categories": [
       "a"
@@ -18020,7 +18774,7 @@ module.exports = [
     }
   },
   {
-    "id": 336,
+    "id": 353,
     "type": "simple",
     "categories": [
       "a"
@@ -18039,7 +18793,7 @@ module.exports = [
     }
   },
   {
-    "id": 337,
+    "id": 354,
     "type": "simple",
     "categories": [
       "a"
@@ -18063,7 +18817,7 @@ module.exports = [
     }
   },
   {
-    "id": 338,
+    "id": 355,
     "type": "simple",
     "categories": [
       "a"
@@ -18087,7 +18841,7 @@ module.exports = [
     }
   },
   {
-    "id": 339,
+    "id": 356,
     "type": "simple",
     "categories": [
       "a"
@@ -18114,7 +18868,7 @@ module.exports = [
     }
   },
   {
-    "id": 340,
+    "id": 357,
     "type": "simple",
     "categories": [
       "a"
@@ -18141,7 +18895,7 @@ module.exports = [
     }
   },
   {
-    "id": 341,
+    "id": 358,
     "type": "and",
     "categories": [
       "a",
@@ -18163,7 +18917,7 @@ module.exports = [
 ]
 ;
 }, {}],
-11: [function(require, module, exports) {
+12: [function(require, module, exports) {
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -18270,8 +19024,8 @@ module.exports = function debounce(func, wait, immediate) {
     return result;
   };
 };
-}, {"date-now":67}],
-67: [function(require, module, exports) {
+}, {"date-now":69}],
+69: [function(require, module, exports) {
 "use strict";
 
 module.exports = Date.now || now;
