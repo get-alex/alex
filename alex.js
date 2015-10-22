@@ -16422,7 +16422,7 @@ module.exports=[
       "homeworkers": "a"
     },
     "inconsiderate": {
-      "housewifes": "female"
+      "housewives": "female"
     }
   },
   {
@@ -16610,7 +16610,7 @@ module.exports=[
     "considerate": {
       "staffed": "a",
       "crewed": "a",
-      "pilotted": "a"
+      "piloted": "a"
     },
     "inconsiderate": {
       "manned": "a"
@@ -17335,7 +17335,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "sustaine injuries": "a",
+      "sustain injuries": "a",
       "receive injuries": "a"
     },
     "inconsiderate": {
@@ -17425,11 +17425,11 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "tourette syndrome": "a"
+      "Tourette syndrome": "a"
     },
     "inconsiderate": {
-      "tourettes syndrome": "a",
-      "tourettes disorder": "a"
+      "Tourettes syndrome": "a",
+      "Tourettes disorder": "a"
     },
     "note": "Source: http://ncdj.org/style-guide/"
   },
@@ -17564,7 +17564,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "obsesive": "a",
+      "obsessive": "a",
       "pedantic": "a",
       "niggly": "a",
       "picky": "a"
@@ -17817,7 +17817,7 @@ module.exports=[
     ],
     "considerate": {
       "Australian Aboriginal": "a",
-      "people of the pacific islands": "a"
+      "people of the Pacific Islands": "a"
     },
     "inconsiderate": {
       "boongas": "a",
@@ -17834,7 +17834,7 @@ module.exports=[
     ],
     "considerate": {
       "Australian Aboriginal": "a",
-      "pacific islander": "a"
+      "Pacific Islander": "a"
     },
     "inconsiderate": {
       "boonga": "a",
@@ -18053,7 +18053,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "hispanic person": "a",
+      "Hispanic person": "a",
       "person of color": "a",
       "black person": "a"
     },
@@ -18069,7 +18069,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "hispanic people": "a",
+      "Hispanic people": "a",
       "people of color": "a",
       "black people": "a"
     },
@@ -18169,7 +18169,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "caribbean people": "a"
+      "Caribbean people": "a"
     },
     "inconsiderate": {
       "golliwogs": "a"
@@ -18182,7 +18182,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "caribbean person": "a"
+      "Caribbean person": "a"
     },
     "inconsiderate": {
       "golliwog": "a"
@@ -18208,7 +18208,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "romani person": "a"
+      "Romani person": "a"
     },
     "inconsiderate": {
       "gyppos": "a",
@@ -18228,7 +18228,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "romani people": "a"
+      "Romani people": "a"
     },
     "inconsiderate": {
       "gyppo": "a",
@@ -18381,7 +18381,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "lebanese": "a"
+      "Lebanese": "a"
     },
     "inconsiderate": {
       "lebos": "a"
@@ -18394,7 +18394,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "lebanese person": "a"
+      "Lebanese person": "a"
     },
     "inconsiderate": {
       "lebo": "a"
@@ -18407,7 +18407,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "lithuanians": "a"
+      "Lithuanians": "a"
     },
     "inconsiderate": {
       "lugans": "a"
@@ -18420,7 +18420,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "lithuanian person": "a"
+      "Lithuanian person": "a"
     },
     "inconsiderate": {
       "lugan": "a"
@@ -18433,7 +18433,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "russians": "a"
+      "Russians": "a"
     },
     "inconsiderate": {
       "moskals": "a"
@@ -18446,7 +18446,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "russian person": "a"
+      "Russian person": "a"
     },
     "inconsiderate": {
       "moskal": "a"
@@ -18492,7 +18492,7 @@ module.exports=[
     ],
     "considerate": {
       "English": "a",
-      "Brittish": "a"
+      "British": "a"
     },
     "inconsiderate": {
       "lebo": "a",
@@ -19023,7 +19023,7 @@ module.exports=[
       "wiggers": "a",
       "whiggers": "a",
       "wiggas": "a",
-      "write trash": "a"
+      "white trash": "a"
     }
   },
   {
