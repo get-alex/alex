@@ -2,6 +2,12 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+1.5.0 / 2015-11-09
+==================
+
+*   Update dev-dependencies ([9af5eef](https://github.com/wooorm/alex/commit/9af5eef))
+*   Rebuild distribution files ([dcf9986](https://github.com/wooorm/alex/commit/dcf9986))
+
 1.4.0 / 2015-10-11
 ==================
 
