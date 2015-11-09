@@ -104,7 +104,7 @@ alex.markdown = alex;
 
 module.exports = alex;
 
-},{"bail":4,"mdast":21,"mdast-util-to-nlcst":20,"retext":59,"retext-english":55,"retext-equality":56,"vfile":69,"vfile-sort":68}],2:[function(require,module,exports){
+},{"bail":4,"mdast":21,"mdast-util-to-nlcst":20,"retext":58,"retext-english":54,"retext-equality":55,"vfile":68,"vfile-sort":67}],2:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -360,7 +360,7 @@ function patch(Ware) {
 
 module.exports = patch;
 
-},{"unherit":64}],4:[function(require,module,exports){
+},{"unherit":62}],4:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -3721,7 +3721,7 @@ function attacher() {
 
 module.exports = attacher;
 
-},{"unist-util-visit":67}],20:[function(require,module,exports){
+},{"unist-util-visit":66}],20:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -4003,7 +4003,7 @@ function toNLCST(file, Parser) {
 
 module.exports = toNLCST;
 
-},{"mdast-range":19,"nlcst-to-string":29}],21:[function(require,module,exports){
+},{"mdast-range":19,"nlcst-to-string":28}],21:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -4034,7 +4034,7 @@ module.exports = unified({
     'Compiler': Compiler
 });
 
-},{"./lib/parse.js":24,"./lib/stringify.js":25,"unified":27}],22:[function(require,module,exports){
+},{"./lib/parse.js":24,"./lib/stringify.js":25,"unified":63}],22:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -6883,7 +6883,7 @@ Parser.prototype.tokenizeFactory = tokenizeFactory;
 
 module.exports = Parser;
 
-},{"./defaults.js":22,"./expressions.js":23,"./utilities.js":26,"extend.js":11,"he":13,"repeat-string":54,"trim":63,"trim-trailing-lines":62}],25:[function(require,module,exports){
+},{"./defaults.js":22,"./expressions.js":23,"./utilities.js":26,"extend.js":11,"he":13,"repeat-string":53,"trim":61,"trim-trailing-lines":60}],25:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -8675,7 +8675,7 @@ compilerPrototype.compile = function () {
 
 module.exports = Compiler;
 
-},{"./defaults.js":22,"./utilities.js":26,"ccount":7,"extend.js":11,"he":13,"longest-streak":17,"markdown-table":18,"repeat-string":54}],26:[function(require,module,exports){
+},{"./defaults.js":22,"./utilities.js":26,"ccount":7,"extend.js":11,"he":13,"longest-streak":17,"markdown-table":18,"repeat-string":53}],26:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -8860,294 +8860,6 @@ exports.clean = clean;
 exports.raise = raise;
 
 },{"collapse-white-space":10}],27:[function(require,module,exports){
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module unified
- * @fileoverview Parse / Transform / Compile / Repeat.
- */
-
-'use strict';
-
-/* eslint-env commonjs */
-
-/*
- * Dependencies.
- */
-
-var bail = require('bail');
-var ware = require('ware');
-var extend = require('extend');
-var AttachWare = require('attach-ware')(ware);
-var VFile = require('vfile');
-var unherit = require('unherit');
-
-/*
- * Processing pipeline.
- */
-
-var pipeline = ware()
-    .use(function (ctx) {
-        ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
-    })
-    .use(function (ctx, next) {
-        ctx.context.run(ctx.tree, ctx.file, next);
-    })
-    .use(function (ctx) {
-        ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
-    });
-
-/**
- * Construct a new Processor class based on the
- * given options.
- *
- * @param {Object} options - Configuration.
- * @param {string} options.name - Private storage.
- * @param {Function} options.Parser - Class to turn a
- *   virtual file into a syntax tree.
- * @param {Function} options.Compiler - Class to turn a
- *   syntax tree into a string.
- * @return {Processor} - A new constructor.
- */
-function unified(options) {
-    var name = options.name;
-    var Parser = options.Parser;
-    var Compiler = options.Compiler;
-    var data = options.data;
-
-    /**
-     * Construct a Processor instance.
-     *
-     * @constructor
-     * @class {Processor}
-     */
-    function Processor(processor) {
-        var self = this;
-
-        if (!(self instanceof Processor)) {
-            return new Processor(processor);
-        }
-
-        self.ware = new AttachWare(processor && processor.ware);
-        self.ware.context = self;
-
-        self.Parser = unherit(Parser);
-        self.Compiler = unherit(Compiler);
-
-        if (self.data) {
-            self.data = extend(true, {}, self.data);
-        }
-    }
-
-    /**
-     * Either return `context` if its an instance
-     * of `Processor` or construct a new `Processor`
-     * instance.
-     *
-     * @private
-     * @param {Processor?} [context] - Context object.
-     * @return {Processor} - Either `context` or a new
-     *   Processor instance.
-     */
-    function instance(context) {
-        return context instanceof Processor ? context : new Processor();
-    }
-
-    /**
-     * Attach a plugin.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @return {Processor}
-     */
-    function use() {
-        var self = instance(this);
-
-        self.ware.use.apply(self.ware, arguments);
-
-        return self;
-    }
-
-    /**
-     * Transform.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Node} [node] - Syntax tree.
-     * @param {VFile?} [file] - Virtual file.
-     * @param {Function?} [done] - Callback.
-     * @return {Node} - `node`.
-     */
-    function run(node, file, done) {
-        var self = this;
-        var space;
-
-        if (typeof file === 'function') {
-            done = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space.tree || node;
-        } else if (!space.tree) {
-            space.tree = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        done = typeof done === 'function' ? done : bail;
-
-        /*
-         * Only run when this is an instance of Processor,
-         * and when there are transformers.
-         */
-
-        if (self.ware && self.ware.fns) {
-            self.ware.run(node, file, done);
-        } else {
-            done(null, node, file);
-        }
-
-        return node;
-    }
-
-    /**
-     * Parse a file.
-     *
-     * Patches the parsed node onto the `name`
-     * namespace on the `type` property.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to parse.
-     * @param {Object?} [settings] - Configuration.
-     * @return {Node} - `node`.
-     */
-    function parse(value, settings) {
-        var file = new VFile(value);
-        var CustomParser = (this && this.Parser) || Parser;
-        var node = new CustomParser(file, settings, instance(this)).parse();
-
-        file.namespace(name).tree = node;
-
-        return node;
-    }
-
-    /**
-     * Compile a file.
-     *
-     * Used the parsed node at the `name`
-     * namespace at `'tree'` when no node was given.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {Object} [node] - Syntax tree.
-     * @param {VFile} [file] - File with syntax tree.
-     * @param {Object?} [settings] - Configuration.
-     * @return {string} - Compiled `file`.
-     */
-    function stringify(node, file, settings) {
-        var CustomCompiler = (this && this.Compiler) || Compiler;
-        var space;
-
-        if (settings === null || settings === undefined) {
-            settings = file;
-            file = null;
-        }
-
-        if (!file && node && !node.type) {
-            file = node;
-            node = null;
-        }
-
-        file = new VFile(file);
-        space = file.namespace(name);
-
-        if (!node) {
-            node = space.tree || node;
-        } else if (!space.tree) {
-            space.tree = node;
-        }
-
-        if (!node) {
-            throw new Error('Expected node, got ' + node);
-        }
-
-        return new CustomCompiler(file, settings, instance(this)).compile();
-    }
-
-    /**
-     * Parse / Transform / Compile.
-     *
-     * @this {Processor?} - Either a Processor instance or
-     *   the Processor constructor.
-     * @param {string|VFile} value - Input to process.
-     * @param {Object?} [settings] - Configuration.
-     * @param {Function?} [done] - Callback.
-     * @return {string?} - Parsed document, when
-     *   transformation was async.
-     */
-    function process(value, settings, done) {
-        var self = instance(this);
-        var file = new VFile(value);
-        var result = null;
-
-        if (typeof settings === 'function') {
-            done = settings;
-            settings = null;
-        }
-
-        pipeline.run({
-            'context': self,
-            'file': file,
-            'settings': settings || {}
-        }, function (err, res) {
-            result = res && res.result;
-
-            if (done) {
-                done(err, file, result);
-            } else if (err) {
-                bail(err);
-            }
-        });
-
-        return result;
-    }
-
-    /*
-     * Methods / functions.
-     */
-
-    var proto = Processor.prototype;
-
-    Processor.use = proto.use = use;
-    Processor.parse = proto.parse = parse;
-    Processor.run = proto.run = run;
-    Processor.stringify = proto.stringify = stringify;
-    Processor.process = proto.process = process;
-    Processor.data = proto.data = data || null;
-
-    return Processor;
-}
-
-/*
- * Expose.
- */
-
-module.exports = unified;
-
-},{"attach-ware":3,"bail":4,"extend":12,"unherit":64,"vfile":69,"ware":70}],28:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9439,7 +9151,7 @@ function isLiteral(parent, index) {
 
 module.exports = isLiteral;
 
-},{"nlcst-to-string":29}],29:[function(require,module,exports){
+},{"nlcst-to-string":28}],28:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -9457,12 +9169,16 @@ module.exports = isLiteral;
  *
  * @param {NLCSTNode|Array.<NLCSTNode>} node - Node to to
  *   stringify.
+ * @param {string} separator - Value to separate each item
+ *   with.
  * @return {string} - Stringified `node`.
  */
-function nlcstToString(node) {
+function nlcstToString(node, separator) {
     var values;
     var length;
     var children;
+
+    separator = separator || '';
 
     if (typeof node.value === 'string') {
         return node.value;
@@ -9482,10 +9198,10 @@ function nlcstToString(node) {
     values = [];
 
     while (length--) {
-        values[length] = nlcstToString(children[length]);
+        values[length] = nlcstToString(children[length], separator);
     }
 
-    return values.join('');
+    return values.join(separator);
 }
 
 /*
@@ -9494,7 +9210,7 @@ function nlcstToString(node) {
 
 module.exports = nlcstToString;
 
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 
 // modified from https://github.com/es-shims/es5-shim
@@ -9502,7 +9218,7 @@ var has = Object.prototype.hasOwnProperty;
 var toStr = Object.prototype.toString;
 var slice = Array.prototype.slice;
 var isArgs = require('./isArguments');
-var hasDontEnumBug = !({ 'toString': null }).propertyIsEnumerable('toString');
+var hasDontEnumBug = !({ toString: null }).propertyIsEnumerable('toString');
 var hasProtoEnumBug = function () {}.propertyIsEnumerable('prototype');
 var dontEnums = [
 	'toString',
@@ -9518,31 +9234,37 @@ var equalsConstructorPrototype = function (o) {
 	return ctor && ctor.prototype === o;
 };
 var blacklistedKeys = {
-	$window: true,
 	$console: true,
+	$frame: true,
+	$frameElement: true,
+	$frames: true,
 	$parent: true,
 	$self: true,
-	$frames: true,
 	$webkitIndexedDB: true,
-	$webkitStorageInfo: true
+	$webkitStorageInfo: true,
+	$window: true
 };
 var hasAutomationEqualityBug = (function () {
 	/* global window */
 	if (typeof window === 'undefined') { return false; }
 	for (var k in window) {
-		if (!blacklistedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
-			try {
-				equalsConstructorPrototype(window[k]);
-			} catch (e) {
-				return true;
+		try {
+			if (!blacklistedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+				try {
+					equalsConstructorPrototype(window[k]);
+				} catch (e) {
+					return true;
+				}
 			}
+		} catch (e) {
+			return true;
 		}
 	}
 	return false;
 }());
 var equalsConstructorPrototypeIfNotBuggy = function (o) {
 	/* global window */
-	if (typeof window === 'undefined' && !hasAutomationEqualityBug) {
+	if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
 		return equalsConstructorPrototype(o);
 	}
 	try {
@@ -9595,9 +9317,7 @@ var keysShim = function keys(object) {
 };
 
 keysShim.shim = function shimObjectKeys() {
-	if (!Object.keys) {
-		Object.keys = keysShim;
-	} else {
+	if (Object.keys) {
 		var keysWorksWithArguments = (function () {
 			// Safari 5.0 bug
 			return (Object.keys(arguments) || '').length === 2;
@@ -9612,13 +9332,15 @@ keysShim.shim = function shimObjectKeys() {
 				}
 			};
 		}
+	} else {
+		Object.keys = keysShim;
 	}
 	return Object.keys || keysShim;
 };
 
 module.exports = keysShim;
 
-},{"./isArguments":31}],31:[function(require,module,exports){
+},{"./isArguments":30}],30:[function(require,module,exports){
 'use strict';
 
 var toStr = Object.prototype.toString;
@@ -9637,7 +9359,7 @@ module.exports = function isArguments(value) {
 	return isArgs;
 };
 
-},{}],32:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10164,7 +9886,7 @@ parserPrototype.tokenizeParagraphPlugins =
 
 module.exports = ParseEnglish;
 
-},{"nlcst-to-string":29,"parse-latin":33,"unist-util-modify-children":65,"unist-util-visit-children":66}],33:[function(require,module,exports){
+},{"nlcst-to-string":28,"parse-latin":32,"unist-util-modify-children":64,"unist-util-visit-children":65}],32:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10179,7 +9901,7 @@ module.exports = ParseEnglish;
 
 module.exports = require('./lib/parse-latin');
 
-},{"./lib/parse-latin":35}],34:[function(require,module,exports){
+},{"./lib/parse-latin":34}],33:[function(require,module,exports){
 /* This module is generated by `script/build-expressions.js` */
 'use strict'
 /* eslint-env commonjs */
@@ -10197,7 +9919,7 @@ module.exports = {
     'whiteSpace': /^(?:[\t-\r \x85\xA0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000])+$/
 };
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -10968,7 +10690,7 @@ parseLatinPrototype.use('tokenizeRoot', [
 
 module.exports = ParseLatin;
 
-},{"./expressions":34,"./parser":36,"./plugin/break-implicit-sentences":37,"./plugin/make-final-white-space-siblings":38,"./plugin/make-initial-white-space-siblings":39,"./plugin/merge-affix-exceptions":40,"./plugin/merge-affix-symbol":41,"./plugin/merge-final-word-symbol":42,"./plugin/merge-initial-lower-case-letter-sentences":43,"./plugin/merge-initial-word-symbol":44,"./plugin/merge-initialisms":45,"./plugin/merge-inner-word-symbol":46,"./plugin/merge-non-word-sentences":47,"./plugin/merge-prefix-exceptions":48,"./plugin/merge-remaining-full-stops":49,"./plugin/merge-words":50,"./plugin/patch-position":51,"./plugin/remove-empty-nodes":52}],36:[function(require,module,exports){
+},{"./expressions":33,"./parser":35,"./plugin/break-implicit-sentences":36,"./plugin/make-final-white-space-siblings":37,"./plugin/make-initial-white-space-siblings":38,"./plugin/merge-affix-exceptions":39,"./plugin/merge-affix-symbol":40,"./plugin/merge-final-word-symbol":41,"./plugin/merge-initial-lower-case-letter-sentences":42,"./plugin/merge-initial-word-symbol":43,"./plugin/merge-initialisms":44,"./plugin/merge-inner-word-symbol":45,"./plugin/merge-non-word-sentences":46,"./plugin/merge-prefix-exceptions":47,"./plugin/merge-remaining-full-stops":48,"./plugin/merge-words":49,"./plugin/patch-position":50,"./plugin/remove-empty-nodes":51}],35:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11015,7 +10737,7 @@ function parserFactory(options) {
 
 module.exports = parserFactory;
 
-},{"./tokenizer":53}],37:[function(require,module,exports){
+},{"./tokenizer":52}],36:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11120,7 +10842,7 @@ function breakImplicitSentences(child, index, parent) {
 
 module.exports = modifyChildren(breakImplicitSentences);
 
-},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],38:[function(require,module,exports){
+},{"../expressions":33,"nlcst-to-string":28,"unist-util-modify-children":64}],37:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11178,7 +10900,7 @@ function makeFinalWhiteSpaceSiblings(child, index, parent) {
 
 module.exports = modifyChildren(makeFinalWhiteSpaceSiblings);
 
-},{"unist-util-modify-children":65}],39:[function(require,module,exports){
+},{"unist-util-modify-children":64}],38:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11229,7 +10951,7 @@ function makeInitialWhiteSpaceSiblings(child, index, parent) {
 
 module.exports = visitChildren(makeInitialWhiteSpaceSiblings);
 
-},{"unist-util-visit-children":66}],40:[function(require,module,exports){
+},{"unist-util-visit-children":65}],39:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11319,7 +11041,7 @@ function mergeAffixExceptions(child, index, parent) {
 
 module.exports = modifyChildren(mergeAffixExceptions);
 
-},{"nlcst-to-string":29,"unist-util-modify-children":65}],41:[function(require,module,exports){
+},{"nlcst-to-string":28,"unist-util-modify-children":64}],40:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11414,7 +11136,7 @@ function mergeAffixSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeAffixSymbol);
 
-},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],42:[function(require,module,exports){
+},{"../expressions":33,"nlcst-to-string":28,"unist-util-modify-children":64}],41:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11508,7 +11230,7 @@ function mergeFinalWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeFinalWordSymbol);
 
-},{"nlcst-to-string":29,"unist-util-modify-children":65}],43:[function(require,module,exports){
+},{"nlcst-to-string":28,"unist-util-modify-children":64}],42:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11610,7 +11332,7 @@ function mergeInitialLowerCaseLetterSentences(child, index, parent) {
 
 module.exports = modifyChildren(mergeInitialLowerCaseLetterSentences);
 
-},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],44:[function(require,module,exports){
+},{"../expressions":33,"nlcst-to-string":28,"unist-util-modify-children":64}],43:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11711,7 +11433,7 @@ function mergeInitialWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeInitialWordSymbol);
 
-},{"nlcst-to-string":29,"unist-util-modify-children":65}],45:[function(require,module,exports){
+},{"nlcst-to-string":28,"unist-util-modify-children":64}],44:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11843,7 +11565,7 @@ function mergeInitialisms(child, index, parent) {
 
 module.exports = modifyChildren(mergeInitialisms);
 
-},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],46:[function(require,module,exports){
+},{"../expressions":33,"nlcst-to-string":28,"unist-util-modify-children":64}],45:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -11987,7 +11709,7 @@ function mergeInnerWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeInnerWordSymbol);
 
-},{"../expressions":34,"nlcst-to-string":29,"unist-util-modify-children":65}],47:[function(require,module,exports){
+},{"../expressions":33,"nlcst-to-string":28,"unist-util-modify-children":64}],46:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12084,7 +11806,7 @@ function mergeNonWordSentences(child, index, parent) {
 
 module.exports = modifyChildren(mergeNonWordSentences);
 
-},{"unist-util-modify-children":65}],48:[function(require,module,exports){
+},{"unist-util-modify-children":64}],47:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12199,7 +11921,7 @@ function mergePrefixExceptions(child, index, parent) {
 
 module.exports = modifyChildren(mergePrefixExceptions);
 
-},{"nlcst-to-string":29,"unist-util-modify-children":65}],49:[function(require,module,exports){
+},{"nlcst-to-string":28,"unist-util-modify-children":64}],48:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12365,7 +12087,7 @@ function mergeRemainingFullStops(child) {
 
 module.exports = visitChildren(mergeRemainingFullStops);
 
-},{"../expressions":34,"nlcst-to-string":29,"unist-util-visit-children":66}],50:[function(require,module,exports){
+},{"../expressions":33,"nlcst-to-string":28,"unist-util-visit-children":65}],49:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12439,7 +12161,7 @@ function mergeFinalWordSymbol(child, index, parent) {
 
 module.exports = modifyChildren(mergeFinalWordSymbol);
 
-},{"unist-util-modify-children":65}],51:[function(require,module,exports){
+},{"unist-util-modify-children":64}],50:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12507,7 +12229,7 @@ function patchPosition(child, index, node) {
 
 module.exports = visitChildren(patchPosition);
 
-},{"unist-util-visit-children":66}],52:[function(require,module,exports){
+},{"unist-util-visit-children":65}],51:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12554,7 +12276,7 @@ function removeEmptyNodes(child, index, parent) {
 
 module.exports = modifyChildren(removeEmptyNodes);
 
-},{"unist-util-modify-children":65}],53:[function(require,module,exports){
+},{"unist-util-modify-children":64}],52:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12642,7 +12364,7 @@ function tokenizerFactory(childType, expression) {
 
 module.exports = tokenizerFactory;
 
-},{"nlcst-to-string":29}],54:[function(require,module,exports){
+},{"nlcst-to-string":28}],53:[function(require,module,exports){
 /*!
  * repeat-string <https://github.com/jonschlinkert/repeat-string>
  *
@@ -12710,7 +12432,7 @@ function repeat(str, num) {
 var res = '';
 var cache;
 
-},{}],55:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -12744,12 +12466,12 @@ function attacher(processor) {
 
 module.exports = attacher;
 
-},{"parse-english":32}],56:[function(require,module,exports){
+},{"parse-english":31}],55:[function(require,module,exports){
 'use strict';
 
 module.exports = require('./lib/equality.js');
 
-},{"./lib/equality.js":57}],57:[function(require,module,exports){
+},{"./lib/equality.js":56}],56:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer
@@ -13332,7 +13054,7 @@ function attacher() {
 
 module.exports = attacher;
 
-},{"./patterns.json":58,"nlcst-is-literal":28,"nlcst-to-string":29,"object-keys":30,"unist-util-visit":67}],58:[function(require,module,exports){
+},{"./patterns.json":57,"nlcst-is-literal":27,"nlcst-to-string":28,"object-keys":29,"unist-util-visit":66}],57:[function(require,module,exports){
 module.exports=[
   {
     "id": 0,
@@ -16422,7 +16144,7 @@ module.exports=[
       "homeworkers": "a"
     },
     "inconsiderate": {
-      "housewifes": "female"
+      "housewives": "female"
     }
   },
   {
@@ -16610,7 +16332,7 @@ module.exports=[
     "considerate": {
       "staffed": "a",
       "crewed": "a",
-      "pilotted": "a"
+      "piloted": "a"
     },
     "inconsiderate": {
       "manned": "a"
@@ -17335,7 +17057,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "sustaine injuries": "a",
+      "sustain injuries": "a",
       "receive injuries": "a"
     },
     "inconsiderate": {
@@ -17425,7 +17147,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "tourette syndrome": "a"
+      "Tourette syndrome": "a"
     },
     "inconsiderate": {
       "tourettes syndrome": "a",
@@ -17564,7 +17286,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "obsesive": "a",
+      "obsessive": "a",
       "pedantic": "a",
       "niggly": "a",
       "picky": "a"
@@ -17817,7 +17539,7 @@ module.exports=[
     ],
     "considerate": {
       "Australian Aboriginal": "a",
-      "people of the pacific islands": "a"
+      "people of the Pacific islands": "a"
     },
     "inconsiderate": {
       "boongas": "a",
@@ -17834,7 +17556,7 @@ module.exports=[
     ],
     "considerate": {
       "Australian Aboriginal": "a",
-      "pacific islander": "a"
+      "Pacific islander": "a"
     },
     "inconsiderate": {
       "boonga": "a",
@@ -18053,7 +17775,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "hispanic person": "a",
+      "Hispanic person": "a",
       "person of color": "a",
       "black person": "a"
     },
@@ -18069,7 +17791,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "hispanic people": "a",
+      "Hispanic people": "a",
       "people of color": "a",
       "black people": "a"
     },
@@ -18169,7 +17891,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "caribbean people": "a"
+      "Caribbean people": "a"
     },
     "inconsiderate": {
       "golliwogs": "a"
@@ -18182,7 +17904,7 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "caribbean person": "a"
+      "Caribbean person": "a"
     },
     "inconsiderate": {
       "golliwog": "a"
@@ -18208,7 +17930,38 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "romani person": "a"
+      "ripped-off": "a",
+      "bamboozled": "a",
+      "cheated": "a"
+    },
+    "inconsiderate": {
+      "gyped": "a",
+      "gypped": "a"
+    }
+  },
+  {
+    "id": 308,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "rip-off": "a",
+      "bamboozle": "a",
+      "cheat": "a"
+    },
+    "inconsiderate": {
+      "gyp": "a"
+    }
+  },
+  {
+    "id": 309,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "Romani people": "a"
     },
     "inconsiderate": {
       "gyppos": "a",
@@ -18222,13 +17975,13 @@ module.exports=[
     }
   },
   {
-    "id": 308,
+    "id": 310,
     "type": "simple",
     "categories": [
       "a"
     ],
     "considerate": {
-      "romani people": "a"
+      "Romani person": "a"
     },
     "inconsiderate": {
       "gyppo": "a",
@@ -18241,7 +17994,7 @@ module.exports=[
     }
   },
   {
-    "id": 309,
+    "id": 311,
     "type": "simple",
     "categories": [
       "a"
@@ -18254,7 +18007,7 @@ module.exports=[
     }
   },
   {
-    "id": 310,
+    "id": 312,
     "type": "simple",
     "categories": [
       "a"
@@ -18267,7 +18020,7 @@ module.exports=[
     }
   },
   {
-    "id": 311,
+    "id": 313,
     "type": "simple",
     "categories": [
       "a"
@@ -18280,7 +18033,7 @@ module.exports=[
     }
   },
   {
-    "id": 312,
+    "id": 314,
     "type": "simple",
     "categories": [
       "a"
@@ -18293,7 +18046,7 @@ module.exports=[
     }
   },
   {
-    "id": 313,
+    "id": 315,
     "type": "simple",
     "categories": [
       "a"
@@ -18306,7 +18059,7 @@ module.exports=[
     }
   },
   {
-    "id": 314,
+    "id": 316,
     "type": "simple",
     "categories": [
       "a"
@@ -18319,7 +18072,7 @@ module.exports=[
     }
   },
   {
-    "id": 315,
+    "id": 317,
     "type": "simple",
     "categories": [
       "a"
@@ -18332,7 +18085,7 @@ module.exports=[
     }
   },
   {
-    "id": 316,
+    "id": 318,
     "type": "simple",
     "categories": [
       "a"
@@ -18345,7 +18098,7 @@ module.exports=[
     }
   },
   {
-    "id": 317,
+    "id": 319,
     "type": "simple",
     "categories": [
       "a"
@@ -18360,7 +18113,7 @@ module.exports=[
     }
   },
   {
-    "id": 318,
+    "id": 320,
     "type": "simple",
     "categories": [
       "a"
@@ -18375,42 +18128,16 @@ module.exports=[
     }
   },
   {
-    "id": 319,
-    "type": "simple",
-    "categories": [
-      "a"
-    ],
-    "considerate": {
-      "lebanese": "a"
-    },
-    "inconsiderate": {
-      "lebos": "a"
-    }
-  },
-  {
-    "id": 320,
-    "type": "simple",
-    "categories": [
-      "a"
-    ],
-    "considerate": {
-      "lebanese person": "a"
-    },
-    "inconsiderate": {
-      "lebo": "a"
-    }
-  },
-  {
     "id": 321,
     "type": "simple",
     "categories": [
       "a"
     ],
     "considerate": {
-      "lithuanians": "a"
+      "Lebanese": "a"
     },
     "inconsiderate": {
-      "lugans": "a"
+      "lebos": "a"
     }
   },
   {
@@ -18420,10 +18147,10 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "lithuanian person": "a"
+      "Lebanese person": "a"
     },
     "inconsiderate": {
-      "lugan": "a"
+      "lebo": "a"
     }
   },
   {
@@ -18433,10 +18160,10 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "russians": "a"
+      "Lithuanians": "a"
     },
     "inconsiderate": {
-      "moskals": "a"
+      "lugans": "a"
     }
   },
   {
@@ -18446,10 +18173,10 @@ module.exports=[
       "a"
     ],
     "considerate": {
-      "russian person": "a"
+      "Lithuanian person": "a"
     },
     "inconsiderate": {
-      "moskal": "a"
+      "lugan": "a"
     }
   },
   {
@@ -18492,7 +18219,7 @@ module.exports=[
     ],
     "considerate": {
       "English": "a",
-      "Brittish": "a"
+      "British": "a"
     },
     "inconsiderate": {
       "lebo": "a",
@@ -18666,7 +18393,7 @@ module.exports=[
     "considerate": {
       "african americans": "a",
       "south americans": "a",
-      "caribbean people": "a",
+      "Caribbean people": "a",
       "africans": "a",
       "people of color": "a",
       "black people": "a"
@@ -18738,7 +18465,7 @@ module.exports=[
     "considerate": {
       "african american": "a",
       "south american": "a",
-      "caribbean person": "a",
+      "Caribbean person": "a",
       "african": "a",
       "person of color": "a",
       "black person": "a"
@@ -19023,7 +18750,7 @@ module.exports=[
       "wiggers": "a",
       "whiggers": "a",
       "wiggas": "a",
-      "write trash": "a"
+      "white trash": "a"
     }
   },
   {
@@ -19038,14 +18765,42 @@ module.exports=[
     "inconsiderate": {
       "ukrop": "a",
       "khokhol": "a",
-      "khokhols": "a",
-      "katsap": "a",
-      "kacap": "a",
-      "kacapas": "a"
+      "khokhols": "a"
     }
   },
   {
     "id": 349,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "Russian": "a"
+    },
+    "inconsiderate": {
+      "moskal": "a",
+      "katsap": "a",
+      "kacap": "a"
+    }
+  },
+  {
+    "id": 350,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "Russians": "a"
+    },
+    "inconsiderate": {
+      "moskals": "a",
+      "katsaps": "a",
+      "kacaps": "a",
+      "kacapas": "a"
+    }
+  },
+  {
+    "id": 351,
     "type": "simple",
     "categories": [
       "a"
@@ -19058,7 +18813,7 @@ module.exports=[
     }
   },
   {
-    "id": 350,
+    "id": 352,
     "type": "simple",
     "categories": [
       "a"
@@ -19073,7 +18828,7 @@ module.exports=[
     }
   },
   {
-    "id": 351,
+    "id": 353,
     "type": "simple",
     "categories": [
       "a"
@@ -19088,7 +18843,7 @@ module.exports=[
     }
   },
   {
-    "id": 352,
+    "id": 354,
     "type": "simple",
     "categories": [
       "a"
@@ -19107,7 +18862,7 @@ module.exports=[
     }
   },
   {
-    "id": 353,
+    "id": 355,
     "type": "simple",
     "categories": [
       "a"
@@ -19126,7 +18881,7 @@ module.exports=[
     }
   },
   {
-    "id": 354,
+    "id": 356,
     "type": "simple",
     "categories": [
       "a"
@@ -19150,7 +18905,7 @@ module.exports=[
     }
   },
   {
-    "id": 355,
+    "id": 357,
     "type": "simple",
     "categories": [
       "a"
@@ -19174,7 +18929,7 @@ module.exports=[
     }
   },
   {
-    "id": 356,
+    "id": 358,
     "type": "simple",
     "categories": [
       "a"
@@ -19201,7 +18956,7 @@ module.exports=[
     }
   },
   {
-    "id": 357,
+    "id": 359,
     "type": "simple",
     "categories": [
       "a"
@@ -19228,7 +18983,7 @@ module.exports=[
     }
   },
   {
-    "id": 358,
+    "id": 360,
     "type": "and",
     "categories": [
       "a",
@@ -19246,10 +19001,385 @@ module.exports=[
       "slave": "b",
       "slaves": "b"
     }
+  },
+  {
+    "id": 361,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "gay": "a",
+      "gay man": "a",
+      "lesbian": "a",
+      "gay person/people": "a"
+    },
+    "inconsiderate": {
+      "homosexual": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 362,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "relationship": "a"
+    },
+    "inconsiderate": {
+      "homosexual relations": "a",
+      "homosexual relationship": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 363,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "couple": "a"
+    },
+    "inconsiderate": {
+      "homosexual couple": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 364,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "sexual orientation": "a",
+      "orientation": "a"
+    },
+    "inconsiderate": {
+      "sexual preference": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 365,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "gay lives": "a",
+      "gay/lesbian lives": "a"
+    },
+    "inconsiderate": {
+      "gay lifestyle": "a",
+      "homosexual lifestyle": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 366,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "sexual orientation": "a",
+      "orientation": "a"
+    },
+    "inconsiderate": {
+      "sexual preference": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 367,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "gay issues": "a"
+    },
+    "inconsiderate": {
+      "gay agenda": "a",
+      "homosexual agenda": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 368,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "equal rights": "a",
+      "civil rights for gay people": "a"
+    },
+    "inconsiderate": {
+      "special rights": "a",
+      "gay rights": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/style"
+  },
+  {
+    "id": 369,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "gay": "a"
+    },
+    "inconsiderate": {
+      "fag": "a",
+      "faggot": "a",
+      "dyke": "a",
+      "homo": "a",
+      "sodomite": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/offensive"
+  },
+  {
+    "id": 370,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "bisexual": "a"
+    },
+    "inconsiderate": {
+      "bi": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/style"
+  },
+  {
+    "id": 371,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "gay marriage": "a",
+      "same-sex marriage": "a"
+    },
+    "inconsiderate": {
+      "homosexual marriage": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/style"
+  },
+  {
+    "id": 372,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "transgender": "a"
+    },
+    "inconsiderate": {
+      "tranny": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/style"
+  },
+  {
+    "id": 373,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "cross-dresser": "a"
+    },
+    "inconsiderate": {
+      "transvestite": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/transgender"
+  },
+  {
+    "id": 374,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "transition": "a"
+    },
+    "inconsiderate": {
+      "sexchange": "a",
+      "sex change": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/transgender"
+  },
+  {
+    "id": 375,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "sex reassignment surgery": "a"
+    },
+    "inconsiderate": {
+      "sex change operation": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/transgender"
+  },
+  {
+    "id": 376,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "transgender people": "a"
+    },
+    "inconsiderate": {
+      "transgenders": "a"
+    },
+    "note": "Transgender should be used as an adjective, not as a noun. (source: http://www.glaad.org/reference/transgender)"
+  },
+  {
+    "id": 377,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "a transgender person": "a"
+    },
+    "inconsiderate": {
+      "a transgender": "a"
+    },
+    "note": "Transgender should be used as an adjective, not as a noun. (source: http://www.glaad.org/reference/transgender)"
+  },
+  {
+    "id": 378,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "trangender": "a"
+    },
+    "inconsiderate": {
+      "transgendered": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/transgender"
+  },
+  {
+    "id": 379,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "being trangender": "a",
+      "the movement for transgender equality": "a"
+    },
+    "inconsiderate": {
+      "transgenderism": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/transgender"
+  },
+  {
+    "id": 380,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "assigned male at birth": "a",
+      "designated male at birth": "a"
+    },
+    "inconsiderate": {
+      "biologically male": "a",
+      "born a man": "a",
+      "genetically male": "a"
+    }
+  },
+  {
+    "id": 381,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "assigned female at birth": "a",
+      "designated female at birth": "a"
+    },
+    "inconsiderate": {
+      "biologically female": "a",
+      "born a woman": "a",
+      "genetically female": "a"
+    }
+  },
+  {
+    "id": 382,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "non-discrimination law": "a",
+      "non-discrimination ordinance": "a"
+    },
+    "inconsiderate": {
+      "bathroom bill": "a"
+    },
+    "note": "Source: http://www.glaad.org/reference/transgender"
+  },
+  {
+    "id": 383,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "died by suicide": "a",
+      "completed suicide": "a"
+    },
+    "inconsiderate": {
+      "committed suicide": "a"
+    },
+    "note": "Source: https://www.afsp.org/news-events/for-the-media/reporting-on-suicide"
+  },
+  {
+    "id": 384,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "die by suicide": "a",
+      "complete suicide": "a"
+    },
+    "inconsiderate": {
+      "commit suicide": "a"
+    },
+    "note": "Source: https://www.afsp.org/news-events/for-the-media/reporting-on-suicide"
+  },
+  {
+    "id": 385,
+    "type": "simple",
+    "categories": [
+      "a"
+    ],
+    "considerate": {
+      "rise in suicides": "a"
+    },
+    "inconsiderate": {
+      "suicide epidemic": "a"
+    },
+    "note": "Source: https://www.afsp.org/news-events/for-the-media/reporting-on-suicide"
   }
 ]
 
-},{}],59:[function(require,module,exports){
+},{}],58:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer.
@@ -19281,7 +19411,7 @@ module.exports = unified({
     'Compiler': Compiler
 });
 
-},{"./lib/compile.js":60,"parse-latin":33,"unified":61}],60:[function(require,module,exports){
+},{"./lib/compile.js":59,"parse-latin":32,"unified":63}],59:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2014-2015 Titus Wormer. All rights reserved.
@@ -19380,9 +19510,7 @@ Compiler.prototype.compile = compile;
 
 module.exports = Compiler;
 
-},{"nlcst-to-string":29}],61:[function(require,module,exports){
-arguments[4][27][0].apply(exports,arguments)
-},{"attach-ware":3,"bail":4,"dup":27,"extend":12,"unherit":64,"vfile":69,"ware":70}],62:[function(require,module,exports){
+},{"nlcst-to-string":28}],60:[function(require,module,exports){
 'use strict';
 
 /*
@@ -19420,7 +19548,7 @@ function trimTrailingLines(value) {
 
 module.exports = trimTrailingLines;
 
-},{}],63:[function(require,module,exports){
+},{}],61:[function(require,module,exports){
 
 exports = module.exports = trim;
 
@@ -19436,7 +19564,7 @@ exports.right = function(str){
   return str.replace(/\s*$/, '');
 };
 
-},{}],64:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19523,7 +19651,301 @@ function unherit(Super) {
 
 module.exports = unherit;
 
-},{"clone":8,"inherits":15}],65:[function(require,module,exports){
+},{"clone":8,"inherits":15}],63:[function(require,module,exports){
+/**
+ * @author Titus Wormer
+ * @copyright 2015 Titus Wormer
+ * @license MIT
+ * @module unified
+ * @fileoverview Parse / Transform / Compile / Repeat.
+ */
+
+'use strict';
+
+/* eslint-env commonjs */
+
+/*
+ * Dependencies.
+ */
+
+var bail = require('bail');
+var ware = require('ware');
+var AttachWare = require('attach-ware')(ware);
+var VFile = require('vfile');
+var unherit = require('unherit');
+var extend;
+
+try {
+    extend = require('node-extend');
+} catch (e) {
+    extend = require('extend');
+}
+
+/*
+ * Processing pipeline.
+ */
+
+var pipeline = ware()
+    .use(function (ctx) {
+        ctx.tree = ctx.context.parse(ctx.file, ctx.settings);
+    })
+    .use(function (ctx, next) {
+        ctx.context.run(ctx.tree, ctx.file, next);
+    })
+    .use(function (ctx) {
+        ctx.result = ctx.context.stringify(ctx.tree, ctx.file, ctx.settings);
+    });
+
+/**
+ * Construct a new Processor class based on the
+ * given options.
+ *
+ * @param {Object} options - Configuration.
+ * @param {string} options.name - Private storage.
+ * @param {Function} options.Parser - Class to turn a
+ *   virtual file into a syntax tree.
+ * @param {Function} options.Compiler - Class to turn a
+ *   syntax tree into a string.
+ * @return {Processor} - A new constructor.
+ */
+function unified(options) {
+    var name = options.name;
+    var Parser = options.Parser;
+    var Compiler = options.Compiler;
+    var data = options.data;
+
+    /**
+     * Construct a Processor instance.
+     *
+     * @constructor
+     * @class {Processor}
+     */
+    function Processor(processor) {
+        var self = this;
+
+        if (!(self instanceof Processor)) {
+            return new Processor(processor);
+        }
+
+        self.ware = new AttachWare(processor && processor.ware);
+        self.ware.context = self;
+
+        self.Parser = unherit(Parser);
+        self.Compiler = unherit(Compiler);
+
+        if (self.data) {
+            self.data = extend(true, {}, self.data);
+        }
+    }
+
+    /**
+     * Either return `context` if its an instance
+     * of `Processor` or construct a new `Processor`
+     * instance.
+     *
+     * @private
+     * @param {Processor?} [context] - Context object.
+     * @return {Processor} - Either `context` or a new
+     *   Processor instance.
+     */
+    function instance(context) {
+        return context instanceof Processor ? context : new Processor();
+    }
+
+    /**
+     * Attach a plugin.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @return {Processor}
+     */
+    function use() {
+        var self = instance(this);
+
+        self.ware.use.apply(self.ware, arguments);
+
+        return self;
+    }
+
+    /**
+     * Transform.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Node} [node] - Syntax tree.
+     * @param {VFile?} [file] - Virtual file.
+     * @param {Function?} [done] - Callback.
+     * @return {Node} - `node`.
+     */
+    function run(node, file, done) {
+        var self = this;
+        var space;
+
+        if (typeof file === 'function') {
+            done = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space.tree || node;
+        } else if (!space.tree) {
+            space.tree = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        done = typeof done === 'function' ? done : bail;
+
+        /*
+         * Only run when this is an instance of Processor,
+         * and when there are transformers.
+         */
+
+        if (self.ware && self.ware.fns) {
+            self.ware.run(node, file, done);
+        } else {
+            done(null, node, file);
+        }
+
+        return node;
+    }
+
+    /**
+     * Parse a file.
+     *
+     * Patches the parsed node onto the `name`
+     * namespace on the `type` property.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to parse.
+     * @param {Object?} [settings] - Configuration.
+     * @return {Node} - `node`.
+     */
+    function parse(value, settings) {
+        var file = new VFile(value);
+        var CustomParser = (this && this.Parser) || Parser;
+        var node = new CustomParser(file, settings, instance(this)).parse();
+
+        file.namespace(name).tree = node;
+
+        return node;
+    }
+
+    /**
+     * Compile a file.
+     *
+     * Used the parsed node at the `name`
+     * namespace at `'tree'` when no node was given.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {Object} [node] - Syntax tree.
+     * @param {VFile} [file] - File with syntax tree.
+     * @param {Object?} [settings] - Configuration.
+     * @return {string} - Compiled `file`.
+     */
+    function stringify(node, file, settings) {
+        var CustomCompiler = (this && this.Compiler) || Compiler;
+        var space;
+
+        if (settings === null || settings === undefined) {
+            settings = file;
+            file = null;
+        }
+
+        if (!file && node && !node.type) {
+            file = node;
+            node = null;
+        }
+
+        file = new VFile(file);
+        space = file.namespace(name);
+
+        if (!node) {
+            node = space.tree || node;
+        } else if (!space.tree) {
+            space.tree = node;
+        }
+
+        if (!node) {
+            throw new Error('Expected node, got ' + node);
+        }
+
+        return new CustomCompiler(file, settings, instance(this)).compile();
+    }
+
+    /**
+     * Parse / Transform / Compile.
+     *
+     * @this {Processor?} - Either a Processor instance or
+     *   the Processor constructor.
+     * @param {string|VFile} value - Input to process.
+     * @param {Object?} [settings] - Configuration.
+     * @param {Function?} [done] - Callback.
+     * @return {string?} - Parsed document, when
+     *   transformation was async.
+     */
+    function process(value, settings, done) {
+        var self = instance(this);
+        var file = new VFile(value);
+        var result = null;
+
+        if (typeof settings === 'function') {
+            done = settings;
+            settings = null;
+        }
+
+        pipeline.run({
+            'context': self,
+            'file': file,
+            'settings': settings || {}
+        }, function (err, res) {
+            result = res && res.result;
+
+            if (done) {
+                done(err, file, result);
+            } else if (err) {
+                bail(err);
+            }
+        });
+
+        return result;
+    }
+
+    /*
+     * Methods / functions.
+     */
+
+    var proto = Processor.prototype;
+
+    Processor.use = proto.use = use;
+    Processor.parse = proto.parse = parse;
+    Processor.run = proto.run = run;
+    Processor.stringify = proto.stringify = stringify;
+    Processor.process = proto.process = process;
+    Processor.data = proto.data = data || null;
+
+    return Processor;
+}
+
+/*
+ * Expose.
+ */
+
+module.exports = unified;
+
+},{"attach-ware":3,"bail":4,"extend":12,"node-extend":12,"unherit":62,"vfile":68,"ware":69}],64:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19612,7 +20034,7 @@ function modifierFactory(callback) {
 
 module.exports = modifierFactory;
 
-},{"array-iterate":2}],66:[function(require,module,exports){
+},{"array-iterate":2}],65:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19669,7 +20091,7 @@ function visitorFactory(callback) {
 
 module.exports = visitorFactory;
 
-},{}],67:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer. All rights reserved.
@@ -19784,7 +20206,7 @@ function visit(tree, type, callback, reverse) {
 
 module.exports = visit;
 
-},{}],68:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19835,7 +20257,7 @@ function sort(file) {
 
 module.exports = sort;
 
-},{}],69:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 /**
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
@@ -19879,6 +20301,55 @@ var SEPARATOR = '/';
 try {
     SEPARATOR = require('pa' + 'th').sep;
 } catch (e) { /* empty */ }
+
+/**
+ * Construct a new file message.
+ *
+ * Note: We cannot invoke `Error` on the created context,
+ * as that adds readonly `line` and `column` attributes on
+ * Safari 9, thus throwing and failing the data.
+ *
+ * @example
+ *   var message = new VFileMessage('Whoops!');
+ *
+ *   message instanceof Error // true
+ *
+ * @constructor
+ * @class {VFileMessage}
+ * @param {string} reason - Reason for messaging.
+ * @property {boolean} [fatal=null] - Whether the message
+ *   is fatal.
+ * @property {string} [name=''] - File-name and positional
+ *   information.
+ * @property {string} [file=''] - File-path.
+ * @property {string} [reason=''] - Reason for messaging.
+ * @property {number} [line=null] - Start of message.
+ * @property {number} [column=null] - Start of message.
+ * @property {Position|Location} [location=null] - Place of
+ *   message.
+ * @property {string} [stack] - Stack-trace of warning.
+ */
+function VFileMessage(reason) {
+    this.message = reason;
+}
+
+/**
+ * Inherit from `Error#`.
+ */
+function VFileMessagePrototype() {}
+
+VFileMessagePrototype.prototype = Error.prototype;
+
+var proto = new VFileMessagePrototype();
+
+VFileMessage.prototype = proto;
+
+/*
+ * Expose defaults.
+ */
+
+proto.file = proto.name = proto.reason = proto.message = proto.stack = '';
+proto.fatal = proto.column = proto.line = null;
 
 /**
  * File-related message with location information.
@@ -20207,7 +20678,7 @@ function message(reason, position) {
         }
     }
 
-    err = new Error(reason.message || reason);
+    err = new VFileMessage(reason.message || reason);
 
     err.name = (filePath ? filePath + ':' : '') + range;
     err.file = filePath;
@@ -20383,7 +20854,7 @@ vFilePrototype.namespace = namespace;
 
 module.exports = VFile;
 
-},{}],70:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /**
  * Module Dependencies
  */
@@ -20476,7 +20947,7 @@ Ware.prototype.run = function () {
   return this;
 };
 
-},{"wrap-fn":71}],71:[function(require,module,exports){
+},{"wrap-fn":70}],70:[function(require,module,exports){
 /**
  * Module Dependencies
  */
