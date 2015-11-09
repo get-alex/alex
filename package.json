@@ -53,22 +53,22 @@
     "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
-    "ava": "^0.2.0",
-    "browserify": "^11.0.1",
+    "ava": "^0.4.2",
+    "browserify": "^12.0.1",
     "eslint": "^1.0.0",
     "esmangle": "^1.0.1",
-    "istanbul": "^0.3.0",
     "jscs": "^2.0.0",
     "jscs-jsdoc": "^1.0.0",
     "mdast-comment-config": "^1.0.0",
     "mdast-github": "^1.0.0",
     "mdast-lint": "^1.0.0",
     "mdast-toc": "^1.0.0",
-    "mdast-validate-links": "^1.0.0"
+    "mdast-validate-links": "^1.0.0",
+    "nyc": "^3.2.2"
   },
   "scripts": {
     "test-api": "ava",
-    "test-coverage": "istanbul cover ava",
+    "test-coverage": "nyc ava",
     "test-travis": "npm run test-coverage",
     "test": "npm run test-api",
     "lint-api": "eslint .",
