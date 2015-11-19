@@ -2,6 +2,11 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+1.6.1 / 2015-11-19
+==================
+
+*   Fix file-finding for files outside of working directory ([0ee8d9a](https://github.com/wooorm/alex/commit/0ee8d9a))
+
 1.6.0 / 2015-11-19
 ==================
 
