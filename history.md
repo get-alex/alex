@@ -2,6 +2,13 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+1.6.0 / 2015-11-19
+==================
+
+*   Refactor wording in `readme.md` ([3c4520f](https://github.com/wooorm/alex/commit/3c4520f))
+*   Add support for file finding, ignoring ([9646363](https://github.com/wooorm/alex/commit/9646363))
+*   Update dependencies ([a826c0c](https://github.com/wooorm/alex/commit/a826c0c))
+
 1.5.0 / 2015-11-09
 ==================
 
