@@ -200,12 +200,12 @@ To prevent files from being found by **alex**, add an
 The **alex** CLI will sometimes [search for files](#file-finding). To prevent
 files from being found, add a file named `.alexignore` in one of the
 directories above the current working directory. The format of these files is
-similar to [`.eslintignore`](http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories).
+similar to [`.eslintignore`](http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories) (which is in turn similar to `.gitignore` files).
 
 For example, when working in `~/alpha/bravo/charlie`, the ignore file can be
 in `charlie`, but also in `~`.
 
-The ignore files for [the project itself](https://github.com/wooorm/alex/blob/master/.alexignore)
+The ignore file for [this project itself](https://github.com/wooorm/alex/blob/master/.alexignore)
 looks as follows:
 
 ```txt
