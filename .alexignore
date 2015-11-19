@@ -1,0 +1,7 @@
+# Both `node_modules` and `bower_components` are
+# ignored by default:
+# node_modules/
+# bower_components/
+
+components/
+example.md

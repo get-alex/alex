@@ -16,21 +16,56 @@
  * Dependencies.
  */
 
+var fs = require('fs');
 var bail = require('bail');
 var notifier = require('update-notifier');
 var meow = require('meow');
 var globby = require('globby');
+var hasMagic = require('glob').hasMagic;
+var minimatch = require('minimatch');
 var getStdin = require('get-stdin');
+var findDown = require('vfile-find-down');
+var findUp = require('vfile-find-up');
 var format = require('vfile-reporter');
 var toFile = require('to-vfile');
 var alex = require('./');
 var pack = require('./package');
 
 /*
+ * Methods.
+ */
+
+var readFile = fs.readFileSync;
+var stat = fs.statSync;
+
+/*
  * Constants.
  */
 
 var expextPipeIn = !process.stdin.isTTY;
+var IGNORE = '.alexignore';
+var ENCODING = 'utf-8';
+var BACKSLASH = '\\';
+var SLASH = '/';
+var CD = './';
+var HASH = '#';
+var EMPTY = '';
+
+var defaultIgnore = [
+    'node_modules/',
+    'bower_components/'
+];
+
+var extensions = [
+    'txt',
+    'text',
+    'md',
+    'markdown',
+    'mkd',
+    'mkdn',
+    'mkdown',
+    'ron'
+];
 
 /*
  * Update messages.
@@ -46,7 +81,7 @@ notifier({
 
 var cli = meow({
     'help': [
-        'Usage:  alex [<file> ...] [-w, --why] [-t, --text]',
+        'Usage:  alex [<file> | <dir> ...] [-w, --why] [-t, --text]',
         '',
         'Options:',
         '',
@@ -72,8 +107,8 @@ var exit = 0;
 var result = [];
 var why = Boolean(cli.flags.w || cli.flags.why);
 var fn = Boolean(cli.flags.t || cli.flags.text) ? 'text' : 'markdown'
-var input = cli.input.length ? cli.input : [
-    '{docs/**/,doc/**/,}*.{md,markdown,mkd,mkdn,mkdown,ron,txt,text}'
+var globs = cli.input.length ? cli.input : [
+    '{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}'
 ];
 
 /*
@@ -119,18 +154,167 @@ if (!cli.input.length && expextPipeIn) {
     return;
 }
 
-/*
- * Handle patterns.
+/**
+ * Check if `file` matches `pattern`.
+ *
+ * @example
+ *   match('baz.md', '*.md'); // true
+ *
+ * @param {string} filePath - File location.
+ * @param {string} pattern - Glob pattern.
+ * @return {boolean}
  */
+function match(filePath, pattern) {
+    return minimatch(filePath, pattern) ||
+        minimatch(filePath, pattern + '/**');
+}
 
-globby(input).then(function (filePaths) {
-    filePaths.forEach(function (filePath) {
-        toFile.read(filePath, function (err, file) {
-            bail(err);
+/**
+ * Check if `filePath` is matched included in `patterns`.
+ *
+ * @example
+ *   shouldIgnore(['node_modules/'], 'node_modules/foo'); // true
+ *
+ * @param {Array.<string>} patterns - Glob patterns.
+ * @param {string} filePath - File location.
+ * @return {boolean}
+ */
+function shouldIgnore(patterns, filePath) {
+    var normalized = filePath.replace(BACKSLASH, SLASH).replace(CD, EMPTY);
+
+    return patterns.reduce(function (isIgnored, pattern) {
+        var isNegated = pattern.charAt(0) === '!';
+
+        if (isNegated) {
+            pattern = pattern.slice(1);
+        }
+
+        if (pattern.indexOf(CD) === 0) {
+            pattern = pattern.slice(CD.length);
+        }
+
+        return match(normalized, pattern) ? !isNegated : isIgnored;
+    }, false);
+}
+
+/**
+ * Load an ignore file.
+ *
+ * @param {string} ignore - File location.
+ * @return {Array.<string>} - Patterns.
+ */
+function loadIgnore(ignore) {
+    return readFile(ignore, ENCODING).split(/\r?\n/).filter(function (value) {
+        var line = value.trim();
+
+        return line.length && line.charAt(0) !== HASH;
+    });
+}
+
+/**
+ * Factory to create a file filter based on bound ignore
+ * patterns.
+ *
+ * @param {Array.<string>} ignore - Ignore patterns.
+ * @param {Array.<string>} given - List of given file paths.
+ * @return {Function} - Filter.
+ */
+function filterFactory(ignore, given) {
+    /**
+     * Check whether a virtual file is applicable.
+     *
+     * @param {VFile} file - Virtual file.
+     */
+    return function (file) {
+        var filePath = file.filePath();
+        var extension = file.extension;
+
+        if (shouldIgnore(ignore, filePath)) {
+            return findDown.SKIP;
+        }
+
+        return given.indexOf(filePath) !== -1 ||
+            (extension && extensions.indexOf(extension) !== -1)
+    }
+}
+
+/**
+ * Factory to create a file filter based on bound ignore
+ * patterns.
+ *
+ * @param {Array.<VFile>} failed - List of failed files.
+ * @return {Function} - Process callback.
+ */
+function processFactory(failed) {
+    /**
+     * Process all found files (and failed ones too).
+     *
+     * @param {Error} [err] - Finding error (not used by
+     *   vfile-find-down).
+     * @param {Array.<VFile>} [files] - Virtual files.
+     */
+    return function (err, files) {
+        failed.concat(files || []).forEach(function (file) {
+            file.quiet = true;
+
+            try {
+                file.contents = readFile(file.filePath(), ENCODING);
+            } catch (err) {
+                file.fail(err);
+            }
 
             alex[fn](file);
 
             log(file);
-        });
+        })
+    }
+}
+
+/*
+ * Handle patterns.
+ */
+
+globby(globs).then(function (filePaths) {
+    var given = [];
+    var failed = [];
+
+    /*
+     * Check whether files are given directly that either
+     * do not exist or which might not match the default
+     * search patterns (based on extensions).
+     */
+
+    globs.forEach(function (glob) {
+        var stats;
+
+        if (hasMagic(glob)) {
+            return;
+        }
+
+        try {
+            stats = stat(glob);
+
+            if (stats.isFile()) {
+                given.push(glob);
+            }
+        } catch (err) {
+            failed.push(toFile(glob));
+        }
+    });
+
+    /*
+     * Search for an ignore file.
+     */
+
+    findUp.one(IGNORE, function (err, file) {
+        var ignore = [];
+
+        try {
+            ignore = file && loadIgnore(file.filePath());
+        } catch (err) { /* Empty. */ }
+
+        ignore = defaultIgnore.concat(ignore);
+
+        findDown.all(filterFactory(ignore, given), filePaths, processFactory(failed));
     });
 }, bail);

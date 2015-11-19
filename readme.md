@@ -51,6 +51,10 @@ $ npm install alex --global
 
 *   [Support](#support)
 
+*   [File finding](#file-finding)
+
+*   [.alexignore](#alexignore)
+
 *   [Workflow](#workflow)
 
 *   [FAQ](#faq)
@@ -183,6 +187,36 @@ alex.text('The `boogeyman`.').messages;
 
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the like](https://github.com/wooorm/nlcst-is-literal#isliteralparent-index)
 are not warned about
+
+## File finding
+
+**alex** CLI searches for files with a markdown or text extension when given
+directories (e.g., `$ alex .` will find `readme.md` and `foo/bar/baz.txt`).
+To prevent files from being found by **alex**, add an
+[`.alexignore`](#alexignore) file.
+
+## `.alexignore`
+
+The **alex** CLI will sometimes [search for files](#file-finding). To prevent
+files from being found, add a file named `.alexignore` in one of the
+directories above the current working directory. The format of these files is
+similar to [`.eslintignore`](http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories).
+
+For example, when working in `~/alpha/bravo/charlie`, the ignore file can be
+in `charlie`, but also in `~`.
+
+The ignore files for [the project itself](https://github.com/wooorm/alex/blob/master/.alexignore)
+looks as follows:
+
+```txt
+# Both `node_modules` and `bower_components` are
+# ignored by default:
+# node_modules/
+# bower_components/
+
+components/
+example.md
+```
 
 ## Workflow
 
