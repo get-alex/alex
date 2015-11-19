@@ -229,12 +229,11 @@ function filterFactory(ignore, given) {
         var filePath = file.filePath();
         var extension = file.extension;
 
-        if (shouldIgnore(ignore, filePath)) {
+        if (given.indexOf(filePath) !== -1 || shouldIgnore(ignore, filePath)) {
             return findDown.SKIP;
         }
 
-        return given.indexOf(filePath) !== -1 ||
-            (extension && extensions.indexOf(extension) !== -1)
+        return extension && extensions.indexOf(extension) !== -1;
     }
 }
 
@@ -242,10 +241,10 @@ function filterFactory(ignore, given) {
  * Factory to create a file filter based on bound ignore
  * patterns.
  *
- * @param {Array.<VFile>} failed - List of failed files.
+ * @param {Array.<VFile>} given - List of given files.
  * @return {Function} - Process callback.
  */
-function processFactory(failed) {
+function processFactory(given) {
     /**
      * Process all found files (and failed ones too).
      *
@@ -254,7 +253,7 @@ function processFactory(failed) {
      * @param {Array.<VFile>} [files] - Virtual files.
      */
     return function (err, files) {
-        failed.concat(files || []).forEach(function (file) {
+        given.concat(files || []).forEach(function (file) {
             file.quiet = true;
 
             try {
@@ -275,8 +274,8 @@ function processFactory(failed) {
  */
 
 globby(globs).then(function (filePaths) {
+    var files = [];
     var given = [];
-    var failed = [];
 
     /*
      * Check whether files are given directly that either
@@ -285,21 +284,19 @@ globby(globs).then(function (filePaths) {
      */
 
     globs.forEach(function (glob) {
-        var stats;
-
         if (hasMagic(glob)) {
             return;
         }
 
-        try {
-            stats = stat(glob);
+        files.push(toFile(glob));
+        given.push(glob);
 
-            if (stats.isFile()) {
-                given.push(glob);
+        try {
+            if (!stat(glob).isFile()) {
+                files.pop();
+                given.pop();
             }
-        } catch (err) {
-            failed.push(toFile(glob));
-        }
+        } catch (err) { /* Empty. */ }
     });
 
     /*
@@ -313,8 +310,8 @@ globby(globs).then(function (filePaths) {
             ignore = file && loadIgnore(file.filePath());
         } catch (err) { /* Empty. */ }
 
-        ignore = defaultIgnore.concat(ignore);
+        ignore = defaultIgnore.concat(ignore || []);
 
-        findDown.all(filterFactory(ignore, given), filePaths, processFactory(failed));
+        findDown.all(filterFactory(ignore, given), filePaths, processFactory(files));
     });
 }, bail);
