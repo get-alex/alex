@@ -4,5 +4,5 @@ bower_components/
 build/
 components/
 node_modules/
-coverage/
+.nyc_output/
 build.js
