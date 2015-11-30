@@ -35,20 +35,14 @@ test('alex()', function (t) {
         '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
         '3:10-3:17: `cripple` may be insensitive, use `person with a limp` instead'
     ]);
-
-    t.end();
 });
 
 test('alex.markdown()', function (t) {
     t.same(alex.markdown('The `boogeyman`.').messages.map(String), []);
-
-    t.end();
 });
 
 test('alex.text()', function (t) {
     t.same(alex.text('The `boogeyman`.').messages.map(String), [
         '1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead'
     ]);
-
-    t.end();
 });
