@@ -21,9 +21,8 @@
     "english"
   ],
   "dependencies": {
-    "wooorm/bail": "^1.0.0",
-    "wooorm/mdast": "^2.0.0",
-    "wooorm/mdast-util-to-nlcst": "^1.0.0",
+    "wooorm/remark": "^3.0.0",
+    "wooorm/remark-retext": "^1.1.0",
     "wooorm/retext": "^1.0.0",
     "wooorm/retext-english": "^1.0.0",
     "wooorm/retext-equality": "^1.5.0",

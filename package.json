@@ -41,10 +41,10 @@
     "get-stdin": "^5.0.0",
     "glob": "^6.0.1",
     "globby": "^4.0.0",
-    "mdast": "^2.0.0",
-    "mdast-util-to-nlcst": "^1.0.0",
+    "remark": "^3.0.0",
     "meow": "^3.3.0",
     "minimatch": "^3.0.0",
+    "remark-retext": "^1.1.0",
     "retext": "^1.0.0",
     "retext-english": "^1.0.0",
     "retext-equality": "^1.5.0",
@@ -63,11 +63,11 @@
     "esmangle": "^1.0.1",
     "jscs": "^2.0.0",
     "jscs-jsdoc": "^1.0.0",
-    "mdast-comment-config": "^1.0.0",
-    "mdast-github": "^1.0.0",
-    "mdast-lint": "^1.0.0",
-    "mdast-toc": "^1.0.0",
-    "mdast-validate-links": "^1.0.0",
+    "remark-comment-config": "^2.0.0",
+    "remark-github": "^3.0.0",
+    "remark-lint": "^2.0.0",
+    "remark-toc": "^2.0.0",
+    "remark-validate-links": "^2.0.0",
     "nyc": "^4.0.1"
   },
   "scripts": {
@@ -82,7 +82,7 @@
     "make": "npm run lint && npm run test-coverage",
     "bundle": "browserify index.js -s alex > alex.js",
     "postbundle": "esmangle alex.js > alex.min.js",
-    "build-md": "mdast . --quiet",
+    "build-md": "remark . --quiet --frail",
     "build": "npm run bundle && npm run build-md"
   }
 }
