@@ -2,6 +2,14 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+2.0.0 / 2016-02-03
+==================
+
+*   Remove Bower, Component, Duo support ([`a16a701`](https://github.com/wooorm/alex/commit/a16a701))
+*   Add support for `.alexrc`, `package.json` config ([`7279819`](https://github.com/wooorm/alex/commit/7279819))
+*   Add support for detecting profanities ([`ac2c643`](https://github.com/wooorm/alex/commit/ac2c643))
+*   Add support for inline warning control ([`89dd779`](https://github.com/wooorm/alex/commit/89dd779))
+
 1.6.1 / 2015-11-19
 ==================
 
