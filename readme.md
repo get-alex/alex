@@ -43,8 +43,8 @@ $ npm install alex --global
 
 *   [API](#api)
 
-    *   [alex(value)](#alexvalue)
-    *   [alex.markdown(value, allow)](#alexmarkdownvalue-allow)
+    *   [alex(value\[, allow\])](#alexvalue-allow)
+    *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
     *   [alex.text(value)](#alextextvalue)
 
 *   [Integrations](#integrations)
@@ -202,7 +202,9 @@ alex.text('The `boogeyman`.').messages;
     `person with a limp` instead;
 
 *   Intolerant phrasing, such as warning about using `master` and `slave`
-    together, and suggesting `primary` and `replica` instead.
+    together, and suggesting `primary` and `replica` instead;
+
+*   Profanities, the least of which being `butt`.
 
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the
 like][literals] are not warned about
@@ -405,7 +407,7 @@ See [CONTRIBUTING.md][contributing].
 
 [vfile-message]: https://github.com/wooorm/vfile#vfilemessages
 
-[alex-api]: #alexvalue
+[alex-api]: #alexvalue-allow
 
 [literals]: https://github.com/wooorm/nlcst-is-literal#isliteralparent-index
 
