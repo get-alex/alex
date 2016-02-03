@@ -55,6 +55,8 @@ $ npm install alex --global
 
 *   [.alexignore](#alexignore)
 
+*   [Ignoring messages](#ignoring-messages)
+
 *   [Workflow](#workflow)
 
 *   [FAQ](#faq)
@@ -217,6 +219,75 @@ looks as follows:
 
 components/
 example.md
+```
+
+## Ignoring messages
+
+Sometimes, **alex** makes mistakes:
+
+```md
+A window will pop up.
+```
+
+Yields:
+
+```txt
+readme.md
+  1:15-1:18  warning  `pop` may be insensitive, use `parent` instead  dad-mom
+
+⚠ 1 warning
+```
+
+**alex** can silence message through HTML comments in markdown:
+
+```md
+<!--alex ignore dad-mom-->
+
+A window will **not** pop up.
+```
+
+Yields:
+
+```txt
+readme.md: no issues found
+```
+
+`ignore` turns off messages for the thing after the comment (in this
+case, the paragraph).
+It’s also possible to turn off messages after a comment by using
+`disable`, and, turn those messages back on using `enable`:
+
+```md
+<!--alex disable dad-mom-->
+
+A window will **not** pop up.
+
+A window will **not** pop up.
+
+<!--alex enable dad-mom-->
+
+A window will pop up.
+```
+
+Yields:
+
+```txt
+readme.md
+  9:15-9:18  warning  `pop` may be insensitive, use `parent` instead  dad-mom
+
+⚠ 1 warning
+```
+
+Multiple messages can be controlled in one go:
+
+```md
+<!--alex disable he-her his-hers dad-mom-->
+```
+
+...and all messages can be controlled by omitting all rule identifiers:
+
+```md
+<!--alex ignore-->
 ```
 
 ## Workflow

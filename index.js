@@ -19,6 +19,7 @@
 var VFile = require('vfile');
 var remark = require('remark');
 var retext = require('retext');
+var control = require('remark-message-control');
 var english = require('retext-english');
 var equality = require('retext-equality');
 var remark2retext = require('remark-retext');
@@ -29,7 +30,10 @@ var sort = require('vfile-sort');
  */
 
 var text = retext().use(english).use(equality);
-var markdown = remark().use(remark2retext, text);
+var markdown = remark().use(remark2retext, text).use(control, {
+    'name': 'alex',
+    'source': 'retext-equality'
+});
 
 /**
  * Wrap the given processor.
