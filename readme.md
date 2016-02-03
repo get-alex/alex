@@ -117,9 +117,9 @@ $ npm install alex --save
 **alex** is also as an AMD, CommonJS, and globals module,
 [uncompressed and compressed][releases].
 
-### `alex(value)`
+### `alex(value[, allow])`
 
-### `alex.markdown(value, allow)`
+### `alex.markdown(value[, allow])`
 
 **Example**
 
