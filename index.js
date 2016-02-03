@@ -4,9 +4,9 @@
  * Dependencies.
  */
 
-const alex = require('wooorm/alex');
-const debounce = require('component/debounce');
-const events = require('component/event');
+const alex = require('alex');
+const debounce = require('debounce');
+const events = require('component-event');
 
 /*
  * Nodes.
