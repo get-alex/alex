@@ -109,7 +109,7 @@ var cli = meow({
 var exit = 0;
 var result = [];
 var why = Boolean(cli.flags.w || cli.flags.why);
-var fn = Boolean(cli.flags.t || cli.flags.text) ? 'text' : 'markdown'
+var fn = Boolean(cli.flags.t || cli.flags.text) ? 'text' : 'markdown';
 var globs = cli.input.length ? cli.input : [
     '{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}'
 ];
@@ -165,7 +165,7 @@ if (!cli.input.length && expextPipeIn) {
  *
  * @param {string} filePath - File location.
  * @param {string} pattern - Glob pattern.
- * @return {boolean}
+ * @return {boolean} - Whether `file` matches.
  */
 function match(filePath, pattern) {
     return minimatch(filePath, pattern) ||
@@ -180,7 +180,7 @@ function match(filePath, pattern) {
  *
  * @param {Array.<string>} patterns - Glob patterns.
  * @param {string} filePath - File location.
- * @return {boolean}
+ * @return {boolean} - Whether `filePath` should be ignored.
  */
 function shouldIgnore(patterns, filePath) {
     var normalized = filePath.replace(BACKSLASH, SLASH).replace(CD, EMPTY);
@@ -237,7 +237,7 @@ function filterFactory(ignore, given) {
         }
 
         return extension && extensions.indexOf(extension) !== -1;
-    }
+    };
 }
 
 /**
@@ -269,8 +269,8 @@ function processFactory(given, allow) {
             alex[fn](file, allow);
 
             log(file);
-        })
-    }
+        });
+    };
 }
 
 /*
@@ -346,7 +346,11 @@ globby(globs).then(function (filePaths) {
                 }
             }
 
-            findDown.all(filterFactory(ignore, given), filePaths, processFactory(files, allow));
+            findDown.all(
+                filterFactory(ignore, given),
+                filePaths,
+                processFactory(files, allow)
+            );
         });
     });
 }, bail);

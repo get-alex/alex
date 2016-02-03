@@ -33,9 +33,11 @@ test('alex()', function (t) {
         'Eric is pretty set on beating your butt for sheriff.'
     ].join('\n')).messages.map(String), [
         '1:5-1:14: `boogeyman` may be insensitive, use `boogey` instead',
-        '1:42-1:48: `master` / `slaves` may be insensitive, use `primary` / `replica` instead',
+        '1:42-1:48: `master` / `slaves` may be insensitive, use ' +
+            '`primary` / `replica` instead',
         '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
-        '3:10-3:17: `cripple` may be insensitive, use `person with a limp` instead',
+        '3:10-3:17: `cripple` may be insensitive, use `person with a ' +
+            'limp` instead',
         '5:36-5:40: Don’t use “butt”, it’s profane'
     ]);
 });
