@@ -112,8 +112,8 @@ See `$ alex --help` for more information.
 $ npm install alex --save
 ```
 
-**alex** is also available for [bower][] and [duo][], and as an AMD,
-CommonJS, and globals module, [uncompressed and compressed][releases].
+**alex** is also as an AMD, CommonJS, and globals module,
+[uncompressed and compressed][releases].
 
 ### `alex(value)`
 
@@ -224,7 +224,6 @@ looks as follows:
 # node_modules/
 # bower_components/
 
-components/
 example.md
 ```
 
@@ -389,10 +388,6 @@ See [CONTRIBUTING.md][contributing].
 [node]: https://nodejs.org/en/download/
 
 [screenshot]: screenshot.png
-
-[bower]: http://bower.io/#install-packages
-
-[duo]: http://duojs.org/#getting-started
 
 [releases]: https://github.com/wooorm/alex/releases
 

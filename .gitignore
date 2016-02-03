@@ -1,8 +1,6 @@
 .DS_Store
 *.log
-bower_components/
-build/
-components/
 node_modules/
 .nyc_output/
-build.js
+alex.js
+alex.min.js
