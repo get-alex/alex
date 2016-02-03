@@ -116,9 +116,9 @@ $ npm install alex --save
 [duo](http://duojs.org/#getting-started), and as an AMD, CommonJS, and globals
 module, [uncompressed](alex.js) and [compressed](alex.min.js).
 
-### alex(value)
+### `alex(value)`
 
-### alex.markdown(value, allow)
+### `alex.markdown(value, allow)`
 
 **Example**
 
@@ -149,7 +149,7 @@ alex('We’ve confirmed his identity.').messages;
 in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
 demonstrated in the example above, as it holds the possible violations.
 
-### alex.text(value)
+### `alex.text(value)`
 
 Works just like [`alex()`](#alexvalue), but does not parse as markdown
 (thus things like code are not ignored)
