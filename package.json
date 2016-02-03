@@ -47,9 +47,9 @@
     "remark-retext": "^1.1.0",
     "retext": "^1.0.0",
     "retext-english": "^1.0.0",
-    "retext-equality": "^1.5.0",
+    "retext-equality": "^2.0.0",
     "to-vfile": "^1.0.0",
-    "update-notifier": "^0.5.0",
+    "update-notifier": "^0.6.0",
     "vfile": "^1.1.0",
     "vfile-find-down": "^1.0.0",
     "vfile-find-up": "^1.0.0",
@@ -57,18 +57,18 @@
     "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
-    "ava": "^0.7.0",
-    "browserify": "^12.0.1",
+    "ava": "^0.11.0",
+    "browserify": "^13.0.0",
     "eslint": "^1.0.0",
     "esmangle": "^1.0.1",
     "jscs": "^2.0.0",
     "jscs-jsdoc": "^1.0.0",
     "remark-comment-config": "^2.0.0",
-    "remark-github": "^3.0.0",
+    "remark-github": "^4.0.0",
     "remark-lint": "^2.0.0",
     "remark-toc": "^2.0.0",
     "remark-validate-links": "^2.0.0",
-    "nyc": "^4.0.1"
+    "nyc": "^5.5.0"
   },
   "scripts": {
     "test-api": "ava",
