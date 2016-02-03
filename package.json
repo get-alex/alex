@@ -81,18 +81,16 @@
     "nyc": "^5.5.0"
   },
   "scripts": {
-    "test-api": "ava",
-    "test-coverage": "nyc ava",
-    "test-travis": "npm run test-coverage",
-    "test": "npm run test-api",
+    "build-md": "remark . --quiet --frail",
+    "build-bundle": "browserify index.js -s alex > alex.js",
+    "build-mangle": "esmangle alex.js > alex.min.js",
+    "build": "npm run build-md && npm run build-bundle && npm run build-mangle",
     "lint-api": "eslint .",
     "lint-style": "jscs --reporter inline .",
     "lint-text": "./cli.js . --why",
     "lint": "npm run lint-api && npm run lint-style && npm run lint-text",
-    "make": "npm run lint && npm run test-coverage",
-    "bundle": "browserify index.js -s alex > alex.js",
-    "postbundle": "esmangle alex.js > alex.min.js",
-    "build-md": "remark . --quiet --frail",
-    "build": "npm run bundle && npm run build-md"
+    "test-api": "ava",
+    "test-coverage": "nyc ava",
+    "test": "npm run build && npm run lint && npm run test-coverage"
   }
 }
