@@ -26,6 +26,7 @@
     "wooorm/retext": "^1.0.0",
     "wooorm/retext-english": "^1.0.0",
     "wooorm/retext-equality": "^1.5.0",
+    "wooorm/retext-profanities": "^1.0.0",
     "wooorm/vfile-sort": "^1.0.0",
     "wooorm/vfile": "^1.1.0"
   },

@@ -49,6 +49,7 @@
     "retext": "^1.0.0",
     "retext-english": "^1.0.0",
     "retext-equality": "^2.0.0",
+    "retext-profanities": "^1.0.0",
     "to-vfile": "^1.0.0",
     "update-notifier": "^0.6.0",
     "vfile": "^1.1.0",
