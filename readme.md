@@ -8,7 +8,7 @@
 
 > 📝 **alex** — Catch insensitive, inconsiderate writing.
 
-[![Build Status](https://img.shields.io/travis/wooorm/alex.svg)](https://travis-ci.org/wooorm/alex) [![Coverage Status](https://img.shields.io/codecov/c/github/wooorm/alex.svg)](https://codecov.io/github/wooorm/alex)
+[![Build Status][travis-badge]][travis] [![Coverage Status][codecov-badge]][codecov]
 
 Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, race related, religion inconsiderate, or other
@@ -19,7 +19,7 @@ it will warn you and suggest using `their` instead of `his`.
 
 > Suggestions, feature requests, and issues are more than welcome!
 
-Give **alex** a spin on the [Online demo »](http://alexjs.com/#demo).
+Give **alex** a spin on the [Online demo »][demo].
 
 ## Why
 
@@ -31,7 +31,7 @@ Give **alex** a spin on the [Online demo »](http://alexjs.com/#demo).
 
 ## Install
 
-[npm](https://docs.npmjs.com/cli/install) (with [Node.js](https://nodejs.org/en/download/)):
+[npm][] (with [Node.js][node]):
 
 ```sh
 $ npm install alex --global
@@ -74,7 +74,7 @@ $ npm install alex --global
 
 ## Command Line
 
-![Example of how alex looks on screen](screenshot.png)
+![Example of how alex looks on screen][screenshot]
 
 Let’s say `example.md` looks as follows:
 
@@ -106,15 +106,14 @@ See `$ alex --help` for more information.
 
 ## API
 
-[npm](https://docs.npmjs.com/cli/install):
+[npm][]:
 
 ```sh
 $ npm install alex --save
 ```
 
-**alex** is also available for [bower](http://bower.io/#install-packages) and
-[duo](http://duojs.org/#getting-started), and as an AMD, CommonJS, and globals
-module, [uncompressed](alex.js) and [compressed](alex.min.js).
+**alex** is also available for [bower][] and [duo][], and as an AMD,
+CommonJS, and globals module, [uncompressed and compressed][releases].
 
 ### `alex(value)`
 
@@ -137,7 +136,7 @@ alex('We’ve confirmed his identity.').messages;
 
 **Parameters**
 
-*   `value` ([`VFile`](https://github.com/wooorm/vfile) or `string`) —
+*   `value` ([`VFile`][vfile] or `string`) —
     Markdown or plain-text;
 
 *   `allow` (`Array.<string>`, optional) —
@@ -145,13 +144,13 @@ alex('We’ve confirmed his identity.').messages;
 
 **Returns**
 
-[`VFile`](https://github.com/wooorm/vfile). You’ll probably be interested
-in its [`messages`](https://github.com/wooorm/vfile#vfilemessages) property, as
-demonstrated in the example above, as it holds the possible violations.
+[`VFile`][vfile]. You’ll probably be interested in its
+[`messages`][vfile-message] property, as demonstrated in the example
+above, as it holds the possible violations.
 
 ### `alex.text(value)`
 
-Works just like [`alex()`](#alexvalue), but does not parse as markdown
+Works just like [`alex()`][alex-api], but does not parse as markdown
 (thus things like code are not ignored)
 
 **Example**
@@ -173,11 +172,11 @@ alex.text('The `boogeyman`.').messages;
 
 ## Integrations
 
-*   Atom — [wooorm/atom-linter-alex](https://github.com/wooorm/atom-linter-alex)
-*   Sublime — [sindresorhus/SublimeLinter-contrib-alex](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
-*   Visual Studio Code — [shinnn/vscode-alex](https://github.com/shinnn/vscode-alex)
-*   Gulp — [dustinspecker/gulp-alex](https://github.com/dustinspecker/gulp-alex)
-*   Slack — [keoghpe/alex-slack](https://github.com/keoghpe/alex-slack)
+*   Atom — [`wooorm/atom-linter-alex`](https://github.com/wooorm/atom-linter-alex)
+*   Sublime — [`sindresorhus/SublimeLinter-contrib-alex`](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
+*   Visual Studio Code — [`shinnn/vscode-alex`](https://github.com/shinnn/vscode-alex)
+*   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
+*   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
 
 ## Support
 
@@ -195,27 +194,28 @@ alex.text('The `boogeyman`.').messages;
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead.
 
-**alex** ignores words meant literally, so `“he”`, `He — ...`, and [the like](https://github.com/wooorm/nlcst-is-literal#isliteralparent-index)
-are not warned about
+**alex** ignores words meant literally, so `“he”`, `He — ...`, and [the
+like][literals] are not warned about
 
 ## Ignoring files
 
 **alex** CLI searches for files with a markdown or text extension when given
 directories (e.g., `$ alex .` will find `readme.md` and `foo/bar/baz.txt`).
 To prevent files from being found by **alex**, add an
-[`.alexignore`](#alexignore) file.
+[`.alexignore`][alexignore] file.
 
 ## `.alexignore`
 
-The **alex** CLI will sometimes [search for files](#ignoring-files). To prevent
+The **alex** CLI will sometimes [search for files][ignoring-files]. To prevent
 files from being found, add a file named `.alexignore` in one of the
 directories above the current working directory. The format of these files is
-similar to [`.eslintignore`](http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories) (which is in turn similar to `.gitignore` files).
+similar to [`.eslintignore`][eslintignore] (which is in turn similar to
+`.gitignore` files).
 
 For example, when working in `~/alpha/bravo/charlie`, the ignore file can be
 in `charlie`, but also in `~`.
 
-The ignore file for [this project itself](https://github.com/wooorm/alex/blob/master/.alexignore)
+The ignore file for [this project itself][.alexignore]
 looks as follows:
 
 ```txt
@@ -331,8 +331,8 @@ Multiple messages can be controlled in one go:
 The recommended workflow is to add **alex** locally and to run it with your
 tests.
 
-A `package.json` file with [npm scripts](https://docs.npmjs.com/misc/scripts),
-and additionally using [AVA](http://ava.li) for unit tests, could look
+A `package.json` file with [npm scripts][npm-scripts],
+and additionally using [AVA][] for unit tests, could look
 as follows:
 
 ```json
@@ -360,14 +360,64 @@ It’s a nice androgynous/unisex name, it was free on npm, I like it! :smile:
 ### Alex didn’t check ‘X’!
 
 See
-[CONTRIBUTING.md](CONTRIBUTING.md) on how to get ‘X’ checked by alex.
+[CONTRIBUTING.md][contributing] on how to get ‘X’ checked by alex.
 
 <!--lint enable no-heading-punctuation-->
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+See [CONTRIBUTING.md][contributing].
 
 ## License
 
-[MIT](LICENSE) © [Titus Wormer](http://wooorm.com)
+[MIT][license] © [Titus Wormer][author]
+
+<!-- Definitions. -->
+
+[travis-badge]: https://img.shields.io/travis/wooorm/alex.svg
+
+[travis]: https://travis-ci.org/wooorm/alex
+
+[codecov-badge]: https://img.shields.io/codecov/c/github/wooorm/alex.svg
+
+[codecov]: https://codecov.io/github/wooorm/alex
+
+[demo]: http://alexjs.com/#demo
+
+[npm]: https://docs.npmjs.com/cli/install
+
+[node]: https://nodejs.org/en/download/
+
+[screenshot]: screenshot.png
+
+[bower]: http://bower.io/#install-packages
+
+[duo]: http://duojs.org/#getting-started
+
+[releases]: https://github.com/wooorm/alex/releases
+
+[vfile]: https://github.com/wooorm/vfile
+
+[vfile-message]: https://github.com/wooorm/vfile#vfilemessages
+
+[alex-api]: #alexvalue
+
+[literals]: https://github.com/wooorm/nlcst-is-literal#isliteralparent-index
+
+[alexignore]: #alexignore
+
+[ignoring-files]: #ignoring-files
+
+[eslintignore]: http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories
+
+[.alexignore]: https://github.com/wooorm/alex/blob/master/.alexignore
+
+[npm-scripts]: https://docs.npmjs.com/misc/scripts
+
+[ava]: http://ava.li
+
+[contributing]: CONTRIBUTING.md
+
+[license]: LICENSE
+
+[author]: http://wooorm.com
