@@ -2,5 +2,8 @@ build/
 components/
 coverage/
 node_modules/
+.nyc_output/
 .DS_Store
 *.log
+alex.js
+alex.min.js
