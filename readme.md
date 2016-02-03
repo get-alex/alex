@@ -44,18 +44,22 @@ $ npm install alex --global
 *   [API](#api)
 
     *   [alex(value)](#alexvalue)
-    *   [alex.markdown(value)](#alexmarkdownvalue)
+    *   [alex.markdown(value, allow)](#alexmarkdownvalue-allow)
     *   [alex.text(value)](#alextextvalue)
 
 *   [Integrations](#integrations)
 
 *   [Support](#support)
 
-*   [File finding](#file-finding)
+*   [Ignoring files](#ignoring-files)
 
 *   [.alexignore](#alexignore)
 
 *   [Ignoring messages](#ignoring-messages)
+
+    *   [.alexrc](#alexrc)
+    *   [package.json](#packagejson)
+    *   [Control](#control)
 
 *   [Workflow](#workflow)
 
@@ -114,7 +118,7 @@ module, [uncompressed](alex.js) and [compressed](alex.min.js).
 
 ### alex(value)
 
-### alex.markdown(value)
+### alex.markdown(value, allow)
 
 **Example**
 
@@ -134,7 +138,10 @@ alex('We’ve confirmed his identity.').messages;
 **Parameters**
 
 *   `value` ([`VFile`](https://github.com/wooorm/vfile) or `string`) —
-    Markdown or plain-text.
+    Markdown or plain-text;
+
+*   `allow` (`Array.<string>`, optional) —
+    List of allowed rules.
 
 **Returns**
 
@@ -191,7 +198,7 @@ alex.text('The `boogeyman`.').messages;
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the like](https://github.com/wooorm/nlcst-is-literal#isliteralparent-index)
 are not warned about
 
-## File finding
+## Ignoring files
 
 **alex** CLI searches for files with a markdown or text extension when given
 directories (e.g., `$ alex .` will find `readme.md` and `foo/bar/baz.txt`).
@@ -200,7 +207,7 @@ To prevent files from being found by **alex**, add an
 
 ## `.alexignore`
 
-The **alex** CLI will sometimes [search for files](#file-finding). To prevent
+The **alex** CLI will sometimes [search for files](#ignoring-files). To prevent
 files from being found, add a file named `.alexignore` in one of the
 directories above the current working directory. The format of these files is
 similar to [`.eslintignore`](http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories) (which is in turn similar to `.gitignore` files).
@@ -222,6 +229,35 @@ example.md
 ```
 
 ## Ignoring messages
+
+### `.alexrc`
+
+### `package.json`
+
+**alex** can silence message through `.alexrc` files:
+
+```json
+{
+  "allow": ["boogeyman-boogeywoman"]
+}
+```
+
+...or `package.json` files:
+
+```txt
+{
+  ...
+  "alex": {
+    "allow": ["butt"]
+  },
+  ...
+}
+```
+
+All `allow` fields in all `package.json` and `.alexrc` files are
+detected and used when processing.
+
+### Control
 
 Sometimes, **alex** makes mistakes:
 

@@ -44,6 +44,9 @@ var stat = fs.statSync;
 
 var expextPipeIn = !process.stdin.isTTY;
 var IGNORE = '.alexignore';
+var RC = '.alexrc';
+var PACKAGE = 'package.json';
+var PACKAGE_FIELD = 'alex';
 var ENCODING = 'utf-8';
 var BACKSLASH = '\\';
 var SLASH = '/';
@@ -242,9 +245,10 @@ function filterFactory(ignore, given) {
  * patterns.
  *
  * @param {Array.<VFile>} given - List of given files.
+ * @param {Array.<string>} allow - List of allowed phrases.
  * @return {Function} - Process callback.
  */
-function processFactory(given) {
+function processFactory(given, allow) {
     /**
      * Process all found files (and failed ones too).
      *
@@ -262,7 +266,7 @@ function processFactory(given) {
                 file.fail(err);
             }
 
-            alex[fn](file);
+            alex[fn](file, allow);
 
             log(file);
         })
@@ -312,6 +316,37 @@ globby(globs).then(function (filePaths) {
 
         ignore = defaultIgnore.concat(ignore || []);
 
-        findDown.all(filterFactory(ignore, given), filePaths, processFactory(files));
+        /*
+         * Search for rc files.
+         */
+
+        findUp.all([PACKAGE, RC], function (err, configs) {
+            var allow = [];
+            var length = configs && configs.length;
+            var index = -1;
+            var file;
+            var contents;
+
+            while (++index < length) {
+                file = configs[index];
+                file.contents = readFile(file.filePath(), ENCODING);
+                file.quiet = true;
+
+                try {
+                    contents = JSON.parse(file.contents);
+
+                    if (file.basename() === PACKAGE) {
+                        contents = contents[PACKAGE_FIELD];
+                    }
+
+                    allow = [].concat.apply(allow, contents.allow);
+                } catch (err) {
+                    file.warn(err);
+                    files.push(file);
+                }
+            }
+
+            findDown.all(filterFactory(ignore, given), filePaths, processFactory(files, allow));
+        });
     });
 }, bail);

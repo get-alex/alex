@@ -31,55 +31,71 @@ var sort = require('vfile-sort');
  */
 
 var text = retext().use(english).use(equality).use(profanities);
-var markdown = remark().use(remark2retext, text).use(control, {
-    'name': 'alex',
-    'source': ['retext-equality', 'retext-profanities']
-});
 
 /**
- * Wrap the given processor.
+ * alex’s core.
  *
- * @param {Processor} processor - Remark or Retext.
+ * @param {string|VFile} value - Content.
+ * @param {Processor} processor - retext or remark.
+ * @return {VFile} - Result.
  */
-function factory(processor) {
-    /**
-     * alex.
-     *
-     * Read markdown as input, converts to natural language,
-     * then detect violations.
-     *
-     * @example
-     *   alex('We’ve confirmed his identity.').messages;
-     *   // [ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs` instead]
-     *   //   name: '1:17-1:20',
-     *   //   file: '',
-     *   //   reason: '`his` may be insensitive, use `their`, `theirs` instead',
-     *   //   line: 1,
-     *   //   column: 17,
-     *   //   fatal: false } ]
-     *
-     * @param {string|VFile} value - Content
-     * @return {VFile} - Result.
-     */
-    return function (value) {
-        var file = new VFile(value);
+function core(value, processor) {
+    var file = new VFile(value);
 
-        processor.parse(file);
-        processor.run(file);
+    processor.parse(file);
+    processor.run(file);
 
-        sort(file);
+    sort(file);
 
-        return file;
-    }
+    return file;
+}
+
+/**
+ * alex.
+ *
+ * Read markdown as input, converts to natural language,
+ * then detect violations.
+ *
+ * @example
+ *   alex('We’ve confirmed his identity.').messages;
+ *   // [ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs` instead]
+ *   //   name: '1:17-1:20',
+ *   //   file: '',
+ *   //   reason: '`his` may be insensitive, use `their`, `theirs` instead',
+ *   //   line: 1,
+ *   //   column: 17,
+ *   //   fatal: false } ]
+ *
+ * @param {string|VFile} value - Content.
+ * @param {Array.<string>?} allow - Allowed rules.
+ * @return {VFile} - Result.
+ */
+function alex(value, allow) {
+    return core(value, remark().use(remark2retext, text).use(control, {
+        'name': 'alex',
+        'disable': allow,
+        'source': [
+            'retext-equality',
+            'retext-profanities'
+        ]
+    }));
+}
+
+/**
+ * alex, without the markdown.
+ *
+ * @param {string|VFile} value - Content.
+ * @return {VFile} - Result.
+ */
+function noMarkdown(value) {
+    return core(value, text);
 }
 
 /*
  * Expose.
  */
 
-var alex = factory(markdown);
-
-alex.text = factory(text);
+alex.text = noMarkdown;
 alex.markdown = alex;
 
 module.exports = alex;
