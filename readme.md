@@ -92,11 +92,13 @@ $ alex example.md
 Yields:
 
 ```txt
-example.md
-   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead
-  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead
-  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead
-  2:59-2:66  warning  `cripple` may be insensitive, use `person with a limp` instead
+<stdin>
+   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
+  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave
+  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she
+  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple
+
+⚠ 4 warnings
 ```
 
 See `$ alex --help` for more information.
@@ -124,13 +126,17 @@ $ npm install alex --save
 ```js
 alex('We’ve confirmed his identity.').messages;
 /*
- * [ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs` instead]
+ * [ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs`, `them` instead]
+ *   message: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
  *   name: '1:17-1:20',
  *   file: '',
- *   reason: '`his` may be insensitive, use `their`, `theirs` instead',
+ *   reason: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
  *   line: 1,
  *   column: 17,
- *   fatal: false } ]
+ *   location: { start: [Object], end: [Object] },
+ *   fatal: false,
+ *   ruleId: 'her-him',
+ *   source: 'retext-equality' } ]
  */
 ```
 
@@ -161,12 +167,16 @@ alex('The `boogeyman`.').messages; // []
 alex.text('The `boogeyman`.').messages;
 /*
  * [ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
+ *   message: '`boogeyman` may be insensitive, use `boogey` instead',
  *   name: '1:6-1:15',
  *   file: '',
  *   reason: '`boogeyman` may be insensitive, use `boogey` instead',
  *   line: 1,
  *   column: 6,
- *   fatal: false } ]
+ *   location: Position { start: [Object], end: [Object] },
+ *   fatal: false,
+ *   ruleId: 'boogeyman-boogeywoman',
+ *   source: 'retext-equality' } ]
  */
 ```
 
