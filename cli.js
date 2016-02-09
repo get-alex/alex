@@ -336,7 +336,7 @@ globby(globs).then(function (filePaths) {
                     contents = JSON.parse(file.contents);
 
                     if (file.basename() === PACKAGE) {
-                        contents = contents[PACKAGE_FIELD];
+                        contents = contents[PACKAGE_FIELD] || {};
                     }
 
                     allow = [].concat.apply(allow, contents.allow);
