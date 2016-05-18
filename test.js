@@ -25,7 +25,7 @@ var alex = require('./');
  */
 
 test('alex()', function (t) {
-    t.same(alex([
+    t.deepEqual(alex([
         'The boogeyman wrote all changes to the **master server**. Thus,',
         'the slaves were read-only copies of master. But not to worry,',
         'he was a cripple.',
@@ -43,11 +43,11 @@ test('alex()', function (t) {
 });
 
 test('alex.markdown()', function (t) {
-    t.same(alex.markdown('The `boogeyman`.').messages.map(String), []);
+    t.deepEqual(alex.markdown('The `boogeyman`.').messages.map(String), []);
 });
 
 test('alex.text()', function (t) {
-    t.same(alex.text('The `boogeyman`.').messages.map(String), [
+    t.deepEqual(alex.text('The `boogeyman`.').messages.map(String), [
         '1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead'
     ]);
 });

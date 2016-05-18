@@ -121,7 +121,7 @@ $ npm install alex --save
 
 ### `alex.markdown(value[, allow])`
 
-**Example**
+**Example**:
 
 ```js
 alex('We’ve confirmed his identity.').messages;
@@ -140,7 +140,7 @@ alex('We’ve confirmed his identity.').messages;
  */
 ```
 
-**Parameters**
+**Parameters**:
 
 *   `value` ([`VFile`][vfile] or `string`) —
     Markdown or plain-text;
@@ -148,7 +148,7 @@ alex('We’ve confirmed his identity.').messages;
 *   `allow` (`Array.<string>`, optional) —
     List of allowed rules.
 
-**Returns**
+**Returns**:
 
 [`VFile`][vfile]. You’ll probably be interested in its
 [`messages`][vfile-message] property, as demonstrated in the example
@@ -159,7 +159,7 @@ above, as it holds the possible violations.
 Works just like [`alex()`][alex-api], but does not parse as markdown
 (thus things like code are not ignored)
 
-**Example**
+**Example**:
 
 ```js
 alex('The `boogeyman`.').messages; // []

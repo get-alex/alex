@@ -5,9 +5,9 @@
     "alex.js",
     "alex.min.js"
   ],
-  "preset": "yandex",
-  "requireQuotedKeysInObjects": true,
-  "disallowQuotedKeysInObjects": false,
+  "preset": "crockford",
+  "requireMultipleVarDecl": false,
+  "disallowDanglingUnderscores": false,
   "maximumLineLength": {
     "value": 79,
     "allExcept": [
@@ -15,6 +15,10 @@
       "comments"
     ]
   },
+  "requireQuotedKeysInObjects": true,
+  "disallowKeywords": [
+    "with"
+  ],
   "jsDoc": {
     "checkAnnotations": "jsdoc3",
     "checkParamExistence": true,

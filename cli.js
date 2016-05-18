@@ -11,6 +11,7 @@
 
 /* eslint-env node */
 /* eslint-disable no-console */
+/* jscs:disable requireVarDeclFirst */ /* Buggy with shebang */
 
 /*
  * Dependencies.
@@ -109,7 +110,7 @@ var cli = meow({
 var exit = 0;
 var result = [];
 var why = Boolean(cli.flags.w || cli.flags.why);
-var fn = Boolean(cli.flags.t || cli.flags.text) ? 'text' : 'markdown';
+var fn = (cli.flags.t || cli.flags.text) ? 'text' : 'markdown';
 var globs = cli.input.length ? cli.input : [
     '{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}'
 ];
@@ -137,24 +138,6 @@ function log(file) {
     if (!exit && file.messages.length) {
         exit = 1;
     }
-}
-
-/*
- * Handle stdin(4).
- */
-
-if (!cli.input.length && expextPipeIn) {
-    getStdin().then(function (value) {
-        var file = toFile('<stdin>');
-
-        file.contents = value;
-
-        alex(file);
-
-        log(file);
-    }, bail);
-
-    return;
 }
 
 /**
@@ -274,83 +257,95 @@ function processFactory(given, allow) {
 }
 
 /*
- * Handle patterns.
+ * Either handle stdin(4) or patterns.
  */
 
-globby(globs).then(function (filePaths) {
-    var files = [];
-    var given = [];
+if (!cli.input.length && expextPipeIn) {
+    getStdin().then(function (value) {
+        var file = toFile('<stdin>');
 
-    /*
-     * Check whether files are given directly that either
-     * do not exist or which might not match the default
-     * search patterns (based on extensions).
-     */
+        file.contents = value;
 
-    globs.forEach(function (glob) {
-        if (hasMagic(glob)) {
-            return;
-        }
+        alex(file);
 
-        files.push(toFile(glob));
-        given.push(glob);
-
-        try {
-            if (!stat(glob).isFile()) {
-                files.pop();
-                given.pop();
-            }
-        } catch (err) { /* Empty. */ }
-    });
-
-    /*
-     * Search for an ignore file.
-     */
-
-    findUp.one(IGNORE, function (err, file) {
-        var ignore = [];
-
-        try {
-            ignore = file && loadIgnore(file.filePath());
-        } catch (err) { /* Empty. */ }
-
-        ignore = defaultIgnore.concat(ignore || []);
+        log(file);
+    }, bail);
+} else {
+    globby(globs).then(function (filePaths) {
+        var files = [];
+        var given = [];
 
         /*
-         * Search for rc files.
+         * Check whether files are given directly that either
+         * do not exist or which might not match the default
+         * search patterns (based on extensions).
          */
 
-        findUp.all([PACKAGE, RC], function (err, configs) {
-            var allow = [];
-            var length = configs && configs.length;
-            var index = -1;
-            var file;
-            var contents;
-
-            while (++index < length) {
-                file = configs[index];
-                file.contents = readFile(file.filePath(), ENCODING);
-                file.quiet = true;
-
-                try {
-                    contents = JSON.parse(file.contents);
-
-                    if (file.basename() === PACKAGE) {
-                        contents = contents[PACKAGE_FIELD] || {};
-                    }
-
-                    allow = [].concat.apply(allow, contents.allow);
-                } catch (err) {
-                    file.warn(err);
-                    files.push(file);
-                }
+        globs.forEach(function (glob) {
+            if (hasMagic(glob)) {
+                return;
             }
 
-            findDown.all(
-                filterFactory(ignore, given),
-                filePaths,
-                processFactory(files, allow)
-            );
+            files.push(toFile(glob));
+            given.push(glob);
+
+            try {
+                if (!stat(glob).isFile()) {
+                    files.pop();
+                    given.pop();
+                }
+            } catch (err) { /* Empty. */ }
         });
-    });
-}, bail);
+
+        /*
+         * Search for an ignore file.
+         */
+
+        findUp.one(IGNORE, function (err, file) {
+            var ignore = [];
+
+            try {
+                ignore = file && loadIgnore(file.filePath());
+            } catch (err) { /* Empty. */ }
+
+            ignore = defaultIgnore.concat(ignore || []);
+
+            /*
+             * Search for rc files.
+             */
+
+            findUp.all([PACKAGE, RC], function (err, configs) {
+                var allow = [];
+                var length = configs && configs.length;
+                var index = -1;
+                var file;
+                var contents;
+
+                while (++index < length) {
+                    file = configs[index];
+                    file.contents = readFile(file.filePath(), ENCODING);
+                    file.quiet = true;
+
+                    try {
+                        contents = JSON.parse(file.contents);
+
+                        if (file.basename() === PACKAGE) {
+                            contents = contents[PACKAGE_FIELD] || {};
+                        }
+
+                        allow = [].concat.apply(allow, contents.allow);
+                    } catch (err) {
+                        file.warn(err);
+                        files.push(file);
+                    }
+                }
+
+                findDown.all(
+                    filterFactory(ignore, given),
+                    filePaths,
+                    processFactory(files, allow)
+                );
+            });
+        });
+    }, bail);
+}
