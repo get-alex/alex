@@ -2,6 +2,11 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+3.0.0 / 2016-05-18
+==================
+
+*   Update retext-equality, retext-profanity ([`d4169df`](https://github.com/wooorm/alex/commit/d4169df))
+
 2.0.1 / 2016-02-09
 ==================
 
