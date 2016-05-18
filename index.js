@@ -21,8 +21,9 @@ function decorateMessage(message) {
     let value = message.reason;
     let index = value.indexOf('use');
 
-    return value.replace(/`(.+?)`/g, function ($0, $1, position) {
-        let name = position > index ? 'ok' : 'nok';
+    return value.replace(/[“`](.+?)[`”]/g, function ($0, $1, position) {
+        let name = index !== -1 && position > index ? 'ok' : 'nok';
+        console.log('n: ', $1, name, position, index);
         return '<code class="label label-' + name + '">' + $1 + '</code>';
     });
 }
