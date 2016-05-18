@@ -31,11 +31,15 @@
     "language",
     "english"
   ],
-  "author": {
-    "name": "Titus Wormer",
-    "email": "tituswormer@gmail.com",
-    "url": "http://wooorm.com"
-  },
+  "author": "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)",
+  "contributors": [
+    "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)",
+    "Sindre Sorhus <sindresorhus@gmail.com>",
+    "Shinnosuke Watanabe <snnskwtnb@gmail.com>",
+    "Conor Hastings <conor@socialtables.com>",
+    "Alex Gleason <alex@alexgleason.me>",
+    "Ansel Halliburton <github@anseljh.com>"
+  ],
   "bin": "cli.js",
   "engines": {
     "node": ">=0.10.0"
