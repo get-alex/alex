@@ -22,8 +22,12 @@ function decorateMessage(message) {
     let index = value.indexOf('use');
 
     return value.replace(/[“`](.+?)[`”]/g, function ($0, $1, position) {
-        let name = index !== -1 && position > index ? 'ok' : 'nok';
-        console.log('n: ', $1, name, position, index);
+        let name = position > index ? 'ok' : 'nok';
+
+        if (message.source === 'retext-profanities') {
+            name = 'nok';
+        }
+
         return '<code class="label label-' + name + '">' + $1 + '</code>';
     });
 }
