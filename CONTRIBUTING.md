@@ -3,7 +3,7 @@
 Have a feature request? Found a bug? Awesome, and in the latter case, sorry!
 
 Is this your first time contributing to open-source? Cool! Don’t be alarmed,
-don’t hold back.
+and don’t hold back.
 
 Issues can be opened on [GitHub Issues](https://github.com/wooorm/alex/issues).
 

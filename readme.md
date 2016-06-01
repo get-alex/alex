@@ -12,7 +12,7 @@
 
 Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, race related, religion inconsiderate, or other
-**unequal** phrasing.
+**unequal** phrasing in text.
 
 For example, when `We’ve confirmed his identity` is given to **alex**,
 it will warn you and suggest using `their` instead of `his`.
@@ -23,7 +23,7 @@ Give **alex** a spin on the [Online demo »][demo].
 
 ## Why
 
-*   [x] To get better at considerate writing;
+*   [x] Helps to get better at considerate writing;
 *   [x] Catches many possible offenses;
 *   [x] Suggests helpful alternatives;
 *   [x] Reads plain-text and markdown as input;
@@ -83,7 +83,7 @@ The boogeyman wrote all changes to the **master server**. Thus, the slaves
 were read-only copies of master. But not to worry, he was a cripple.
 ```
 
-Then, run **alex** on `example.md`:
+Now, run **alex** on `example.md`:
 
 ```sh
 $ alex example.md
@@ -114,7 +114,7 @@ See `$ alex --help` for more information.
 $ npm install alex --save
 ```
 
-**alex** is also as an AMD, CommonJS, and globals module,
+**alex** is also available as an AMD, CommonJS, and globals module,
 [uncompressed and compressed][releases].
 
 ### `alex(value[, allow])`
