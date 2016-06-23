@@ -85,12 +85,13 @@ notifier({
 
 var cli = meow({
     'help': [
-        'Usage:  alex [<file> | <dir> ...] [-w, --why] [-t, --text]',
+        'Usage:  alex [<file> | <dir> ...] [-q, --quiet] [-w, --why] ' +
+            '[-t, --text]',
         '',
         'Options:',
         '',
-        '  -w, --why    output more info regarding why things might be ' +
-        'offensive',
+        '  -w, --why    output sources (when available)',
+        '  -q, --quiet  output only warnings and errors',
         '  -t, --text   treat input as plain-text (not markdown)',
         '',
         'When no input files are given, searches for markdown and text',
@@ -110,6 +111,7 @@ var cli = meow({
 var exit = 0;
 var result = [];
 var why = Boolean(cli.flags.w || cli.flags.why);
+var quiet = Boolean(cli.flags.q || cli.flags.quiet);
 var fn = (cli.flags.t || cli.flags.text) ? 'text' : 'markdown';
 var globs = cli.input.length ? cli.input : [
     '{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}'
@@ -120,9 +122,14 @@ var globs = cli.input.length ? cli.input : [
  */
 
 process.on('exit', function () {
-    console.log(format(result, {
-        'verbose': why
-    }));
+    var report = format(result, {
+        'verbose': why,
+        'quiet': quiet
+    });
+
+    if (report) {
+        console.log(report);
+    }
 
     process.exit(exit);
 });

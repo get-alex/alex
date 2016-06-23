@@ -94,7 +94,7 @@
     "build": "npm run build-md && npm run build-bundle && npm run build-mangle",
     "lint-api": "eslint .",
     "lint-style": "jscs --reporter inline .",
-    "lint-text": "./cli.js . --why",
+    "lint-text": "./cli.js . --why --quiet",
     "lint": "npm run lint-api && npm run lint-style && npm run lint-text",
     "test-api": "ava",
     "test-coverage": "nyc ava",
