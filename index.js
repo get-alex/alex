@@ -17,8 +17,8 @@
  */
 
 var VFile = require('vfile');
-var remark = require('remark');
-var retext = require('retext');
+var unified = require('unified');
+var markdown = require('remark-parse');
 var control = require('remark-message-control');
 var english = require('retext-english');
 var equality = require('retext-equality');
@@ -30,7 +30,7 @@ var sort = require('vfile-sort');
  * Processor.
  */
 
-var text = retext().use(english).use(equality).use(profanities);
+var text = unified().use(english).use(equality).use(profanities);
 
 /**
  * alex’s core.
@@ -71,14 +71,18 @@ function core(value, processor) {
  * @return {VFile} - Result.
  */
 function alex(value, allow) {
-    return core(value, remark().use(remark2retext, text).use(control, {
-        'name': 'alex',
-        'disable': allow,
-        'source': [
-            'retext-equality',
-            'retext-profanities'
-        ]
-    }));
+    return core(value, unified()
+        .use(markdown)
+        .use(remark2retext, text)
+        .use(control, {
+            'name': 'alex',
+            'disable': allow,
+            'source': [
+                'retext-equality',
+                'retext-profanities'
+            ]
+        })
+    );
 }
 
 /**
