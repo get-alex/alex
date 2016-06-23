@@ -41,9 +41,9 @@ var text = retext().use(english).use(equality).use(profanities);
  */
 function core(value, processor) {
     var file = new VFile(value);
+    var tree = processor.parse(file);
 
-    processor.parse(file);
-    processor.run(file);
+    processor.run(tree, file);
 
     sort(file);
 
