@@ -2,6 +2,12 @@
 
 <!--lint disable no-multiple-toplevel-headings-->
 
+3.1.0 / 2016-06-23
+==================
+
+*   Add support for `-q, --quiet` ([`7d0b961`](https://github.com/wooorm/alex/commit/7d0b961))
+*   Update docs ([`e94f747`](https://github.com/wooorm/alex/commit/e94f747))
+
 3.0.0 / 2016-05-18
 ==================
 
