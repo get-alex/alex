@@ -54,7 +54,7 @@
     "bail": "^1.0.0",
     "get-stdin": "^5.0.0",
     "glob": "^7.0.0",
-    "globby": "^5.0.0",
+    "globby": "^6.0.0",
     "meow": "^3.3.0",
     "minimatch": "^3.0.0",
     "remark-message-control": "^2.0.0",
@@ -69,13 +69,13 @@
     "vfile": "^1.1.0",
     "vfile-find-down": "^1.0.0",
     "vfile-find-up": "^1.0.0",
-    "vfile-reporter": "^1.2.0",
+    "vfile-reporter": "^2.0.1",
     "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
     "ava": "^0.15.0",
     "browserify": "^13.0.0",
-    "eslint": "^2.0.0",
+    "eslint": "^3.1.1",
     "esmangle": "^1.0.1",
     "jscs": "^3.0.0",
     "jscs-jsdoc": "^2.0.0",
@@ -85,7 +85,7 @@
     "remark-lint": "^4.0.0",
     "remark-toc": "^3.0.0",
     "remark-validate-links": "^4.0.0",
-    "nyc": "^6.0.0"
+    "nyc": "^7.0.0"
   },
   "scripts": {
     "build-md": "remark . --quiet --frail",
