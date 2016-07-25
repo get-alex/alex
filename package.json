@@ -85,7 +85,7 @@
     "remark-lint": "^4.0.0",
     "remark-toc": "^3.0.0",
     "remark-validate-links": "^4.0.0",
-    "nyc": "^6.0.0"
+    "nyc": "^7.1.0"
   },
   "scripts": {
     "build-md": "remark . --quiet --frail",
