@@ -75,7 +75,7 @@
   "devDependencies": {
     "ava": "^0.15.0",
     "browserify": "^13.0.0",
-    "eslint": "^2.0.0",
+    "eslint": "^3.2.0",
     "esmangle": "^1.0.1",
     "jscs": "^3.0.0",
     "jscs-jsdoc": "^2.0.0",
