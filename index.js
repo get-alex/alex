@@ -10,12 +10,7 @@
 
 'use strict';
 
-/* eslint-env commonjs */
-
-/*
- * Dependencies.
- */
-
+/* Dependencies. */
 var VFile = require('vfile');
 var unified = require('unified');
 var markdown = require('remark-parse');
@@ -26,10 +21,12 @@ var profanities = require('retext-profanities');
 var remark2retext = require('remark-retext');
 var sort = require('vfile-sort');
 
-/*
- * Processor.
- */
+/* Expose. */
+module.exports = alex;
+alex.text = noMarkdown;
+alex.markdown = alex;
 
+/* Processor. */
 var text = unified().use(english).use(equality).use(profanities);
 
 /**
@@ -40,14 +37,14 @@ var text = unified().use(english).use(equality).use(profanities);
  * @return {VFile} - Result.
  */
 function core(value, processor) {
-    var file = new VFile(value);
-    var tree = processor.parse(file);
+  var file = new VFile(value);
+  var tree = processor.parse(file);
 
-    processor.run(tree, file);
+  processor.run(tree, file);
 
-    sort(file);
+  sort(file);
 
-    return file;
+  return file;
 }
 
 /**
@@ -71,18 +68,18 @@ function core(value, processor) {
  * @return {VFile} - Result.
  */
 function alex(value, allow) {
-    return core(value, unified()
-        .use(markdown)
-        .use(remark2retext, text)
-        .use(control, {
-            'name': 'alex',
-            'disable': allow,
-            'source': [
-                'retext-equality',
-                'retext-profanities'
-            ]
-        })
-    );
+  return core(value, unified()
+    .use(markdown)
+    .use(remark2retext, text)
+    .use(control, {
+      name: 'alex',
+      disable: allow,
+      source: [
+        'retext-equality',
+        'retext-profanities'
+      ]
+    })
+  );
 }
 
 /**
@@ -92,14 +89,5 @@ function alex(value, allow) {
  * @return {VFile} - Result.
  */
 function noMarkdown(value) {
-    return core(value, text);
+  return core(value, text);
 }
-
-/*
- * Expose.
- */
-
-alex.text = noMarkdown;
-alex.markdown = alex;
-
-module.exports = alex;

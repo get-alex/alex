@@ -40,36 +40,23 @@ $ npm install alex --global
 ## Table of Contents
 
 *   [Command Line](#command-line)
-
 *   [API](#api)
-
     *   [alex(value\[, allow\])](#alexvalue-allow)
     *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
     *   [alex.text(value)](#alextextvalue)
-
 *   [Integrations](#integrations)
-
 *   [Support](#support)
-
 *   [Ignoring files](#ignoring-files)
-
 *   [.alexignore](#alexignore)
-
 *   [Ignoring messages](#ignoring-messages)
-
     *   [.alexrc](#alexrc)
     *   [package.json](#packagejson)
     *   [Control](#control)
-
 *   [Workflow](#workflow)
-
 *   [FAQ](#faq)
-
     *   [Why is this named alex?](#why-is-this-named-alex)
     *   [Alex didn’t check ‘X’!](#alex-didnt-check-x)
-
 *   [Contributing](#contributing)
-
 *   [License](#license)
 
 ## Command Line
@@ -92,8 +79,8 @@ $ alex example.md
 Yields:
 
 ```txt
-<stdin>
-   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
+example.md
+  1:5-1:14   warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
   1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave
   2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she
   2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple
@@ -121,7 +108,7 @@ $ npm install alex --save
 
 ### `alex.markdown(value[, allow])`
 
-**Example**:
+###### Example
 
 ```js
 alex('We’ve confirmed his identity.').messages;
@@ -140,15 +127,14 @@ alex('We’ve confirmed his identity.').messages;
  */
 ```
 
-**Parameters**:
+###### Parameters
 
-*   `value` ([`VFile`][vfile] or `string`) —
-    Markdown or plain-text;
+*   `value` ([`VFile`][vfile] or `string`)
+    — Markdown or plain-text;
+*   `allow` (`Array.<string>`, optional)
+    — List of allowed rules.
 
-*   `allow` (`Array.<string>`, optional) —
-    List of allowed rules.
-
-**Returns**:
+###### Returns
 
 [`VFile`][vfile]. You’ll probably be interested in its
 [`messages`][vfile-message] property, as demonstrated in the example
@@ -159,7 +145,7 @@ above, as it holds the possible violations.
 Works just like [`alex()`][alex-api], but does not parse as markdown
 (thus things like code are not ignored)
 
-**Example**:
+###### Example
 
 ```js
 alex('The `boogeyman`.').messages; // []
@@ -194,16 +180,12 @@ alex.text('The `boogeyman`.').messages;
 
 *   Gendered work-titles, for example warning about `garbageman` and suggesting
     `garbage collector` instead;
-
 *   Gendered proverbs, such as warning about `like a man` and suggesting
     `bravely` instead, or `ladylike` and suggesting `courteous`;
-
 *   Blunt phrases, such as warning about `cripple` and suggesting
     `person with a limp` instead;
-
 *   Intolerant phrasing, such as warning about using `master` and `slave`
     together, and suggesting `primary` and `replica` instead;
-
 *   Profanities, the least of which being `butt`.
 
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the
