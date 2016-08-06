@@ -73,7 +73,7 @@
     "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
-    "ava": "^0.15.0",
+    "ava": "^0.16.0",
     "browserify": "^13.0.0",
     "esmangle": "^1.0.1",
     "jscs": "^3.0.0",
