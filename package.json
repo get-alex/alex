@@ -64,7 +64,7 @@
     "retext-equality": "^2.3.0",
     "retext-profanities": "^3.0.0",
     "to-vfile": "^1.0.0",
-    "unified": "^4.1.2",
+    "unified": "^5.0.0",
     "update-notifier": "^1.0.0",
     "vfile": "^1.1.0",
     "vfile-find-down": "^1.0.0",
