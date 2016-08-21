@@ -66,7 +66,7 @@
     "to-vfile": "^1.0.0",
     "unified": "^4.1.2",
     "update-notifier": "^1.0.0",
-    "vfile": "^1.1.0",
+    "vfile": "^2.0.0",
     "vfile-find-down": "^1.0.0",
     "vfile-find-up": "^1.0.0",
     "vfile-reporter": "^2.0.1",
