@@ -69,7 +69,7 @@
     "vfile": "^1.1.0",
     "vfile-find-down": "^1.0.0",
     "vfile-find-up": "^1.0.0",
-    "vfile-reporter": "^2.0.1",
+    "vfile-reporter": "^3.0.0",
     "vfile-sort": "^1.0.0"
   },
   "devDependencies": {
