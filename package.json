@@ -82,7 +82,7 @@
     "remark-cli": "^1.0.0",
     "remark-comment-config": "^4.0.0",
     "remark-github": "^5.0.0",
-    "remark-lint": "^4.0.0",
+    "remark-lint": "^5.0.0",
     "remark-toc": "^3.0.0",
     "remark-validate-links": "^4.0.0",
     "xo": "^0.16.0"
