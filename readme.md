@@ -1,4 +1,4 @@
-<!--lint disable no-html first-heading-level maximum-line-length-->
+<!--lint disable no-html first-heading-level maximum-line-length no-shell-dollars-->
 
 <h1 align="center">
   <img width="400" src="https://rawgit.com/wooorm/alex/master/media/logo.svg" alt="alex">
@@ -55,7 +55,7 @@ $ npm install alex --global
 *   [Workflow](#workflow)
 *   [FAQ](#faq)
     *   [Why is this named alex?](#why-is-this-named-alex)
-    *   [Alex didn’t check ‘X’!](#alex-didnt-check-x)
+    *   [Alex didn’t check “X”!](#alex-didnt-check-x)
 *   [Contributing](#contributing)
 *   [License](#license)
 
@@ -136,7 +136,7 @@ alex('We’ve confirmed his identity.').messages;
 
 ###### Returns
 
-[`VFile`][vfile]. You’ll probably be interested in its
+[`VFile`][vfile].  You’ll probably be interested in its
 [`messages`][vfile-message] property, as demonstrated in the example
 above, as it holds the possible violations.
 
@@ -200,9 +200,9 @@ To prevent files from being found by **alex**, add an
 
 ## `.alexignore`
 
-The **alex** CLI will sometimes [search for files][ignoring-files]. To prevent
+The **alex** CLI will sometimes [search for files][ignoring-files].  To prevent
 files from being found, add a file named `.alexignore` in one of the
-directories above the current working directory. The format of these files is
+directories above the current working directory.  The format of these files is
 similar to [`.eslintignore`][eslintignore] (which is in turn similar to
 `.gitignore` files).
 
@@ -348,12 +348,12 @@ as follows:
 
 ### Why is this named alex?
 
-It’s a nice androgynous/unisex name, it was free on npm, I like it! :smile:
+It’s a nice androgynous/unisex name, it was free on npm, I like it!  :smile:
 
-### Alex didn’t check ‘X’!
+### Alex didn’t check “X”!
 
 See
-[CONTRIBUTING.md][contributing] on how to get ‘X’ checked by alex.
+[CONTRIBUTING.md][contributing] on how to get “X” checked by alex.
 
 <!--lint enable no-heading-punctuation-->
 
