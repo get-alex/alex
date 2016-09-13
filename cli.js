@@ -47,6 +47,7 @@ var cli = meow({
     '  -w, --why    output sources (when available)',
     '  -q, --quiet  output only warnings and errors',
     '  -t, --text   treat input as plain-text (not markdown)',
+    '  -d, --diff   ignore unchanged lines (affects Travis only)',
     '',
     'When no input files are given, searches for markdown and text',
     'files in the current directory, `doc`, and `docs`.',
@@ -61,6 +62,7 @@ var cli = meow({
     v: 'version',
     h: 'help',
     t: 'text',
+    d: 'diff',
     q: 'quiet',
     w: 'why'
   }
@@ -82,6 +84,12 @@ if (!cli.flags.text) {
 }
 
 var filter = require.resolve('./filter.js');
+var plugins = [filter];
+
+/* istanbul ignore if - hard to check. */
+if (cli.flags.diff) {
+  plugins.push(require.resolve('unified-diff'));
+}
 
 engine({
   processor: processor,

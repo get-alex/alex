@@ -57,6 +57,7 @@
     "retext-equality": "^2.3.0",
     "retext-profanities": "^3.0.0",
     "unified": "^5.0.0",
+    "unified-diff": "^1.0.0",
     "unified-engine": "^2.0.0",
     "update-notifier": "^1.0.0",
     "vfile": "^2.0.0",
@@ -78,9 +79,7 @@
     "build-bundle": "browserify index.js -s alex > alex.js",
     "build-mangle": "esmangle alex.js > alex.min.js",
     "build": "npm run build-md && npm run build-bundle && npm run build-mangle",
-    "lint-api": "xo",
-    "lint-text": "./cli.js readme.md --why --quiet",
-    "lint": "npm run lint-api && npm run lint-text",
+    "lint": "xo",
     "test-api": "ava",
     "test-coverage": "nyc --reporter lcov ava",
     "test": "npm run build && npm run lint && npm run test-coverage"

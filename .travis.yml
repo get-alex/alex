@@ -3,7 +3,10 @@ node_js:
 - '0.11'
 - '5.0'
 - '6.0'
-after_success: bash <(curl -s https://codecov.io/bash)
+after_script: bash <(curl -s https://codecov.io/bash)
+script:
+- npm test
+- ./cli.js readme.md --why --quiet
 deploy:
   - provider: npm
     email: tituswormer@gmail.com

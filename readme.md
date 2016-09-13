@@ -65,7 +65,7 @@ $ npm install alex --global
 
 Let’s say `example.md` looks as follows:
 
-```md
+```markdown
 The boogeyman wrote all changes to the **master server**. Thus, the slaves
 were read-only copies of master. But not to worry, he was a cripple.
 ```
@@ -250,7 +250,7 @@ detected and used when processing.
 
 Sometimes, **alex** makes mistakes:
 
-```md
+```markdown
 A window will pop up.
 ```
 
@@ -265,7 +265,7 @@ readme.md
 
 **alex** can silence message through HTML comments in markdown:
 
-```md
+```markdown
 <!--alex ignore dad-mom-->
 
 A window will **not** pop up.
@@ -282,7 +282,7 @@ case, the paragraph).
 It’s also possible to turn off messages after a comment by using
 `disable`, and, turn those messages back on using `enable`:
 
-```md
+```markdown
 <!--alex disable dad-mom-->
 
 A window will **not** pop up.
@@ -317,8 +317,11 @@ Multiple messages can be controlled in one go:
 
 ## Workflow
 
-The recommended workflow is to add **alex** locally and to run it with your
-tests.
+The recommended workflow is to add **alex** to `package.json`
+and to run it with your tests in Travis.
+
+You can opt to ignore warnings through [alexrc][] files and
+[control comments][control].  For example, with a `package.json`.
 
 A `package.json` file with [npm scripts][npm-scripts],
 and additionally using [AVA][] for unit tests, could look
@@ -337,6 +340,21 @@ as follows:
   }
 }
 ```
+
+Alternatively, if you’re using Travis to test, set up something
+like the following in your `.travis.yml`:
+
+```diff
+ script:
+ - npm test
++- alex --diff
+```
+
+Make sure to still install alex though!
+
+If the `--diff` flag is used, and Travis is detected, unchanged
+lines are ignored.  Using this workflow, you can merge PRs
+with warnings, and not be bothered by them afterwards.
 
 ## FAQ
 
@@ -390,6 +408,10 @@ See [CONTRIBUTING.md][contributing].
 [literals]: https://github.com/wooorm/nlcst-is-literal#isliteralparent-index
 
 [alexignore]: #alexignore
+
+[alexrc]: #alexrc
+
+[control]: #control
 
 [ignoring-files]: #ignoring-files
 
