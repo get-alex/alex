@@ -2,6 +2,18 @@
 
 <!--lint disable no-multiple-toplevel-headings heading-style-->
 
+4.0.0 / 2016-09-13
+==================
+
+*   [`17a0447`](https://github.com/wooorm/alex/commit/17a0447)
+    Add `noBinary` option in `.alexrc` files
+*   [`ed0e568`](https://github.com/wooorm/alex/commit/ed0e568)
+    Add `--diff` to check added lines only
+*   [`4ea6f67`](https://github.com/wooorm/alex/commit/4ea6f67)
+    Update CLI internals
+*   [`8d7f089`](https://github.com/wooorm/alex/commit/8d7f089)
+    Update dependencies
+
 3.1.0 / 2016-06-23
 ==================
 
