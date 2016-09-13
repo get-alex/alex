@@ -3,10 +3,7 @@
   "version": "3.1.0",
   "description": "Catch insensitive, inconsiderate writing",
   "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/wooorm/alex.git"
-  },
+  "repository": "https://github.com/wooorm/alex",
   "bugs": "https://github.com/wooorm/alex/issues",
   "homepage": "http://alexjs.com",
   "alex": {
@@ -48,27 +45,21 @@
   },
   "files": [
     "index.js",
+    "filter.js",
     "cli.js"
   ],
   "dependencies": {
-    "bail": "^1.0.0",
-    "get-stdin": "^5.0.0",
-    "glob": "^7.0.0",
-    "globby": "^6.0.0",
     "meow": "^3.3.0",
-    "minimatch": "^3.0.0",
     "remark-message-control": "^2.0.0",
     "remark-parse": "^2.0.0",
     "remark-retext": "^2.0.0",
     "retext-english": "^2.0.0",
     "retext-equality": "^2.3.0",
     "retext-profanities": "^3.0.0",
-    "to-vfile": "^2.0.0",
     "unified": "^5.0.0",
+    "unified-engine": "^2.0.0",
     "update-notifier": "^1.0.0",
     "vfile": "^2.0.0",
-    "vfile-find-down": "^2.0.0",
-    "vfile-find-up": "^2.0.0",
     "vfile-reporter": "^3.0.0",
     "vfile-sort": "^1.0.0"
   },
@@ -76,6 +67,7 @@
     "ava": "^0.16.0",
     "browserify": "^13.0.0",
     "esmangle": "^1.0.1",
+    "execa": "^0.4.0",
     "nyc": "^8.0.0",
     "remark-cli": "^2.0.0",
     "remark-preset-wooorm": "^1.0.0",
@@ -87,11 +79,17 @@
     "build-mangle": "esmangle alex.js > alex.min.js",
     "build": "npm run build-md && npm run build-bundle && npm run build-mangle",
     "lint-api": "xo",
-    "lint-text": "./cli.js . --why --quiet",
+    "lint-text": "./cli.js readme.md --why --quiet",
     "lint": "npm run lint-api && npm run lint-text",
     "test-api": "ava",
-    "test-coverage": "nyc ava",
+    "test-coverage": "nyc --reporter lcov ava",
     "test": "npm run build && npm run lint && npm run test-coverage"
+  },
+  "nyc": {
+    "check-coverage": true,
+    "lines": 100,
+    "functions": 100,
+    "branches": 100
   },
   "xo": {
     "space": true,

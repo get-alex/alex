@@ -2,5 +2,6 @@
 *.log
 node_modules/
 .nyc_output/
+coverage/
 alex.js
 alex.min.js

@@ -14,12 +14,12 @@
 var VFile = require('vfile');
 var unified = require('unified');
 var markdown = require('remark-parse');
-var control = require('remark-message-control');
 var english = require('retext-english');
 var equality = require('retext-equality');
 var profanities = require('retext-profanities');
 var remark2retext = require('remark-retext');
 var sort = require('vfile-sort');
+var filter = require('./filter');
 
 /* Expose. */
 module.exports = alex;
@@ -71,14 +71,7 @@ function alex(value, allow) {
   return core(value, unified()
     .use(markdown)
     .use(remark2retext, text)
-    .use(control, {
-      name: 'alex',
-      disable: allow,
-      source: [
-        'retext-equality',
-        'retext-profanities'
-      ]
-    })
+    .use(filter, {allow: allow})
   );
 }
 

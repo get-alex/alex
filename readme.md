@@ -24,7 +24,7 @@ Give **alex** a spin on the [Online demo »][demo].
 ## Why
 
 *   [x] Helps to get better at considerate writing;
-*   [x] Catches many possible offenses;
+*   [x] Catches many possible offences;
 *   [x] Suggests helpful alternatives;
 *   [x] Reads plain-text and markdown as input;
 *   [x] Stylish.
@@ -213,11 +213,7 @@ The ignore file for [this project itself][.alexignore]
 looks as follows:
 
 ```txt
-# Both `node_modules` and `bower_components` are
-# ignored by default:
-# node_modules/
-# bower_components/
-
+# `node_modules` is ignored by default.
 example.md
 ```
 

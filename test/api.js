@@ -2,7 +2,7 @@
  * @author Titus Wormer
  * @copyright 2015 Titus Wormer
  * @license MIT
- * @module alex:test
+ * @module alex:test:api
  * @fileoverview Test suite for alex.
  */
 
@@ -10,7 +10,7 @@
 
 /* Dependencies. */
 var test = require('ava');
-var alex = require('./');
+var alex = require('..');
 
 /* Tests. Note that these are small because alex is in fact
  * just a collection of well-tested modules.

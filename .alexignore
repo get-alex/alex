@@ -1,6 +1,2 @@
-# Both `node_modules` and `bower_components` are
-# ignored by default:
-# node_modules/
-# bower_components/
-
+# `node_modules` is ignored by default.
 example.md
