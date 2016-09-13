@@ -17,8 +17,6 @@ var engine = require('unified-engine');
 var unified = require('unified');
 var markdown = require('remark-parse');
 var english = require('retext-english');
-var equality = require('retext-equality');
-var profanities = require('retext-profanities');
 var remark2retext = require('remark-retext');
 var report = require('vfile-reporter');
 var pack = require('./package');
@@ -76,15 +74,24 @@ if (cli.input.length) {
   globs = cli.input;
 }
 
-var plain = unified().use(english).use(equality).use(profanities);
-var processor = plain;
+var processor = unified();
 
-if (!cli.flags.text) {
-  processor = unified().use(markdown).use(remark2retext, plain);
+if (cli.flags.text) {
+  processor.use(english);
+} else {
+  processor
+    .use(markdown)
+    .use(remark2retext, english.Parser);
 }
 
 var filter = require.resolve('./filter.js');
-var plugins = [filter];
+var equality = require.resolve('retext-equality');
+
+var plugins = [
+  equality,
+  require.resolve('retext-profanities'),
+  filter
+];
 
 /* istanbul ignore if - hard to check. */
 if (cli.flags.diff) {
@@ -125,7 +132,13 @@ function transform(raw) {
 
     current = current.plugins && current.plugins[filter] && current.plugins[filter].allow;
 
-    plugins[filter] = {allow: [].concat(allow, current || [])};
+    if (allow.length) {
+      plugins[filter] = {allow: [].concat(allow, current || [])};
+    }
+
+    if ('noBinary' in raw) {
+      plugins[equality] = {noBinary: raw.noBinary};
+    }
 
     return {plugins: plugins};
   };

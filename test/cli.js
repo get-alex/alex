@@ -86,3 +86,30 @@ test('quiet on nok files', function (t) {
     );
   });
 });
+
+test('binary (default)', function (t) {
+  var rp = path.join('fixtures', 'binary', 'two.md');
+  var fp = path.join(__dirname, rp);
+
+  return execa.stderr('../cli.js', [fp]).then(function (result) {
+    t.is(result, rp + ': no issues found');
+  });
+});
+
+test('non-binary (optional)', function (t) {
+  var rp = path.join('fixtures', 'non-binary', 'two.md');
+  var fp = path.join(__dirname, rp);
+
+  return execa.stderr('../cli.js', [fp]).catch(function (err) {
+    var expected = [
+      rp,
+      '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
+      '  1:7-1:10  warning  `she` may be insensitive, use `they`, `it` instead  he-she  retext-equality',
+      '',
+      '⚠ 2 warnings',
+      ''
+    ].join('\n');
+
+    t.is(err.stderr, expected);
+  });
+});

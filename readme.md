@@ -246,6 +246,10 @@ example.md
 All `allow` fields in all `package.json` and `.alexrc` files are
 detected and used when processing.
 
+Next to `allow`, `noBinary` can also be passed.  Setting it to true
+counts `he and she`, `garbageman or garbagewoman` and similar pairs
+as errors, whereas the default (`false`), treats it as OK.
+
 ### Control
 
 Sometimes, **alex** makes mistakes:
