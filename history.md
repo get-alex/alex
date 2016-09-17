@@ -2,6 +2,11 @@
 
 <!--lint disable no-multiple-toplevel-headings heading-style-->
 
+4.0.1 / 2016-09-17
+==================
+
+*   Fix bug where part of the CLI didn’t work :( ([`12f5b63`](https://github.com/wooorm/alex/commit/12f5b63))
+
 4.0.0 / 2016-09-13
 ==================
 
