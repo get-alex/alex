@@ -69,7 +69,7 @@ var cli = meow({
 /* Set-up. */
 var globs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}'];
 
-/* istanbul ignore next - Bug in tests. Something hangs, at least. */
+/* istanbul ignore else - Bug in tests. Something hangs, at least. */
 if (cli.input.length) {
   globs = cli.input;
 }
@@ -109,7 +109,7 @@ engine({
   rcName: '.alexrc',
   packageField: 'alex',
   ignoreName: '.alexignore',
-  plugins: [filter],
+  plugins: plugins,
   frail: true
 }, function (err, code, result) {
   var out = report(err || result.files, {
