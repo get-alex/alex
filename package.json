@@ -62,7 +62,7 @@
     "update-notifier": "^1.0.0",
     "vfile": "^2.0.0",
     "vfile-reporter": "^3.0.0",
-    "vfile-sort": "^1.0.0"
+    "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
     "ava": "^0.16.0",
