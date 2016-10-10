@@ -188,6 +188,9 @@ alex.text('The `boogeyman`.').messages;
     together, and suggesting `primary` and `replica` instead;
 *   Profanities, the least of which being `butt`.
 
+See [**retext-equality**][equality] and [**retext-profanities**][profanities]
+for all checked rules.
+
 **alex** ignores words meant literally, so `“he”`, `He — ...`, and [the
 like][literals] are not warned about
 
@@ -432,3 +435,7 @@ See [CONTRIBUTING.md][contributing].
 [license]: LICENSE
 
 [author]: http://wooorm.com
+
+[profanities]: https://github.com/wooorm/retext-profanities/blob/master/rules.md
+
+[equality]: https://github.com/wooorm/retext-equality/blob/master/rules.md
