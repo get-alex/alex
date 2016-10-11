@@ -70,7 +70,7 @@ var cli = meow({
 var globs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}'];
 
 /* istanbul ignore else - Bug in tests. Something hangs, at least. */
-if (cli.input.length) {
+if (cli.input.length !== 0) {
   globs = cli.input;
 }
 
@@ -132,7 +132,7 @@ function transform(raw) {
 
     current = current.plugins && current.plugins[filter] && current.plugins[filter].allow;
 
-    if (allow.length) {
+    if (allow.length !== 0) {
       plugins[filter] = {allow: [].concat(allow, current || [])};
     }
 

@@ -72,7 +72,7 @@
     "nyc": "^8.0.0",
     "remark-cli": "^2.0.0",
     "remark-preset-wooorm": "^1.0.0",
-    "xo": "^0.16.0"
+    "xo": "^0.17.0"
   },
   "scripts": {
     "build-md": "remark . --quiet --frail",
@@ -93,6 +93,7 @@
   "xo": {
     "space": true,
     "rules": {
+      "ava/prefer-async-await": "off",
       "max-lines": "off"
     },
     "ignores": [
