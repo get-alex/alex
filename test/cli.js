@@ -21,7 +21,7 @@ test('version', function (t) {
 
 test('help', function (t) {
   return execa.stdout('../cli.js', ['-h']).then(function (result) {
-    t.regex(result, /Usage: alex \[<glob> ...\] /);
+    t.regex(result, /Usage: alex \[<glob> ...] /);
   });
 });
 
