@@ -16,6 +16,8 @@ const $input = document.getElementsByTagName('textarea')[0];
 const $highlight = document.getElementById('highlight');
 const $issues = document.getElementById('issues');
 const $noIssues = document.getElementById('no-issues');
+const $coverSection = document.getElementById('cover-section');
+const $demoHeader = document.getElementById('demo-header');
 
 function decorateMessage(message) {
     let value = message.reason;
@@ -195,5 +197,37 @@ const start = debounce(onstart, 100, true);
     events.bind($input, name, start);
     events.bind($input, name, end);
 });
+
+/**
+ * Textarea can gain autofocus.
+ */
+let canAutofocus = true;
+
+/**
+ * Checks if user scrolled past the splash screen.
+ */
+function focus () {
+    if (!canAutofocus) {
+        return
+    };
+
+    const position = window.scrollY;
+    if (position >= $coverSection.clientHeight) {
+        const value = $input.value;
+        $input.focus();
+        $input.selectionStart = value.length;
+        $input.selectionEnd = value.length;
+    }
+}
+
+/**
+ * Disables autofocus if user clicked outside the textarea.
+ */
+function noFocus () {
+    canAutofocus = false;
+}
+
+events.bind(window, 'scroll', focus);
+events.bind($input, 'blur', noFocus);
 
 onchange();
