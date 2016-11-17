@@ -69,7 +69,7 @@
     "browserify": "^13.0.0",
     "esmangle": "^1.0.1",
     "execa": "^0.5.0",
-    "nyc": "^8.0.0",
+    "nyc": "^9.0.1",
     "remark-cli": "^2.0.0",
     "remark-preset-wooorm": "^1.0.0",
     "xo": "^0.17.0"
