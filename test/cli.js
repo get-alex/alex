@@ -14,31 +14,29 @@ var test = require('ava');
 var execa = require('execa');
 
 test('version', function (t) {
-  return execa.stdout('../cli.js', ['-v']).then(function (result) {
+  return execa.stdout('./cli.js', ['-v']).then(function (result) {
     t.is(result, require('../package').version);
   });
 });
 
 test('help', function (t) {
-  return execa.stdout('../cli.js', ['-h']).then(function (result) {
+  return execa.stdout('./cli.js', ['-h']).then(function (result) {
     t.regex(result, /Usage: alex \[<glob> ...] /);
   });
 });
 
 test('markdown by default', function (t) {
-  var rp = path.join('fixtures', 'one.md');
-  var fp = path.join(__dirname, rp);
+  var rp = path.join('test', 'fixtures', 'one.md');
 
-  return execa.stderr('../cli.js', [fp]).then(function (result) {
+  return execa.stderr('./cli.js', [rp]).then(function (result) {
     t.is(result, rp + ': no issues found');
   });
 });
 
 test('text optional', function (t) {
-  var rp = path.join('fixtures', 'one.md');
-  var fp = path.join(__dirname, rp);
+  var rp = path.join('test', 'fixtures', 'one.md');
 
-  return execa.stderr('../cli.js', [fp, '--text']).catch(function (err) {
+  return execa.stderr('./cli.js', [rp, '--text']).catch(function (err) {
     t.is(
       err.stderr,
       [
@@ -53,10 +51,9 @@ test('text optional', function (t) {
 });
 
 test('successful files', function (t) {
-  var rp = path.join('fixtures', 'ok.txt');
-  var fp = path.join(__dirname, rp);
+  var rp = path.join('test', 'fixtures', 'ok.txt');
 
-  return execa.stderr('../cli.js', [fp]).then(function (result) {
+  return execa.stderr('./cli.js', [rp]).then(function (result) {
     t.is(result, rp + ': no issues found');
   });
 });
@@ -64,16 +61,15 @@ test('successful files', function (t) {
 test('quiet on ok files', function (t) {
   var fp = path.join(__dirname, 'fixtures', 'ok.txt');
 
-  return execa.stderr('../cli.js', [fp, '-q']).then(function (result) {
+  return execa.stderr('./cli.js', [fp, '-q']).then(function (result) {
     t.is(result, '');
   });
 });
 
 test('quiet on nok files', function (t) {
-  var rp = path.join('fixtures', 'one.md');
-  var fp = path.join(__dirname, rp);
+  var rp = path.join('test', 'fixtures', 'one.md');
 
-  return execa.stderr('../cli.js', [fp, '--text']).catch(function (err) {
+  return execa.stderr('./cli.js', [rp, '--text']).catch(function (err) {
     t.is(
       err.stderr,
       [
@@ -88,19 +84,17 @@ test('quiet on nok files', function (t) {
 });
 
 test('binary (default)', function (t) {
-  var rp = path.join('fixtures', 'binary', 'two.md');
-  var fp = path.join(__dirname, rp);
+  var rp = path.join('test', 'fixtures', 'binary', 'two.md');
 
-  return execa.stderr('../cli.js', [fp]).then(function (result) {
+  return execa.stderr('./cli.js', [rp]).then(function (result) {
     t.is(result, rp + ': no issues found');
   });
 });
 
 test('non-binary (optional)', function (t) {
-  var rp = path.join('fixtures', 'non-binary', 'two.md');
-  var fp = path.join(__dirname, rp);
+  var rp = path.join('test', 'fixtures', 'non-binary', 'two.md');
 
-  return execa.stderr('../cli.js', [fp]).catch(function (err) {
+  return execa.stderr('./cli.js', [rp]).catch(function (err) {
     var expected = [
       rp,
       '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
