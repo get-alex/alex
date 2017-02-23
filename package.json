@@ -50,7 +50,7 @@
   ],
   "dependencies": {
     "meow": "^3.3.0",
-    "remark-message-control": "^2.0.0",
+    "remark-message-control": "^4.0.0",
     "remark-parse": "^2.0.0",
     "remark-retext": "^2.0.0",
     "retext-english": "^2.0.0",
