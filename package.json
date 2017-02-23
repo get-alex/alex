@@ -70,7 +70,7 @@
     "esmangle": "^1.0.1",
     "execa": "^0.6.0",
     "nyc": "^10.1.0",
-    "remark-cli": "^2.0.0",
+    "remark-cli": "^3.0.0",
     "remark-preset-wooorm": "^1.0.0",
     "xo": "^0.17.0"
   },
