@@ -56,7 +56,7 @@
     "retext-english": "^2.0.0",
     "retext-equality": "^2.3.0",
     "retext-profanities": "^3.0.0",
-    "unified": "^5.0.0",
+    "unified": "^6.1.1",
     "unified-diff": "^1.0.0",
     "unified-engine": "^2.0.0",
     "update-notifier": "^2.1.0",
