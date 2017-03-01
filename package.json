@@ -58,7 +58,7 @@
     "retext-profanities": "^3.0.0",
     "unified": "^5.0.0",
     "unified-diff": "^1.0.0",
-    "unified-engine": "^2.0.0",
+    "unified-engine": "^3.0.3",
     "update-notifier": "^2.1.0",
     "vfile": "^2.0.0",
     "vfile-reporter": "^3.0.0",
