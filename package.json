@@ -65,14 +65,14 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
-    "ava": "^0.18.1",
+    "ava": "^0.19.1",
     "browserify": "^14.0.0",
     "esmangle": "^1.0.1",
     "execa": "^0.6.0",
     "nyc": "^10.1.0",
     "remark-cli": "^3.0.0",
     "remark-preset-wooorm": "^2.0.0",
-    "xo": "^0.17.0"
+    "xo": "^0.18.1"
   },
   "scripts": {
     "build-md": "remark . -qfo",
@@ -92,9 +92,11 @@
   },
   "xo": {
     "space": true,
+    "esnext": false,
     "rules": {
       "ava/prefer-async-await": "off",
-      "max-lines": "off"
+      "max-lines": "off",
+      "capitalized-comments": "off"
     },
     "ignores": [
       "alex.js"
