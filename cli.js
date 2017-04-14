@@ -19,7 +19,11 @@ var markdown = require('remark-parse');
 var english = require('retext-english');
 var remark2retext = require('remark-retext');
 var report = require('vfile-reporter');
+var equality = require('retext-equality');
+var profanities = require('retext-profanities');
+var diff = require('unified-diff');
 var pack = require('./package');
+var filter = require('./filter');
 
 var extensions = [
   'txt',
@@ -74,33 +78,9 @@ if (cli.input.length !== 0) {
   globs = cli.input;
 }
 
-var processor = unified();
-
-if (cli.flags.text) {
-  processor.use(english);
-} else {
-  processor
-    .use(markdown)
-    .use(remark2retext, english.Parser);
-}
-
-var filter = require.resolve('./filter.js');
-var equality = require.resolve('retext-equality');
-
-var plugins = [
-  equality,
-  require.resolve('retext-profanities'),
-  filter
-];
-
-/* istanbul ignore if - hard to check. */
-if (cli.flags.diff) {
-  plugins.push(require.resolve('unified-diff'));
-}
-
 engine({
-  processor: processor,
-  globs: globs,
+  processor: unified(),
+  files: globs,
   extensions: extensions,
   configTransform: transform,
   output: false,
@@ -109,8 +89,8 @@ engine({
   rcName: '.alexrc',
   packageField: 'alex',
   ignoreName: '.alexignore',
-  plugins: plugins,
-  frail: true
+  frail: true,
+  defaultConfig: transform()
 }, function (err, code, result) {
   var out = report(err || result.files, {
     verbose: cli.flags.why,
@@ -124,22 +104,27 @@ engine({
   process.exit(code);
 });
 
-function transform(raw) {
-  var allow = raw.allow || /* istanbul ignore next */ [];
+function transform(options) {
+  var settings = options || {};
+  var plugins = [
+    english,
+    profanities,
+    [equality, {noBinary: settings.noBinary}]
+  ];
 
-  return function (current) {
-    var plugins = {};
+  if (!cli.flags.text) {
+    plugins = [
+      markdown,
+      [remark2retext, unified().use({plugins: plugins})]
+    ];
+  }
 
-    current = current.plugins && current.plugins[filter] && current.plugins[filter].allow;
+  plugins.push([filter, {allow: settings.allow}]);
 
-    if (allow.length !== 0) {
-      plugins[filter] = {allow: [].concat(allow, current || [])};
-    }
+  /* istanbul ignore if - hard to check. */
+  if (cli.flags.diff) {
+    plugins.push(diff);
+  }
 
-    if ('noBinary' in raw) {
-      plugins[equality] = {noBinary: raw.noBinary};
-    }
-
-    return {plugins: plugins};
-  };
+  return {plugins: plugins};
 }

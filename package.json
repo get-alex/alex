@@ -50,15 +50,15 @@
   ],
   "dependencies": {
     "meow": "^3.3.0",
-    "remark-message-control": "^2.0.0",
-    "remark-parse": "^2.0.0",
-    "remark-retext": "^2.0.0",
-    "retext-english": "^2.0.0",
-    "retext-equality": "^2.3.0",
-    "retext-profanities": "^3.0.0",
-    "unified": "^5.0.0",
+    "remark-message-control": "^4.0.0",
+    "remark-parse": "^3.0.0",
+    "remark-retext": "^3.0.0",
+    "retext-english": "^3.0.0",
+    "retext-equality": "^3.0.0",
+    "retext-profanities": "^4.0.0",
+    "unified": "^6.1.0",
     "unified-diff": "^1.0.0",
-    "unified-engine": "^2.0.0",
+    "unified-engine": "^3.1.0",
     "update-notifier": "^2.1.0",
     "vfile": "^2.0.0",
     "vfile-reporter": "^3.0.0",
@@ -66,16 +66,16 @@
   },
   "devDependencies": {
     "ava": "^0.18.1",
-    "browserify": "^13.0.0",
+    "browserify": "^14.0.0",
     "esmangle": "^1.0.1",
     "execa": "^0.6.0",
     "nyc": "^10.1.0",
-    "remark-cli": "^2.0.0",
-    "remark-preset-wooorm": "^1.0.0",
+    "remark-cli": "^3.0.0",
+    "remark-preset-wooorm": "^2.0.0",
     "xo": "^0.17.0"
   },
   "scripts": {
-    "build-md": "remark . --quiet --frail",
+    "build-md": "remark . -qfo",
     "build-bundle": "browserify index.js -s alex > alex.js",
     "build-mangle": "esmangle alex.js > alex.min.js",
     "build": "npm run build-md && npm run build-bundle && npm run build-mangle",
@@ -101,7 +101,6 @@
     ]
   },
   "remarkConfig": {
-    "output": true,
-    "presets": "wooorm"
+    "plugins": ["preset-wooorm"]
   }
 }

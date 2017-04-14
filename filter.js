@@ -4,9 +4,9 @@ var control = require('remark-message-control');
 
 module.exports = filter;
 
-function filter(proc, options) {
+function filter(options) {
   var settings = options || /* istanbul ignore next */ {};
-  proc.use(control, {
+  return control({
     name: 'alex',
     disable: settings.allow,
     source: ['retext-equality', 'retext-profanities']

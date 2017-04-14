@@ -40,7 +40,7 @@ function core(value, processor) {
   var file = new VFile(value);
   var tree = processor.parse(file);
 
-  processor.run(tree, file);
+  processor.runSync(tree, file);
 
   sort(file);
 
