@@ -61,7 +61,7 @@
   <body class="home">
     <section id="cover-section" class="section cover">
       <div class="cover-inner content">
-        <h1 class="title"><span class="title__inner">ALEX</span></h1>
+        <h1 class="title"><span class="title-inner">ALEX</span></h1>
         <p class="byline">Catch insensitive, inconsiderate writing</p>
       </div>
     </section>
@@ -107,7 +107,23 @@ Thus, the slaves were read-only copies of master. But not to worry, he was a cri
     </section>
     <section class="section content">
       <h2 id="cli">Command Line</h2>
-      <img alt="screen shot" src="https://raw.githubusercontent.com/wooorm/alex/master/screenshot.png?token=AA5pFuEdA4Blb1cSMK3Q_nS1aO-vsCWbks5V5dHkwA%3D%3D">
+
+      <figure class="terminal">
+        <figcaption>
+          <span class="chrome button close"></span>
+          <span class="chrome button minimize"></span>
+          <span class="chrome button fullscreen"></span>
+          <span class="chrome title">sh</span>
+        </figcaption>
+        <pre><span class="command">alex example.md</span>
+<span class="output"><span class="hl">example.md</span>
+   1:5-1:14  <span class="nok">warning</span>  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
+  1:42-1:48  <span class="nok">warning</span>  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave
+  2:52-2:54  <span class="nok">warning</span>  `he` may be insensitive, use `they`, `it` instead                          he-she
+  2:61-2:68  <span class="nok">warning</span>  `cripple` may be insensitive, use `person with a limp` instead             cripple
+
+<span class="nok">⚠ 4 warnings</span></span></pre>
+        </figure>
 
       <p>Install using <a href="https://docs.npmjs.com/cli/install">npm</a> (with <a href="https://nodejs.org/en/download/">Node.js</a>):</p>
 

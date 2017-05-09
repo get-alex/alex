@@ -53,7 +53,7 @@ body {
   margin-right: auto;
 }
 
-.title {
+.cover .title {
   font-size: 6em;
   font-weight: 100;
   letter-spacing: 0.05em;
@@ -62,7 +62,7 @@ body {
   margin-bottom: 1em;
 }
 
-.title__inner {
+.cover .title-inner {
   position: relative;
   padding-left: 0.025em;
   border-bottom: 0.03125em solid currentcolor;
@@ -218,6 +218,82 @@ a:focus {
 .code.operator {
   color: #ed6a43;
 }
+
+/* Terminal. */
+.terminal {
+  margin: 2em auto;
+  border-radius: 3px;
+  font-size: 14px;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.02);
+  color: #93a1a1;
+  background-color: #002b36;
+}
+
+.terminal figcaption {
+  display: -webkit-flex;
+  display: flex;
+  letter-spacing: 1px;
+  border-bottom: 1px solid;
+  padding-right: 66px;
+  padding-left: 12px;
+  border-bottom-color: #073642;
+  color: #657b83;
+}
+
+.terminal pre {
+  padding: 7px 12px;
+  margin: 0;
+  line-height: 1.6;
+  overflow: scroll;
+  background-color: transparent;
+  border-radius: 0;
+}
+
+.terminal .command::before,
+.terminal .input::before {
+  content: '$ ';
+  font-weight: bold;
+}
+
+.terminal .input {
+  font-weight: bold;
+}
+
+.terminal .nok {
+  color: hsl(45, 97%, 43%);
+}
+
+.terminal .chrome.button {
+  display: inline-block;
+  border-radius: 50%;
+  min-width: 12px;
+  height: 12px;
+  margin: 12px 6px;
+  margin-left: 0;
+}
+
+.terminal .close {
+  background-color: #dc322f;
+}
+
+.terminal .minimize {
+  background-color: #b58900;
+}
+
+.terminal .fullscreen {
+  background-color: #859900;
+}
+
+.chrome.title {
+  -webkit-flex: 1;
+  flex: 1;
+  text-align: center;
+  line-height: 36px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+
 
 @media screen and (max-width: 35em) {
   .input,
