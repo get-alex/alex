@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Alex - Catch insensitive, inconsiderate writing</title>
-    <link href="http://fonts.googleapis.com/css?family=Neuton%3A400%2C700%2C400italic%7CMontserrat%3A700" rel="stylesheet" type="text/css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="index.css">
     <meta name="theme-color" content="#8060e5">
@@ -61,144 +60,103 @@
   </head>
   <body class="home">
     <section id="cover-section" class="section cover">
-      <div class="cover-inner">
+      <div class="cover-inner content">
         <h1 class="title"><span class="title__inner">ALEX</span></h1>
         <p class="byline">Catch insensitive, inconsiderate writing</p>
       </div>
     </section>
     <section id="demo" class="section demo">
-      <div id="demo-header" class="report">
-        <div class="content">
-          <h2>Demo</h2>
-          <p>Take alex for a spin, start typing below. <a href="#contributing">Missing something? See Contributing</a>.</p>
-        </div>
+      <div id="demo-header" class="content">
+        <h2>Demo</h2>
+        <p>Take alex for a spin, start typing below. <a href="#contributing">Missing something? See Contributing</a>.</p>
       </div>
       <div class="input-container">
         <div class="highlight"><div id="highlight" class="highlight-inner"></div></div>
         <textarea class="input" rows="8">The boogeyman wrote all changes to the **master server**.
 Thus, the slaves were read-only copies of master. But not to worry, he was a cripple.</textarea>
       </div>
-      <div class="report">
-        <div class="content">
-          <ol id="issues" class="issues"></ol>
-          <div id="no-issues" class="no-issues"><code class="label label-ok">No issues!</code></div>
-        </div>
+      <div class="content">
+        <ol id="issues" class="issues"></ol>
+        <div id="no-issues" class="no-issues"><code class="label label-ok">No issues!</code></div>
       </div>
     </section>
-    <section class="section text">
+    <section class="section content">
       <h2 id="introduction">Introduction</h2>
-      <div class="content">
-        <p>Whether your own or someone else’s writing, <strong>alex</strong>
-        helps you find gender favouring, polarising, race related, religion
-        inconsiderate, or other <strong>unequal</strong> phrasing.</p>
+      <p>Whether your own or someone else’s writing, <strong>alex</strong>
+      helps you find gender favouring, polarising, race related, religion
+      inconsiderate, or other <strong>unequal</strong> phrasing.</p>
 
-        <p>For example, when <code>We’ve confirmed his identity</code> is given
-        to <strong>alex</strong>, it will warn and suggest using
-        <code class="label label-ok">their</code> instead of
-        <code class="label label-nok">his</code>.</p>
+      <p>For example, when <code>We’ve confirmed his identity</code> is given
+      to <strong>alex</strong>, it will warn and suggest using
+      <code class="label label-ok">their</code> instead of
+      <code class="label label-nok">his</code>.</p>
 
-        <p class="double">
-          <a href="https://github.com/wooorm/alex">GitHub »</a><br>
-          <a href="#demo">Online demo »</a>
-        </p>
+      <p>
+        <a href="https://github.com/wooorm/alex">GitHub »</a><br>
+        <a href="#demo">Online demo »</a>
+      </p>
 
-        <h3 class="double">Why</h3>
-        <ol class="checkbox-list">
-          <li><input type="checkbox" checked disabled> To get better at considerate writing;</li>
-          <li><input type="checkbox" checked disabled> Catches many possible offenses;</li>
-          <li><input type="checkbox" checked disabled> Suggests helpful alternatives;</li>
-          <li><input type="checkbox" checked disabled> Reads plain-text and markdown as input;</li>
-          <li><input type="checkbox" checked disabled> Stylish.</li>
-        </ol>
-      </div>
+      <h3>Why</h3>
+      <ol class="checkbox-list">
+        <li><input type="checkbox" checked disabled> To get better at considerate writing</li>
+        <li><input type="checkbox" checked disabled> Catches many possible offenses</li>
+        <li><input type="checkbox" checked disabled> Suggests helpful alternatives</li>
+        <li><input type="checkbox" checked disabled> Reads plain-text and markdown as input</li>
+        <li><input type="checkbox" checked disabled> Stylish</li>
+      </ol>
     </section>
-    <section class="section text">
+    <section class="section content">
       <h2 id="cli">Command Line</h2>
-      <div class="content">
-        <img alt="screen shot" src="https://raw.githubusercontent.com/wooorm/alex/master/screenshot.png?token=AA5pFuEdA4Blb1cSMK3Q_nS1aO-vsCWbks5V5dHkwA%3D%3D">
+      <img alt="screen shot" src="https://raw.githubusercontent.com/wooorm/alex/master/screenshot.png?token=AA5pFuEdA4Blb1cSMK3Q_nS1aO-vsCWbks5V5dHkwA%3D%3D">
 
-        <p>Install using <a href="https://docs.npmjs.com/cli/install">npm</a> (with <a href="https://nodejs.org/en/download/">Node.js</a>):</p>
+      <p>Install using <a href="https://docs.npmjs.com/cli/install">npm</a> (with <a href="https://nodejs.org/en/download/">Node.js</a>):</p>
 
-        <pre><code>$ <span class="code fn">npm install</span> <span class="code">alex</span> --global</code></pre>
+      <pre><code>$ <span class="code fn">npm install</span> <span class="code">alex</span> --global</code></pre>
 
-        <hr class="tripple">
+      <p>Let’s say <code>example.md</code> looks as follows:</p>
 
-        <p>Let’s say <code>example.md</code> looks as follows:</p>
+      <pre><code>The boogeyman wrote all changes to the <strong>**master server**</strong>. Thus, the slaves
+were read-only copies of master. But not to worry, he was a cripple.</code></pre>
 
-        <pre><code>The boogeyman wrote all changes to the <strong>**master server**</strong>. Thus, the slaves
-were read-only copies of master. But not to worry, he was a cripple.
-</code></pre>
+      <p>Then, run <strong>alex</strong> on <code>example.md</code>:<p>
 
-        <p>Then, run <strong>alex</strong> on <code>example.md</code>:<p>
+      <pre><code><span class="code fn">alex</span> <span class="code">example.md</span></code></pre>
 
-        <pre><code><span class="code fn">alex</span> <span class="code">example.md</span></code></pre>
+      <p>Yields:</p>
 
-        Yields:
-
-        <pre class="wide"><code>example.md
-   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
-  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave
-  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she
-  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple
+      <pre><code>example.md
+ 1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
+1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave
+2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she
+2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple
 
 ⚠ 4 warnings</code></pre>
 
-        <p>See <code><span class="code fn">alex</span> <span class="code">--help</span></code> for more information.</p>
-      </div>
+      <p>See <code><span class="code fn">alex</span> <span class="code">--help</span></code> for more information.</p>
     </section>
-    <section class="section text">
+    <section class="section content">
       <span id="editors"></span> <!--previous anchor link-->
       <h2 id="integrations">Integrations</h2>
-      <div class="content">
-        <img alt="screen cast" src="https://raw.githubusercontent.com/wooorm/atom-linter-alex/master/screencast.gif?token=AA5pFhwJyhXtc0a3GdKXaLfWqyIQvN0Mks5V5dJUwA%3D%3D">
-        <ul>
-          <li>Atom — <a href="https://github.com/wooorm/atom-linter-alex">atom-linter-alex</a> (by <a href="https://github.com/wooorm">@wooorm</a>);</li>
-          <li>Sublime — <a href="https://github.com/sindresorhus/SublimeLinter-contrib-alex">SublimeLinter-contrib-alex</a> (by <a href="https://github.com/sindresorhus">@sindresorhus</a>);</li>
-          <li>Visual Studio Code — <a href="https://github.com/shinnn/vscode-alex">vscode-alex</a> (by <a href="https://github.com/shinnn">@shinnn</a>);</li>
-          <li>Gulp — <a href="https://github.com/dustinspecker/gulp-alex">gulp-alex</a> (by <a href="https://github.com/dustinspecker">@dustinspecker</a>);</li>
-          <li>Slack — <a href="https://github.com/keoghpe/alex-slack">alex-slack</a> (by <a href="https://github.com/keoghpe">@keoghpe</a>).</li>
-        </ul>
-      </div>
+      <img alt="screen cast" src="https://raw.githubusercontent.com/wooorm/atom-linter-alex/master/screencast.gif?token=AA5pFhwJyhXtc0a3GdKXaLfWqyIQvN0Mks5V5dJUwA%3D%3D">
+      <ul>
+        <li>Atom: <a href="https://github.com/wooorm/atom-linter-alex">atom-linter-alex</a> (by <a href="https://github.com/wooorm">@wooorm</a>)</li>
+        <li>Sublime: <a href="https://github.com/sindresorhus/SublimeLinter-contrib-alex">SublimeLinter-contrib-alex</a> (by <a href="https://github.com/sindresorhus">@sindresorhus</a>)</li>
+        <li>Visual Studio Code: <a href="https://github.com/shinnn/vscode-alex">vscode-alex</a> (by <a href="https://github.com/shinnn">@shinnn</a>)</li>
+        <li>Gulp: <a href="https://github.com/dustinspecker/gulp-alex">gulp-alex</a> (by <a href="https://github.com/dustinspecker">@dustinspecker</a>)</li>
+        <li>Slack: <a href="https://github.com/keoghpe/alex-slack">alex-slack</a> (by <a href="https://github.com/keoghpe">@keoghpe</a>)</li>
+      </ul>
     </section>
-    <section class="section text">
+    <section class="section content">
       <h2 id="contributing">Contributing</h2>
-      <div class="content">
-        <p><strong>Alex</strong> is open source software and accepts requests from the community. Suggestions, feature requests, and issues are more than welcome.</p>
-        <p>Requests can be submitted on <a href="https://github.com/wooorm/alex/issues/new?title=Suggestion%3A%20add%E2%80%A6&labels=enhancement&assignee=wooorm">GitHub Issues</a>. Try it, contributing to open source—helping others out—is great. You can also <a href="https://twitter.com/intent/tweet?hashtags=alexjs&related=wooorm&text=%40wooorm">tweet to me</a> or send me an <a href="mailto:tituswormer@gmail.com?subject=Suggestion%20for%20Alex">e-mail</a>.</p>
-        <p><strong>Even small requests, such as a single word, are greatly appreciated!</strong></p>
-      </div>
+      <p>Alex is open source software and accepts requests from the community. Suggestions, feature requests, and issues are more than welcome.</p>
+      <p>Requests can be submitted on <a href="https://github.com/wooorm/alex/issues/new?title=Suggestion%3A%20add%E2%80%A6&labels=enhancement&assignee=wooorm">GitHub Issues</a>. Try it, contributing to open source—helping others out—is great. You can also <a href="https://twitter.com/intent/tweet?hashtags=alexjs&related=wooorm&text=%40wooorm">tweet to me</a> or send me an <a href="mailto:tituswormer@gmail.com?subject=Suggestion%20for%20Alex">e-mail</a>.</p>
+      <p><em>Even small requests, such as a single word, are greatly appreciated!</em></p>
     </section>
-    <section class="section text">
-      <h2 id="read-next">What to read next</h2>
-      <div class="spread tripple">
-        <div class="spread-block">
-          <h3 id="importance-of-equality" class="double">Importance of Equality (in Technology)</h3>
-          <ul class="single">
-            <li>‘“Code” and the Quest for Inclusive Software’ <a href="http://www.newyorker.com/business/currency/code-and-the-quest-for-inclusive-software">//newyorker</a></small></li>
-            <li>‘Ben Noordhuis’s Departure’ <a href="https://news.ycombinator.com/item?id=6845286">//news.ycombinator</a></li>
-            <li>‘We F*cked Up’ <a href="https://medium.com/@rrhoover/we-fucked-up-9163151c9166">//medium</a></li>
-            <li>‘Replace occurrences of master/slave terminology’ <a href="https://github.com/django/django/pull/2692">//github</a></li>
-          </ul>
-        </div>
-        <div class="spread-block">
-          <h3 id="get-better" class="double">Get Better at Considerate Writing</h3>
-          <ul class="single">
-            <li>‘Stereotypes and Biased Language’ <a href="https://owl.english.purdue.edu/owl/resource/608/05/">//purdue</a></li>
-            <li>‘Archive for Singular “They”’ <a href="http://languagelog.ldc.upenn.edu/nll/?category_name=singular-they">//upenn</a></li>
-            <li>‘Inclusive Language’ <a href="http://www.monash.edu/about/editorialstyle/writing/inclusive-language">//monash</a></li>
-            <li>‘Replacing “Crazy”’ <a href="http://whatprivilege.com/replacing-crazy-for-ableism-and-preciseness-of-language">//whatprivilege</a></li>
-            <li>‘Guidelines For Inclusive Language’ <a href="https://elcic.ca/Resources/Inclusive-Language.cfm">//elcic.ca</a></li>
-            <li>‘Avoiding Bias’ <a href="http://academicguides.waldenu.edu/writingcenter/scholarlyvoice/avoidingbias">//waldenu</a></li>
-            <li>‘A Way with Words and Images’ <a href="http://www.esdc.gc.ca/eng/disability/arc/words_images.shtml">//gc.ca</a></li>
-          </ul>
-        </div>
-    </section>
-
-    <section class="section footer">
-      <div class="footer-inner">
+    <section class="footer section">
+      <div class="footer-inner content">
         <h1>Made with love.</h1>
-        <p>By <a href="http://wooorm.com">Titus Wormer</a>.</p>
-        <p class="tripple"><small>&hellip;and a special thanks to <a href="http://sindresorhus.com">Sindre Sorhus</a> for inspiring me to do this.</small></p>
+        <p>By <a href="https://twitter.com/wooorm">@wooorm</a>.</p>
+        <p><small>&hellip;and a special thanks to <a href="https://twitter.com/sindresorhus">@sindresorhus</a> for inspiring me to do this.</small></p>
       </div>
     </section>
     <script src="build.js"></script>
