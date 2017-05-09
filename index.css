@@ -20,7 +20,7 @@ body {
 .footer {
   position: relative;
   min-height: 100vh;
-  background-color: #8060E5;
+  background-color: #8060e5;
   color: white;
   display: flex;
   justify-content: center;
@@ -94,8 +94,8 @@ body {
 /* Lists. */
 ul,
 ol {
-  margin-top: 1.860em;
-  margin-bottom: 1.860em;
+  margin-top: 1.86em;
+  margin-bottom: 1.86em;
   padding: 0;
 }
 
@@ -184,7 +184,7 @@ h3 {
 /* Links */
 
 a {
-  color: #8060E5;
+  color: #8060e5;
   text-decoration: none;
   transition: color 200ms;
 }
@@ -352,15 +352,13 @@ textarea {
   margin: 0;
   padding: 0;
   width: 100%;
-
   border: none;
   outline: none;
   resize: none;
   overflow: hidden;
+
   /* Can’t use a nice font: kerning renders differently in textareas. */
   font-family: monospace;
-  line-height: inherit;
-  font-size: inherit;
   background: transparent;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -385,7 +383,6 @@ textarea {
   width: 100%;
   z-index: 1;
   overflow: scroll;
-
   color: #93a1a1;
   background-color: #002b36;
   max-height: 8em;

@@ -6,7 +6,7 @@
   "author": "Titus Wormer <tituswormer@gmail.com>",
   "dependencies": {},
   "scripts": {
-    "lint": "xo",
+    "lint": "xo && stylelint index.css",
     "build": "browserify index.js -t [ babelify --presets es2015 ] | uglifyjs > build.js",
     "prepublish": "npm run test",
     "test": "npm run lint && npm run build"
@@ -22,6 +22,8 @@
     "retext-english": "^3.0.0",
     "retext-equality": "^3.0.0",
     "retext-profanities": "^4.1.0",
+    "stylelint": "^7.10.1",
+    "stylelint-config-standard": "^16.0.0",
     "uglifyjs": "^2.4.10",
     "unified": "^6.1.3",
     "unist-util-stringify-position": "^1.1.0",
@@ -43,5 +45,8 @@
     "ignore": [
       "build.js"
     ]
+  },
+  "stylelint": {
+    "extends": "stylelint-config-standard"
   }
 }
