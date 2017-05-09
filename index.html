@@ -65,20 +65,17 @@
         <p class="byline">Catch insensitive, inconsiderate writing</p>
       </div>
     </section>
-    <section id="demo" class="section demo">
-      <div id="demo-header" class="content">
-        <h2>Demo</h2>
-        <p>Take alex for a spin, start typing below. <a href="#contributing">Missing something? See Contributing</a>.</p>
-      </div>
-      <div class="input-container">
-        <div class="highlight"><div id="highlight" class="highlight-inner"></div></div>
-        <textarea class="input" rows="8">The boogeyman wrote all changes to the **master server**.
-Thus, the slaves were read-only copies of master. But not to worry, he was a cripple.</textarea>
-      </div>
-      <div class="content">
-        <ol id="issues" class="issues"></ol>
-        <div id="no-issues" class="no-issues"><code class="label label-ok">No issues!</code></div>
-      </div>
+    <section class="section content">
+      <h2 id="demo">Demo</h2>
+      <figure class="window editor">
+        <figcaption>
+          <span class="chrome button close"></span>
+          <span class="chrome button minimize"></span>
+          <span class="chrome button fullscreen"></span>
+          <span class="chrome title">example.md — ~/projects/oss/example</span>
+        </figcaption>
+        <div id="root"></div>
+      </figure>
     </section>
     <section class="section content">
       <h2 id="introduction">Introduction</h2>
@@ -93,6 +90,9 @@ Thus, the slaves were read-only copies of master. But not to worry, he was a cri
 
       <p>
         <a href="https://github.com/wooorm/alex">GitHub »</a><br>
+      </p>
+
+      <p>
         <a href="#demo">Online demo »</a>
       </p>
 
@@ -108,7 +108,7 @@ Thus, the slaves were read-only copies of master. But not to worry, he was a cri
     <section class="section content">
       <h2 id="cli">Command Line</h2>
 
-      <figure class="terminal">
+      <figure class="window terminal">
         <figcaption>
           <span class="chrome button close"></span>
           <span class="chrome button minimize"></span>
@@ -175,6 +175,7 @@ were read-only copies of master. But not to worry, he was a cripple.</code></pre
         <p><small>&hellip;and a special thanks to <a href="https://twitter.com/sindresorhus">@sindresorhus</a> for inspiring me to do this.</small></p>
       </div>
     </section>
+    <template>The boogeyman wrote all changes to the **master server** as he was all out of fucks to give. Thus, the slaves were read-only copies of master.</template>
     <script src="build.js"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
