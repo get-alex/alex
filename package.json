@@ -68,10 +68,10 @@
     "ava": "^0.19.1",
     "browserify": "^14.0.0",
     "esmangle": "^1.0.1",
-    "execa": "^0.6.0",
-    "nyc": "^10.1.0",
+    "execa": "^0.7.0",
+    "nyc": "^11.0.0",
     "remark-cli": "^3.0.0",
-    "remark-preset-wooorm": "^2.0.0",
+    "remark-preset-wooorm": "^3.0.0",
     "xo": "^0.18.1"
   },
   "scripts": {
