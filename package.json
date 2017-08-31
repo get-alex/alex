@@ -6,11 +6,6 @@
   "repository": "https://github.com/wooorm/alex",
   "bugs": "https://github.com/wooorm/alex/issues",
   "homepage": "http://alexjs.com",
-  "alex": {
-    "allow": [
-      "butt"
-    ]
-  },
   "keywords": [
     "cli-app",
     "cli",
@@ -84,6 +79,11 @@
     "test-coverage": "nyc --reporter lcov ava",
     "test": "npm run build && npm run lint && npm run test-coverage"
   },
+  "alex": {
+    "allow": [
+      "butt"
+    ]
+  },
   "nyc": {
     "check-coverage": true,
     "lines": 100,
@@ -103,6 +103,8 @@
     ]
   },
   "remarkConfig": {
-    "plugins": ["preset-wooorm"]
+    "plugins": [
+      "preset-wooorm"
+    ]
   }
 }
