@@ -48,17 +48,17 @@
   "dependencies": {
     "meow": "^3.3.0",
     "remark-message-control": "^4.0.0",
-    "remark-parse": "^3.0.0",
+    "remark-parse": "^4.0.0",
     "remark-retext": "^3.0.0",
     "retext-english": "^3.0.0",
     "retext-equality": "^3.0.0",
     "retext-profanities": "^4.0.0",
     "unified": "^6.1.0",
     "unified-diff": "^1.0.0",
-    "unified-engine": "^3.1.0",
+    "unified-engine": "^4.0.0",
     "update-notifier": "^2.1.0",
     "vfile": "^2.0.0",
-    "vfile-reporter": "^3.0.0",
+    "vfile-reporter": "^4.0.0",
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
