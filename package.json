@@ -32,7 +32,9 @@
     "Shinnosuke Watanabe <snnskwtnb@gmail.com>",
     "Conor Hastings <conor@socialtables.com>",
     "Alex Gleason <alex@alexgleason.me>",
-    "Ansel Halliburton <github@anseljh.com>"
+    "Ansel Halliburton <github@anseljh.com>",
+    "John-David Dalton <john.david.dalton@gmail.com>",
+    "Conor Hastings <conor@socialtables.com>"
   ],
   "bin": "cli.js",
   "engines": {
