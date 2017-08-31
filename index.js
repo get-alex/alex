@@ -14,6 +14,7 @@
 var VFile = require('vfile');
 var unified = require('unified');
 var markdown = require('remark-parse');
+var frontmatter = require('remark-frontmatter');
 var english = require('retext-english');
 var equality = require('retext-equality');
 var profanities = require('retext-profanities');
@@ -70,6 +71,7 @@ function core(value, processor) {
 function alex(value, allow) {
   return core(value, unified()
     .use(markdown)
+    .use(frontmatter, ['yaml', 'toml'])
     .use(remark2retext, text)
     .use(filter, {allow: allow})
   );

@@ -16,6 +16,7 @@ var meow = require('meow');
 var engine = require('unified-engine');
 var unified = require('unified');
 var markdown = require('remark-parse');
+var frontmatter = require('remark-frontmatter');
 var english = require('retext-english');
 var remark2retext = require('remark-retext');
 var report = require('vfile-reporter');
@@ -115,6 +116,7 @@ function transform(options) {
   if (!cli.flags.text) {
     plugins = [
       markdown,
+      [frontmatter, ['yaml', 'toml']],
       [remark2retext, unified().use({plugins: plugins})]
     ];
   }
