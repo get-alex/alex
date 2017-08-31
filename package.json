@@ -62,12 +62,12 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
-    "ava": "^0.19.1",
+    "ava": "^0.22.0",
     "browserify": "^14.0.0",
     "esmangle": "^1.0.1",
-    "execa": "^0.7.0",
+    "execa": "^0.8.0",
     "nyc": "^11.0.0",
-    "remark-cli": "^3.0.0",
+    "remark-cli": "^4.0.0",
     "remark-preset-wooorm": "^3.0.0",
     "xo": "^0.18.1"
   },
