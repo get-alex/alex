@@ -80,12 +80,13 @@ Yields:
 
 ```txt
 example.md
-  1:5-1:14   warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman
-  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave
-  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she
-  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple
+   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman  retext-equality
+  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave           retext-equality
+  1:69-1:75  warning  Don’t use “slaves”, it’s profane                                           slaves                 retext-profanities
+  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
+  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple                retext-equality
 
-⚠ 4 warnings
+⚠ 5 warnings
 ```
 
 See `$ alex --help` for more information.
@@ -226,7 +227,7 @@ example.md
 
 ### `package.json`
 
-**alex** can silence message through `.alexrc` files:
+**alex** can silence messages through `.alexrc` configuration:
 
 ```json
 {
@@ -234,7 +235,7 @@ example.md
 }
 ```
 
-...or `package.json` files:
+...or the `alex` field in `package.json`:
 
 ```txt
 {
@@ -245,6 +246,8 @@ example.md
   ...
 }
 ```
+
+The `allow` field is expected to be an array of rule identifier strings.
 
 All `allow` fields in all `package.json` and `.alexrc` files are
 detected and used when processing.
@@ -265,7 +268,7 @@ Yields:
 
 ```txt
 readme.md
-  1:15-1:18  warning  `pop` may be insensitive, use `parent` instead  dad-mom
+  1:15-1:18  warning  `pop` may be insensitive, use `parent` instead  dad-mom  retext-equality
 
 ⚠ 1 warning
 ```
@@ -305,7 +308,7 @@ Yields:
 
 ```txt
 readme.md
-  9:15-9:18  warning  `pop` may be insensitive, use `parent` instead  dad-mom
+  9:15-9:18  warning  `pop` may be insensitive, use `parent` instead  dad-mom  retext-equality
 
 ⚠ 1 warning
 ```
