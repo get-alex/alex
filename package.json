@@ -63,7 +63,7 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
-    "ava": "^0.22.0",
+    "ava": "^0.23.0",
     "browserify": "^14.0.0",
     "esmangle": "^1.0.1",
     "execa": "^0.8.0",
