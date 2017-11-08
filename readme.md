@@ -409,13 +409,13 @@ See [CONTRIBUTING.md][contributing].
 
 [releases]: https://github.com/wooorm/alex/releases
 
-[vfile]: https://github.com/wooorm/vfile
+[vfile]: https://github.com/vfile/vfile
 
-[vfile-message]: https://github.com/wooorm/vfile#vfilemessages
+[vfile-message]: https://github.com/vfile/vfile#vfilemessages
 
 [alex-api]: #alexvalue-allow
 
-[literals]: https://github.com/wooorm/nlcst-is-literal#isliteralparent-index
+[literals]: https://github.com/syntax-tree/nlcst-is-literal#isliteralparent-index
 
 [alexignore]: #alexignore
 
