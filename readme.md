@@ -174,6 +174,7 @@ alex.text('The `boogeyman`.').messages;
 *   Visual Studio Code — [`shinnn/vscode-alex`](https://github.com/shinnn/vscode-alex)
 *   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
 *   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
+*   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
 
 ## Support
 
