@@ -5,3 +5,4 @@ node_modules/
 coverage/
 alex.js
 alex.min.js
+yarn.lock
