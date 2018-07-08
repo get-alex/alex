@@ -380,13 +380,17 @@ It’s a nice androgynous/unisex name, it was free on npm, I like it!  :smile:
 ### Alex didn’t check “X”!
 
 See
-[CONTRIBUTING.md][contributing] on how to get “X” checked by alex.
+[`contributing.md`][contributing] on how to get “X” checked by alex.
 
 <!--lint enable no-heading-punctuation-->
 
 ## Contributing
 
-See [CONTRIBUTING.md][contributing].
+**alex** is built by people just like you!  Check out
+[`contributing.md`][contributing] for ways to get started.
+
+This project has a [Code of Conduct][coc].  By interacting with this repository
+or community you agree to abide by its terms.
 
 ## License
 
@@ -436,7 +440,9 @@ See [CONTRIBUTING.md][contributing].
 
 [ava]: http://ava.li
 
-[contributing]: CONTRIBUTING.md
+[contributing]: contributing.md
+
+[coc]: code-of-conduct.md
 
 [license]: LICENSE
 
