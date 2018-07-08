@@ -1,6 +1,7 @@
 language: node_js
 node_js:
-- '9.0'
+- lts/boron
+- node
 after_script: bash <(curl -s https://codecov.io/bash)
 script:
 - npm test
