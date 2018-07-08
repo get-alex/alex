@@ -7,20 +7,12 @@ script:
 - npm test
 - ./cli.js readme.md --why --quiet
 deploy:
-  - provider: npm
-    email: tituswormer@gmail.com
-    api_key:
-      secure: DnaVIhhJJuVlr67EUZVjTNqC7SAP+1vzKDoo1L151L6C9iXgh6YwlvuKnTYil7OYeQKdqzk2rkJTgRGBbfXMdsI4RlnNQltey19QWM8skzm3VQuqz0sXdFFMErbh8RwX8LDA+kxcV3hBy8eaRmzhiY7jccybHFPoGGA9WIjozSQxPlwB0JfYZsSwmyxhGA8EV/CbPUo57GDXUfYMa/tM7eH4/RA4lXvsU+HUmXY2Y4bKTQESxS+2zlwHbrbsnnEG6b2Z0qEZSYj/PcYbszV1TBGrvf58UwmzaTyUwi7sTfW2uNAQr5yxbzIMjOSbaqsjwNIBglrYwdyS/SAjuN9yvBWr7teHQkd0Spf2VrpHx82Tqc8fFD9VzWkTiBnUUGVSm1JotAOyxNm540h+fOsBvoSiG/YFDEnY47FAtIMZPLsjigavP6aHCyvuNruAy2HDJDkyEu2AohDx5nEo2Y+gwwHTmN+aWSnoTjpCir/MuCjP1Uk5y6DZe+zr8tntEMeJp/DC1TAaMkIV3ICsqtjn4kzE0mWQGpsWsjVwTbdz7YrrwRf9ODZ6e5ykl8csCm4MHjWOjaSHHryaga8x5hLqOy2ljqH71aJkGXoO6SeXPws+fyubzUzYdMdtfHebL4JavcFGVhlzQZBweyHmLX959i/rjSrCSdVNJYvtAOazTNQ=
-    on:
-      tags: true
-      node: '9.0'
-  - provider: releases
-    skip_cleanup: true
-    api_key:
-      secure: AIsO+EjbuRp/n3n+6+jFkVP8mw/LMKofYknhKw8FOfxdoxH6I3OQfPJYI8iIAFrfV3cVPPC8M8AmWj6We19PDHqEmqtpfILkIJExp3TUu70zeQcvmANkFG6bUQVJa87F0liluidVQ2fHgTpJCLNEr0KexBGi6DTcOQs2vktVo4A3Em5BNN8x2HPTRuj/ZjavABHm5w6+lpN1uA4xvQxbqGO459z/Ol54bcJv9Hf7qG9zd3kk48tKV6j7vFf2aXjxKmbV1MzjfcSTzTzR4/ebShrVYBSDVpX12gEhvweY33Gp3NK2tNkxwpv7GEFGblbCN5X0+RhEaYX9oXuCo9Z0QR21ZgC22UppMRBqtdhE1thIEVhZ8KzSYFsvqrup/wxHy1gTmxfUC/1TaxXUOO1blzskTRI/Y9IycZ3gjJ9uURjBEHDrWRQDn7UEvNiFtWny1BdWwNYo3uPDLEm0eoju5Ek+54MJujyzIGQm8KPdl1s5X0WO0yXz0IXm335pr8iU6waHUxLZu3rNf5EUlkjg8SJ+W7E8v+SqJ7fpI+n66Oq0332WMIgNkaxUMe2nTJDTjiFhtcEpf58IVjB46KPzFBAUkeOepjsGBrbVLB/RdqnYZYjwcuaRkQyQArxggao1inGflaMPVvGabFoeLNwKRN1x6L3HQV1B9OJipYXk0QA=
-    file:
-      - "alex.js"
-      - "alex.min.js"
-    on:
-      tags: true
-      node: '9.0'
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: AIsO+EjbuRp/n3n+6+jFkVP8mw/LMKofYknhKw8FOfxdoxH6I3OQfPJYI8iIAFrfV3cVPPC8M8AmWj6We19PDHqEmqtpfILkIJExp3TUu70zeQcvmANkFG6bUQVJa87F0liluidVQ2fHgTpJCLNEr0KexBGi6DTcOQs2vktVo4A3Em5BNN8x2HPTRuj/ZjavABHm5w6+lpN1uA4xvQxbqGO459z/Ol54bcJv9Hf7qG9zd3kk48tKV6j7vFf2aXjxKmbV1MzjfcSTzTzR4/ebShrVYBSDVpX12gEhvweY33Gp3NK2tNkxwpv7GEFGblbCN5X0+RhEaYX9oXuCo9Z0QR21ZgC22UppMRBqtdhE1thIEVhZ8KzSYFsvqrup/wxHy1gTmxfUC/1TaxXUOO1blzskTRI/Y9IycZ3gjJ9uURjBEHDrWRQDn7UEvNiFtWny1BdWwNYo3uPDLEm0eoju5Ek+54MJujyzIGQm8KPdl1s5X0WO0yXz0IXm335pr8iU6waHUxLZu3rNf5EUlkjg8SJ+W7E8v+SqJ7fpI+n66Oq0332WMIgNkaxUMe2nTJDTjiFhtcEpf58IVjB46KPzFBAUkeOepjsGBrbVLB/RdqnYZYjwcuaRkQyQArxggao1inGflaMPVvGabFoeLNwKRN1x6L3HQV1B9OJipYXk0QA=
+  file:
+    - "alex.js"
+    - "alex.min.js"
+  on:
+    tags: true
