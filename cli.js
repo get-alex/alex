@@ -41,33 +41,31 @@ var extensions = [
 notifier({pkg: pack}).notify();
 
 /* Set-up meow. */
-var cli = meow({
-  help: [
-    'Usage: alex [<glob> ...] [options ...]',
-    '',
-    'Options:',
-    '',
-    '  -w, --why    output sources (when available)',
-    '  -q, --quiet  output only warnings and errors',
-    '  -t, --text   treat input as plain-text (not markdown)',
-    '  -d, --diff   ignore unchanged lines (affects Travis only)',
-    '',
-    'When no input files are given, searches for markdown and text',
-    'files in the current directory, `doc`, and `docs`.',
-    '',
-    'Examples',
-    '  $ echo "His network looks good" | alex',
-    '  $ alex *.md !example.md',
-    '  $ alex'
-  ]
-}, {
-  alias: {
-    v: 'version',
-    h: 'help',
-    t: 'text',
-    d: 'diff',
-    q: 'quiet',
-    w: 'why'
+var cli = meow([
+  'Usage: alex [<glob> ...] [options ...]',
+  '',
+  'Options:',
+  '',
+  '  -w, --why    output sources (when available)',
+  '  -q, --quiet  output only warnings and errors',
+  '  -t, --text   treat input as plain-text (not markdown)',
+  '  -d, --diff   ignore unchanged lines (affects Travis only)',
+  '',
+  'When no input files are given, searches for markdown and text',
+  'files in the current directory, `doc`, and `docs`.',
+  '',
+  'Examples',
+  '  $ echo "His network looks good" | alex',
+  '  $ alex *.md !example.md',
+  '  $ alex'
+].join('\n'), {
+  flags: {
+    version: {type: 'boolean', alias: 'v'},
+    help: {type: 'boolean', alias: 'h'},
+    text: {type: 'boolean', alias: 't'},
+    diff: {type: 'boolean', alias: 'd'},
+    quiet: {type: 'boolean', alias: 'q'},
+    why: {type: 'boolean', alias: 'w'}
   }
 });
 
