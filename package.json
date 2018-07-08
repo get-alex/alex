@@ -67,19 +67,19 @@
     "esmangle": "^1.0.1",
     "execa": "^0.10.0",
     "nyc": "^12.0.0",
+    "prettier": "^1.13.7",
     "remark-cli": "^5.0.0",
     "remark-preset-wooorm": "^4.0.0",
     "xo": "^0.21.0"
   },
   "scripts": {
-    "build-md": "remark . -qfo",
+    "format": "remark . -qfo && prettier --write '**/*.js' && xo --fix",
     "build-bundle": "browserify index.js -s alex > alex.js",
     "build-mangle": "esmangle alex.js > alex.min.js",
-    "build": "npm run build-md && npm run build-bundle && npm run build-mangle",
-    "lint": "xo",
+    "build": "npm run build-bundle && npm run build-mangle",
     "test-api": "ava",
     "test-coverage": "nyc --reporter lcov ava",
-    "test": "npm run build && npm run lint && npm run test-coverage"
+    "test": "npm run format && npm run build && npm run test-coverage"
   },
   "alex": {
     "allow": [
@@ -92,13 +92,19 @@
     "functions": 100,
     "branches": 100
   },
+  "prettier": {
+    "tabWidth": 2,
+    "useTabs": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "semi": false,
+    "trailingComma": "none"
+  },
   "xo": {
-    "space": true,
+    "prettier": true,
     "esnext": false,
     "rules": {
-      "ava/prefer-async-await": "off",
-      "max-lines": "off",
-      "capitalized-comments": "off"
+      "ava/prefer-async-await": "off"
     },
     "ignores": [
       "alex.js"

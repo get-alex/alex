@@ -8,48 +8,51 @@
  *   inconsiderate wording.
  */
 
-'use strict';
+'use strict'
 
 /* Dependencies. */
-var VFile = require('vfile');
-var unified = require('unified');
-var markdown = require('remark-parse');
-var frontmatter = require('remark-frontmatter');
-var english = require('retext-english');
-var equality = require('retext-equality');
-var profanities = require('retext-profanities');
-var remark2retext = require('remark-retext');
-var sort = require('vfile-sort');
-var filter = require('./filter');
+var VFile = require('vfile')
+var unified = require('unified')
+var markdown = require('remark-parse')
+var frontmatter = require('remark-frontmatter')
+var english = require('retext-english')
+var equality = require('retext-equality')
+var profanities = require('retext-profanities')
+var remark2retext = require('remark-retext')
+var sort = require('vfile-sort')
+var filter = require('./filter')
 
 /* Expose. */
-module.exports = alex;
-alex.text = noMarkdown;
-alex.markdown = alex;
+module.exports = alex
+alex.text = noMarkdown
+alex.markdown = alex
 
 /* Processor. */
-var text = unified().use(english).use(equality).use(profanities);
+var text = unified()
+  .use(english)
+  .use(equality)
+  .use(profanities)
 
 /**
- * alex’s core.
+ * Alex’s core.
  *
  * @param {string|VFile} value - Content.
  * @param {Processor} processor - retext or remark.
  * @return {VFile} - Result.
  */
 function core(value, processor) {
-  var file = new VFile(value);
-  var tree = processor.parse(file);
+  var file = new VFile(value)
+  var tree = processor.parse(file)
 
-  processor.runSync(tree, file);
+  processor.runSync(tree, file)
 
-  sort(file);
+  sort(file)
 
-  return file;
+  return file
 }
 
 /**
- * alex.
+ * Alex.
  *
  * Read markdown as input, converts to natural language,
  * then detect violations.
@@ -69,20 +72,22 @@ function core(value, processor) {
  * @return {VFile} - Result.
  */
 function alex(value, allow) {
-  return core(value, unified()
-    .use(markdown)
-    .use(frontmatter, ['yaml', 'toml'])
-    .use(remark2retext, text)
-    .use(filter, {allow: allow})
-  );
+  return core(
+    value,
+    unified()
+      .use(markdown)
+      .use(frontmatter, ['yaml', 'toml'])
+      .use(remark2retext, text)
+      .use(filter, {allow: allow})
+  )
 }
 
 /**
- * alex, without the markdown.
+ * Alex, without the markdown.
  *
  * @param {string|VFile} value - Content.
  * @return {VFile} - Result.
  */
 function noMarkdown(value) {
-  return core(value, text);
+  return core(value, text)
 }

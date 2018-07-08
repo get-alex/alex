@@ -23,11 +23,11 @@ Give **alex** a spin on the [Online demo »][demo].
 
 ## Why
 
-*   [x] Helps to get better at considerate writing;
-*   [x] Catches many possible offences;
-*   [x] Suggests helpful alternatives;
-*   [x] Reads plain-text and markdown as input;
-*   [x] Stylish.
+*   [x] Helps to get better at considerate writing
+*   [x] Catches many possible offences
+*   [x] Suggests helpful alternatives
+*   [x] Reads plain-text and markdown as input
+*   [x] Stylish
 
 ## Install
 
@@ -112,28 +112,28 @@ $ npm install alex --save
 ###### Example
 
 ```js
-alex('We’ve confirmed his identity.').messages;
-/*
- * [ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs`, `them` instead]
- *   message: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
- *   name: '1:17-1:20',
- *   file: '',
- *   reason: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
- *   line: 1,
- *   column: 17,
- *   location: { start: [Object], end: [Object] },
- *   fatal: false,
- *   ruleId: 'her-him',
- *   source: 'retext-equality' } ]
- */
+alex('We’ve confirmed his identity.').messages
+```
+
+Yields:
+
+```js
+[ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs`, `them` instead]
+    message: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
+    name: '1:17-1:20',
+    reason: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
+    line: 1,
+    column: 17,
+    location: { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'her-him',
+    fatal: false } ]
 ```
 
 ###### Parameters
 
-*   `value` ([`VFile`][vfile] or `string`)
-    — Markdown or plain-text;
-*   `allow` (`Array.<string>`, optional)
-    — List of allowed rules.
+*   `value` ([`VFile`][vfile] or `string`) — Markdown or plain-text
+*   `allow` (`Array.<string>`, optional) — List of allowed rules
 
 ###### Returns
 
@@ -149,22 +149,24 @@ Works just like [`alex()`][alex-api], but does not parse as markdown
 ###### Example
 
 ```js
-alex('The `boogeyman`.').messages; // []
+alex('The `boogeyman`.').messages // => []
 
-alex.text('The `boogeyman`.').messages;
-/*
- * [ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
- *   message: '`boogeyman` may be insensitive, use `boogey` instead',
- *   name: '1:6-1:15',
- *   file: '',
- *   reason: '`boogeyman` may be insensitive, use `boogey` instead',
- *   line: 1,
- *   column: 6,
- *   location: Position { start: [Object], end: [Object] },
- *   fatal: false,
- *   ruleId: 'boogeyman-boogeywoman',
- *   source: 'retext-equality' } ]
- */
+alex.text('The `boogeyman`.').messages
+```
+
+Yields:
+
+```js
+[ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
+    message: '`boogeyman` may be insensitive, use `boogey` instead',
+    name: '1:6-1:15',
+    reason: '`boogeyman` may be insensitive, use `boogey` instead',
+    line: 1,
+    column: 6,
+    location: Position { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'boogeyman-boogeywoman',
+    fatal: false } ]
 ```
 
 ## Integrations
@@ -181,14 +183,14 @@ alex.text('The `boogeyman`.').messages;
 **alex** checks for many patterns of English language, and warns for:
 
 *   Gendered work-titles, for example warning about `garbageman` and suggesting
-    `garbage collector` instead;
+    `garbage collector` instead
 *   Gendered proverbs, such as warning about `like a man` and suggesting
-    `bravely` instead, or `ladylike` and suggesting `courteous`;
+    `bravely` instead, or `ladylike` and suggesting `courteous`
 *   Blunt phrases, such as warning about `cripple` and suggesting
-    `person with a limp` instead;
+    `person with a limp` instead
 *   Intolerant phrasing, such as warning about using `master` and `slave`
-    together, and suggesting `primary` and `replica` instead;
-*   Profanities, the least of which being `butt`.
+    together, and suggesting `primary` and `replica` instead
+*   Profanities, the least of which being `butt`
 
 See [**retext-equality**][equality] and [**retext-profanities**][profanities]
 for all checked rules.
