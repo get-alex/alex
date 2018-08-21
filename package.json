@@ -51,7 +51,7 @@
     "remark-parse": "^5.0.0",
     "remark-retext": "^3.0.0",
     "retext-english": "^3.0.0",
-    "retext-equality": "~3.3.0",
+    "retext-equality": "~3.4.0",
     "retext-profanities": "~4.4.0",
     "unified": "^7.0.0",
     "unified-diff": "^2.0.0",
