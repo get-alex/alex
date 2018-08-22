@@ -177,6 +177,7 @@ Yields:
 *   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
 *   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
+*   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
 
 ## Support
 
