@@ -382,12 +382,14 @@ textarea {
   bottom: 0;
   width: 100%;
   z-index: 1;
-  overflow: scroll;
   color: #93a1a1;
   background-color: #002b36;
   max-height: 8em;
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
+
+  /* See https://github.com/wooorm/alex/issues/187 */
+  overflow: hidden;
 }
 
 .issues {
