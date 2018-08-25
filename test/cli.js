@@ -25,6 +25,33 @@ test('help', function(t) {
   })
 })
 
+test('stdin', function(t) {
+  return execa
+    .stderr('./cli.js', ['--stdin'], {input: 'His'})
+    .catch(function(err) {
+      t.is(
+        err.stderr,
+        [
+          '<stdin>',
+          '  1:1-1:4  warning  `His` may be insensitive, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
+          '',
+          '⚠ 1 warning',
+          ''
+        ].join('\n')
+      )
+    })
+})
+
+test('stdin and globs', function(t) {
+  var rp = path.join('test', 'fixtures', 'one.md')
+
+  return execa
+    .stderr('./cli.js', ['--stdin', rp], {input: 'His'})
+    .catch(function(err) {
+      t.regex(err.stderr, /Do not pass globs with `--stdin`/)
+    })
+})
+
 test('markdown by default', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
@@ -101,6 +128,26 @@ test('non-binary (optional)', function(t) {
       '  1:7-1:10  warning  `she` may be insensitive, use `they`, `it` instead  he-she  retext-equality',
       '',
       '⚠ 2 warnings',
+      ''
+    ].join('\n')
+
+    t.is(err.stderr, expected)
+  })
+})
+
+test('default globs', function(t) {
+  return execa.stderr('./cli.js').catch(function(err) {
+    var expected = [
+      'code-of-conduct.md',
+      '  1:1  error  Cannot process specified file: it’s ignored',
+      '',
+      'contributing.md: no issues found',
+      'example.md',
+      '  1:1  error  Cannot process specified file: it’s ignored',
+      '',
+      'readme.md: no issues found',
+      '',
+      '✖ 2 errors',
       ''
     ].join('\n')
 

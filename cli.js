@@ -51,12 +51,13 @@ var cli = meow(
     '  -q, --quiet  output only warnings and errors',
     '  -t, --text   treat input as plain-text (not markdown)',
     '  -d, --diff   ignore unchanged lines (affects Travis only)',
+    '  --stdin      read from stdin',
     '',
     'When no input files are given, searches for markdown and text',
     'files in the current directory, `doc`, and `docs`.',
     '',
     'Examples',
-    '  $ echo "His network looks good" | alex',
+    '  $ echo "His network looks good" | alex --stdin',
     '  $ alex *.md !example.md',
     '  $ alex'
   ].join('\n'),
@@ -64,6 +65,7 @@ var cli = meow(
     flags: {
       version: {type: 'boolean', alias: 'v'},
       help: {type: 'boolean', alias: 'h'},
+      stdin: {type: 'boolean'},
       text: {type: 'boolean', alias: 't'},
       diff: {type: 'boolean', alias: 'd'},
       quiet: {type: 'boolean', alias: 'q'},
@@ -73,10 +75,16 @@ var cli = meow(
 )
 
 /* Set-up. */
-var globs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
+var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
+var globs
 
-/* istanbul ignore else - Bug in tests. Something hangs, at least. */
-if (cli.input.length !== 0) {
+if (cli.flags.stdin) {
+  if (cli.input.length !== 0) {
+    throw new Error('Do not pass globs with `--stdin`')
+  }
+} else if (cli.input.length === 0) {
+  globs = defaultGlobs
+} else {
   globs = cli.input
 }
 
