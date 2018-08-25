@@ -76,6 +76,7 @@ var cli = meow(
 
 /* Set-up. */
 var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
+var silentlyIgnore
 var globs
 
 if (cli.flags.stdin) {
@@ -84,6 +85,7 @@ if (cli.flags.stdin) {
   }
 } else if (cli.input.length === 0) {
   globs = defaultGlobs
+  silentlyIgnore = true
 } else {
   globs = cli.input
 }
@@ -100,6 +102,7 @@ engine(
     rcName: '.alexrc',
     packageField: 'alex',
     ignoreName: '.alexignore',
+    silentlyIgnore: silentlyIgnore,
     frail: true,
     defaultConfig: transform()
   },

@@ -136,21 +136,12 @@ test('non-binary (optional)', function(t) {
 })
 
 test('default globs', function(t) {
-  return execa.stderr('./cli.js').catch(function(err) {
+  return execa.stderr('./cli.js').then(function(stderr) {
     var expected = [
-      'code-of-conduct.md',
-      '  1:1  error  Cannot process specified file: it’s ignored',
-      '',
       'contributing.md: no issues found',
-      'example.md',
-      '  1:1  error  Cannot process specified file: it’s ignored',
-      '',
-      'readme.md: no issues found',
-      '',
-      '✖ 2 errors',
-      ''
+      'readme.md: no issues found'
     ].join('\n')
 
-    t.is(err.stderr, expected)
+    t.is(stderr, expected)
   })
 })
