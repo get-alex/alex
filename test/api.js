@@ -1,21 +1,12 @@
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module alex:test:api
- * @fileoverview Test suite for alex.
- */
-
 'use strict'
 
-/* Dependencies. */
 var test = require('ava')
 var alex = require('..')
 
-/* Tests. Note that these are small because alex is in fact
- * just a collection of well-tested modules.
- * See `wooorm/retext-equality` for the gist of what
- * warnings are exposed. */
+// Tests. Note that these are small because alex is in fact
+// just a collection of well-tested modules.
+// See `wooorm/retext-equality` for the gist of what
+// warnings are exposed.
 test('alex()', function(t) {
   t.deepEqual(
     alex(

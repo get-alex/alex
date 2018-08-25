@@ -1,14 +1,5 @@
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module alex:test:cli
- * @fileoverview Test suite for alex.
- */
-
 'use strict'
 
-/* Dependencies. */
 var path = require('path')
 var test = require('ava')
 var execa = require('execa')

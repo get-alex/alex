@@ -1,15 +1,6 @@
 #!/usr/bin/env node
-/**
- * @author Titus Wormer
- * @copyright 2015 Titus Wormer
- * @license MIT
- * @module alex
- * @fileoverview CLI for alex.
- */
-
 'use strict'
 
-/* Dependencies. */
 var PassThrough = require('stream').PassThrough
 var notifier = require('update-notifier')
 var meow = require('meow')
@@ -37,10 +28,10 @@ var extensions = [
   'ron'
 ]
 
-/* Update messages. */
+// Update messages.
 notifier({pkg: pack}).notify()
 
-/* Set-up meow. */
+// Set-up meow.
 var cli = meow(
   [
     'Usage: alex [<glob> ...] [options ...]',
@@ -74,7 +65,7 @@ var cli = meow(
   }
 )
 
-/* Set-up. */
+// Set-up.
 var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
 var silentlyIgnore
 var globs
