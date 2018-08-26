@@ -12,21 +12,21 @@
     "test": "npm run lint && npm run build"
   },
   "devDependencies": {
-    "browserify": "^14.0.0",
+    "browserify": "^16.0.0",
     "debounce": "^1.0.0",
     "global": "^4.3.2",
     "retext-english": "^3.0.0",
     "retext-equality": "^3.0.0",
     "retext-profanities": "^4.1.0",
-    "stylelint": "^7.10.1",
-    "stylelint-config-standard": "^16.0.0",
+    "stylelint": "^9.0.0",
+    "stylelint-config-standard": "^18.0.0",
     "uglify-js": "^3.0.15",
-    "unified": "^6.1.3",
-    "vfile": "^2.0.1",
+    "unified": "^7.0.0",
+    "vfile": "^3.0.0",
     "vfile-sort": "^2.0.0",
     "vfile-statistics": "^1.0.0",
     "virtual-dom": "^2.1.1",
-    "xo": "^0.18.2"
+    "xo": "^0.22.0"
   },
   "xo": {
     "space": true,
