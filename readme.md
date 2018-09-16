@@ -178,6 +178,7 @@ Yields:
 *   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
+*   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
 
 ## Support
 
