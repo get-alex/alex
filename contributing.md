@@ -8,7 +8,13 @@ a moment to read the following guidelines.  And thanks for contributing to
 **alex**!  👏👌✨
 
 Before anything else: people involved with this project often do so for fun,
-next to their day job: you are not entitled to free customer service.
+as volunteers, next to their day job. Please be considerate in requests for
+features and changes, and be patient regarding response times. If you have
+questions about how to use alex, the best place to start is asking
+the broader JavaScript community in chats or StackOverflow. Maintainers
+are not able to respond to individual support requests, but if you feel
+that something in the documentation is missing or incorrect, please
+let us know!
 
 ## Table of Contents
 
@@ -24,11 +30,32 @@ next to their day job: you are not entitled to free customer service.
 
 ## Ecosystem
 
-This project, alex, is a small wrapper around the [unified][] ecosystem.
+This project, `alex`, is a small wrapper around the [unified][] ecosystem.
 It mainly uses [`retext`][retext] to process natural language, with the
 [`retext-equality`][equality] and [`retext-profanities`][profanities] plugins.
 For markdown, [`remark`][remark] is used.
+
 Try and pick the right place to contribute to so we can help you faster.
+`alex` handles the user's command line experience, while the `retext`
+plugins determine the rules and recommendations.
+
+## Trying out your local changes
+
+To see how your local changes affect `alex`, you can use
+[npm link](https://docs.npmjs.com/cli/link)
+
+```
+git clone <your fork url>
+npm install
+npm link
+alex some-file.md
+```
+
+## Running tests
+
+```
+npm test
+```
 
 ## Contributions
 
