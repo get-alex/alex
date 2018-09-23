@@ -9,9 +9,7 @@ a moment to read the following guidelines.  And thanks for contributing to
 
 Before anything else: people involved with this project often do so for fun,
 as volunteers, next to their day job. Please be considerate in requests for
-features and changes, and be patient regarding response times. If you have
-questions about how to use alex, the best place to start is asking
-the broader JavaScript community in chats or StackOverflow. Maintainers
+features and changes, and be patient regarding response times. Maintainers
 are not able to respond to individual support requests, but if you feel
 that something in the documentation is missing or incorrect, please
 let us know!
@@ -46,6 +44,7 @@ To see how your local changes affect `alex`, you can use
 
 ```
 git clone <your fork url>
+cd alex
 npm install
 npm link
 alex some-file.md
