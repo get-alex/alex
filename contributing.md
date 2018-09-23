@@ -8,8 +8,8 @@ a moment to read the following guidelines.  And thanks for contributing to
 **alex**!  👏👌✨
 
 Before anything else: people involved with this project often do so for fun,
-as volunteers, next to their day job. Please be considerate in requests for
-features and changes, and be patient regarding response times. Maintainers
+as volunteers, next to their day job.  Please be considerate in requests for
+features and changes, and be patient regarding response times.  Maintainers
 are not able to respond to individual support requests, but if you feel
 that something in the documentation is missing or incorrect, please
 let us know!
@@ -34,7 +34,7 @@ It mainly uses [`retext`][retext] to process natural language, with the
 For markdown, [`remark`][remark] is used.
 
 Try and pick the right place to contribute to so we can help you faster.
-`alex` handles the user's command line experience, while the `retext`
+`alex` handles the user’s command line experience, while the `retext`
 plugins determine the rules and recommendations.
 
 ## Trying out your local changes
@@ -42,7 +42,7 @@ plugins determine the rules and recommendations.
 To see how your local changes affect `alex`, you can use
 [npm link](https://docs.npmjs.com/cli/link)
 
-```
+```sh
 git clone <your fork url>
 cd alex
 npm install
@@ -52,7 +52,7 @@ alex some-file.md
 
 ## Running tests
 
-```
+```sh
 npm test
 ```
 
