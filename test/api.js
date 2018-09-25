@@ -5,7 +5,7 @@ var alex = require('..')
 
 // Tests. Note that these are small because alex is in fact
 // just a collection of well-tested modules.
-// See `wooorm/retext-equality` for the gist of what
+// See `retextjs/retext-equality` for the gist of what
 // warnings are exposed.
 test('alex()', function(t) {
   t.deepEqual(

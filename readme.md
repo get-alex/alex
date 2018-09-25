@@ -1,7 +1,7 @@
 <!--lint disable no-html first-heading-level maximum-line-length no-shell-dollars-->
 
 <h1 align="center">
-  <img width="400" src="https://rawgit.com/wooorm/alex/master/media/logo.svg" alt="alex">
+  <img width="400" src="https://rawgit.com/get-alex/alex/master/media/logo.svg" alt="alex">
   <br>
   <br>
 </h1>
@@ -400,13 +400,13 @@ or community you agree to abide by its terms.
 
 <!-- Definitions. -->
 
-[travis-badge]: https://img.shields.io/travis/wooorm/alex.svg
+[travis-badge]: https://img.shields.io/travis/get-alex/alex.svg
 
-[travis]: https://travis-ci.org/wooorm/alex
+[travis]: https://travis-ci.org/get-alex/alex
 
-[codecov-badge]: https://img.shields.io/codecov/c/github/wooorm/alex.svg
+[codecov-badge]: https://img.shields.io/codecov/c/github/get-alex/alex.svg
 
-[codecov]: https://codecov.io/github/wooorm/alex
+[codecov]: https://codecov.io/github/get-alex/alex
 
 [demo]: http://alexjs.com/#demo
 
@@ -416,7 +416,7 @@ or community you agree to abide by its terms.
 
 [screenshot]: screenshot.png
 
-[releases]: https://github.com/wooorm/alex/releases
+[releases]: https://github.com/get-alex/alex/releases
 
 [vfile]: https://github.com/vfile/vfile
 
@@ -436,7 +436,7 @@ or community you agree to abide by its terms.
 
 [eslintignore]: http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories
 
-[.alexignore]: https://github.com/wooorm/alex/blob/master/.alexignore
+[.alexignore]: https://github.com/get-alex/alex/blob/master/.alexignore
 
 [npm-scripts]: https://docs.npmjs.com/misc/scripts
 
@@ -450,6 +450,6 @@ or community you agree to abide by its terms.
 
 [author]: http://wooorm.com
 
-[profanities]: https://github.com/wooorm/retext-profanities/blob/master/rules.md
+[profanities]: https://github.com/retextjs/retext-profanities/blob/master/rules.md
 
-[equality]: https://github.com/wooorm/retext-equality/blob/master/rules.md
+[equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md

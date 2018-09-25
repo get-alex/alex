@@ -3,8 +3,8 @@
   "version": "6.0.0",
   "description": "Catch insensitive, inconsiderate writing",
   "license": "MIT",
-  "repository": "https://github.com/wooorm/alex",
-  "bugs": "https://github.com/wooorm/alex/issues",
+  "repository": "https://github.com/get-alex/alex",
+  "bugs": "https://github.com/get-alex/alex/issues",
   "homepage": "http://alexjs.com",
   "keywords": [
     "cli-app",
