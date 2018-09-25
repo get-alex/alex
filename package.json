@@ -33,7 +33,8 @@
     "Alex Gleason <alex@alexgleason.me>",
     "Ansel Halliburton <github@anseljh.com>",
     "John-David Dalton <john.david.dalton@gmail.com>",
-    "Conor Hastings <conor@socialtables.com>"
+    "Conor Hastings <conor@socialtables.com>",
+    "Jen Weber <j@jenweber.me>"
   ],
   "bin": "cli.js",
   "engines": {
