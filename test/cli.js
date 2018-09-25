@@ -19,9 +19,9 @@ test('help', function(t) {
 test('stdin', function(t) {
   return execa
     .stderr('./cli.js', ['--stdin'], {input: 'His'})
-    .catch(function(err) {
+    .catch(function(error) {
       t.is(
-        err.stderr,
+        error.stderr,
         [
           '<stdin>',
           '  1:1-1:4  warning  `His` may be insensitive, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
@@ -38,8 +38,8 @@ test('stdin and globs', function(t) {
 
   return execa
     .stderr('./cli.js', ['--stdin', rp], {input: 'His'})
-    .catch(function(err) {
-      t.regex(err.stderr, /Do not pass globs with `--stdin`/)
+    .catch(function(error) {
+      t.regex(error.stderr, /Do not pass globs with `--stdin`/)
     })
 })
 
@@ -54,9 +54,9 @@ test('markdown by default', function(t) {
 test('text optional', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
-  return execa.stderr('./cli.js', [rp, '--text']).catch(function(err) {
+  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
     t.is(
-      err.stderr,
+      error.stderr,
       [
         rp,
         '  1:18-1:21  warning  `his` may be insensitive, use `their`, `theirs`, `them` instead  her-him  retext-equality',
@@ -87,9 +87,9 @@ test('quiet on ok files', function(t) {
 test('quiet on nok files', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
-  return execa.stderr('./cli.js', [rp, '--text']).catch(function(err) {
+  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
     t.is(
-      err.stderr,
+      error.stderr,
       [
         rp,
         '  1:18-1:21  warning  `his` may be insensitive, use `their`, `theirs`, `them` instead  her-him  retext-equality',
@@ -112,7 +112,7 @@ test('binary (default)', function(t) {
 test('non-binary (optional)', function(t) {
   var rp = path.join('test', 'fixtures', 'non-binary', 'two.md')
 
-  return execa.stderr('./cli.js', [rp]).catch(function(err) {
+  return execa.stderr('./cli.js', [rp]).catch(function(error) {
     var expected = [
       rp,
       '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
@@ -122,7 +122,7 @@ test('non-binary (optional)', function(t) {
       ''
     ].join('\n')
 
-    t.is(err.stderr, expected)
+    t.is(error.stderr, expected)
   })
 })
 
