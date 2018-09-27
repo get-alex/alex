@@ -171,7 +171,7 @@ Yields:
 
 ## Integrations
 
-*   Atom — [`wooorm/atom-linter-alex`](https://github.com/wooorm/atom-linter-alex)
+*   Atom — [`get-alex/atom-linter-alex`](https://github.com/get-alex/atom-linter-alex)
 *   Sublime — [`sindresorhus/SublimeLinter-contrib-alex`](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
 *   Visual Studio Code — [`shinnn/vscode-alex`](https://github.com/shinnn/vscode-alex)
 *   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
