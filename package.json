@@ -38,7 +38,6 @@
     "stylelint": "^9.0.0",
     "stylelint-config-standard": "^18.0.0",
     "tinyify": "^2.4.3",
-    "uglify-js": "^3.0.15",
     "unified": "^7.0.0",
     "vfile": "^3.0.0",
     "vfile-sort": "^2.0.0",
