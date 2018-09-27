@@ -388,7 +388,7 @@ textarea {
   border-bottom-left-radius: 2px;
   border-bottom-right-radius: 2px;
 
-  /* See https://github.com/wooorm/alex/issues/187 */
+  /* See https://github.com/get-alex/alex/issues/187 */
   overflow: hidden;
 }
 

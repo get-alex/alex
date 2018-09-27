@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "description": "The alexjs.com website",
   "license": "MIT",
-  "repository": "wooorm/alex",
-  "bugs": "https://github.com/wooorm/alex/issues",
+  "repository": "get-alex/alex",
+  "bugs": "https://github.com/get-alex/alex/issues",
   "author": "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)",
   "contributors": [
     "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)"
