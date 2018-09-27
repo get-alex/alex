@@ -113,7 +113,7 @@ prevent you from doing unnecessary work.
 ## Resources
 
 *   [How to Contribute to Open Source](https://opensource.guide/how-to-contribute/)
-*   [Making your first contribution](https://medium.com/@vadimdemedes/making-your-first-contribution-de6576ddb190)
+*   [Your first open source contribution: a step-by-step technical guide](https://medium.com/@jenweber/your-first-open-source-contribution-a-step-by-step-technical-guide-d3aca55cc5a6)
 *   [Using Pull Requests](https://help.github.com/articles/about-pull-requests/)
 *   [GitHub Help](https://help.github.com)
 
