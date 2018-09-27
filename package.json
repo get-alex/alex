@@ -43,7 +43,7 @@
     "vfile-sort": "^2.0.0",
     "vfile-statistics": "^1.0.0",
     "virtual-dom": "^2.1.1",
-    "xo": "^0.22.0"
+    "xo": "^0.23.0"
   },
   "stylelint": {
     "extends": "stylelint-config-standard"
