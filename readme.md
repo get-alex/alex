@@ -13,7 +13,6 @@
 [![Hacktoberfest][hacktoberfest-badge]][hacktoberfest]
 [![First timers friendly][first-timers-badge]][first-timers]
 
-
 Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, race related, religion inconsiderate, or other
 **unequal** phrasing in text.
