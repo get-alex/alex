@@ -11,6 +11,7 @@
 [![Build Status][travis-badge]][travis]
 [![Coverage Status][codecov-badge]][codecov]
 [![Hacktoberfest][hacktoberfest-badge]][hacktoberfest]
+[![First timers friendly][first-timers-badge]][first-timers]
 
 Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, race related, religion inconsiderate, or other
@@ -401,6 +402,10 @@ or community you agree to abide by its terms.
 [MIT][license] © [Titus Wormer][author]
 
 <!-- Definitions. -->
+
+[first-timers-badge]: https://img.shields.io/badge/first--timers--only-friendly-blue.svg
+
+[first-timers]: https://www.firsttimersonly.com/
 
 [travis-badge]: https://img.shields.io/travis/get-alex/alex.svg
 
