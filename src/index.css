@@ -468,10 +468,18 @@ textarea {
   background-color: #859900;
 }
 
+.github-corner svg {
+  fill: #151513;
+  color: #fff;
+  position: absolute;
+  top: 0;
+  border: 0;
+  right: 0;
+}
+
 .github-corner:hover .octo-arm {
   animation: octocat-wave 560ms ease-in-out;
 }
-
 
 @keyframes octocat-wave {
   0%,
