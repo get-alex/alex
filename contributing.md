@@ -88,7 +88,8 @@ prevent you from doing unnecessary work.
 
 There are ways in which our [website][website] can be improved as well, and 
 we are open to contributions.
-Switch to the [`website`][website-branch] branch and start contributing! 
+Switch to the [`website`][website-branch] branch (with `git checkout website`) 
+and start contributing! 
 Changes made to the [`src`][src-folder] folder are automatically 
 built to the [`dest`][dest-folder] folder.
 
