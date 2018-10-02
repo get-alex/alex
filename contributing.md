@@ -86,8 +86,11 @@ prevent you from doing unnecessary work.
 
 ### Website contributions
 
-There are ways in which our [website](https://alexjs.com/) can be improved as well, and we are open to contributions.
-Switch to the [`website`](../../tree/website/) branch and start contributing! Changes made to the [`src`](../../tree/website/src) folder are automatically built to the [`dest`](../../tree/website/dest) folder.
+There are ways in which our [website][website] can be improved as well, and 
+we are open to contributions.
+Switch to the [`website`][website-branch] branch and start contributing! 
+Changes made to the [`src`][src-folder] folder are automatically 
+built to the [`dest`][dest-folder] folder.
 
 ## Submitting an issue
 
@@ -136,3 +139,11 @@ Switch to the [`website`](../../tree/website/) branch and start contributing! Ch
 [profanities]: https://github.com/retextjs/retext-profanities
 
 [unit-test]: https://twitter.com/sindresorhus/status/579306280495357953
+
+[website]: https://alexjs.com
+
+[website-branch]: https://github.com/get-alex/alex/tree/website
+
+[src-folder]: https://github.com/get-alex/alex/tree/website/src
+
+[dest-folder]: https://github.com/get-alex/alex/tree/website/dest
