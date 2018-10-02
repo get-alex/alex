@@ -24,6 +24,7 @@ let us know!
     *   [Improve issues](#improve-issues)
     *   [Give feedback on issues](#give-feedback-on-issues)
     *   [Write code](#write-code)
+    *   [Website contributions](#website-contributions)
 *   [Submitting an issue](#submitting-an-issue)
 *   [Submitting a pull request](#submitting-a-pull-request)
 *   [Resources](#resources)
@@ -82,6 +83,11 @@ We’re always looking for more opinions on discussions in the issue tracker.
 Code contributions are very welcome.  It’s often good to first create an issue
 to report a bug or suggest a new feature before creating a pull request to
 prevent you from doing unnecessary work.
+
+### Website contributions
+
+There are ways in which our [website](https://alexjs.com/) can be improved as well, and we are open to contributions.
+Switch to the [`website`](../../tree/website/) branch and start contributing! Changes made to the [`src`](../../tree/website/src) folder are automatically built to the [`dest`](../../tree/website/dest) folder.
 
 ## Submitting an issue
 
