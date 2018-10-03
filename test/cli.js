@@ -68,6 +68,23 @@ test('text optional', function(t) {
   })
 })
 
+test('html optional', function(t) {
+  var rp = path.join('test', 'fixtures', 'three.html')
+
+  return execa.stderr('./cli.js', [rp, '--html']).catch(function(error) {
+    t.is(
+      error.stderr,
+      [
+        rp,
+        '  2:4-2:7  warning  `His` may be insensitive, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
+        '',
+        '⚠ 1 warning',
+        ''
+      ].join('\n')
+    )
+  })
+})
+
 test('successful files', function(t) {
   var rp = path.join('test', 'fixtures', 'ok.txt')
 
