@@ -24,6 +24,7 @@ let us know!
     *   [Improve issues](#improve-issues)
     *   [Give feedback on issues](#give-feedback-on-issues)
     *   [Write code](#write-code)
+    *   [Website contributions](#website-contributions)
 *   [Submitting an issue](#submitting-an-issue)
 *   [Submitting a pull request](#submitting-a-pull-request)
 *   [Resources](#resources)
@@ -83,6 +84,15 @@ Code contributions are very welcome.  It’s often good to first create an issue
 to report a bug or suggest a new feature before creating a pull request to
 prevent you from doing unnecessary work.
 
+### Website contributions
+
+There are ways in which our [website][website] can be improved as well, and 
+we are open to contributions.
+Switch to the [`website`][website-branch] branch (with `git checkout website`) 
+and start contributing! 
+Changes made to the [`src`][src-folder] folder are automatically 
+built to the [`dest`][dest-folder] folder.
+
 ## Submitting an issue
 
 *   The issue tracker is for issues
@@ -130,3 +140,11 @@ prevent you from doing unnecessary work.
 [profanities]: https://github.com/retextjs/retext-profanities
 
 [unit-test]: https://twitter.com/sindresorhus/status/579306280495357953
+
+[website]: https://alexjs.com
+
+[website-branch]: https://github.com/get-alex/alex/tree/website
+
+[src-folder]: https://github.com/get-alex/alex/tree/website/src
+
+[dest-folder]: https://github.com/get-alex/alex/tree/website/dest
