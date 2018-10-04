@@ -68,6 +68,13 @@ test('text optional', function(t) {
   })
 })
 
+test('text on html', function(t) {
+  var rp = path.join('test', 'fixtures', 'three.html')
+  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
+    t.regex(error.stderr, /9 warnings/)
+  })
+})
+
 test('html optional', function(t) {
   var rp = path.join('test', 'fixtures', 'three.html')
 
@@ -76,9 +83,10 @@ test('html optional', function(t) {
       error.stderr,
       [
         rp,
-        '  2:4-2:7  warning  `His` may be insensitive, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
+        '  9:18-9:20  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
+        '  10:1-10:4  warning  `She` may be insensitive, use `They`, `It` instead  he-she  retext-equality',
         '',
-        '⚠ 1 warning',
+        '⚠ 2 warnings',
         ''
       ].join('\n')
     )
