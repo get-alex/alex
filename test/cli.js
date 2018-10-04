@@ -68,6 +68,31 @@ test('text optional', function(t) {
   })
 })
 
+test('text on html', function(t) {
+  var rp = path.join('test', 'fixtures', 'three.html')
+  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
+    t.regex(error.stderr, /9 warnings/)
+  })
+})
+
+test('html optional', function(t) {
+  var rp = path.join('test', 'fixtures', 'three.html')
+
+  return execa.stderr('./cli.js', [rp, '--html']).catch(function(error) {
+    t.is(
+      error.stderr,
+      [
+        rp,
+        '  9:18-9:20  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
+        '  10:1-10:4  warning  `She` may be insensitive, use `They`, `It` instead  he-she  retext-equality',
+        '',
+        '⚠ 2 warnings',
+        ''
+      ].join('\n')
+    )
+  })
+})
+
 test('successful files', function(t) {
   var rp = path.join('test', 'fixtures', 'ok.txt')
 

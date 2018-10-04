@@ -7,9 +7,11 @@ var meow = require('meow')
 var engine = require('unified-engine')
 var unified = require('unified')
 var markdown = require('remark-parse')
+var html = require('rehype-parse')
 var frontmatter = require('remark-frontmatter')
 var english = require('retext-english')
 var remark2retext = require('remark-retext')
+var rehype2retext = require('rehype-retext')
 var report = require('vfile-reporter')
 var equality = require('retext-equality')
 var profanities = require('retext-profanities')
@@ -25,7 +27,8 @@ var extensions = [
   'mkd',
   'mkdn',
   'mkdown',
-  'ron'
+  'ron',
+  'html'
 ]
 
 // Update messages.
@@ -41,6 +44,7 @@ var cli = meow(
     '  -w, --why    output sources (when available)',
     '  -q, --quiet  output only warnings and errors',
     '  -t, --text   treat input as plain-text (not markdown)',
+    '  -l, --html   treat input as html (not markdown)',
     '  -d, --diff   ignore unchanged lines (affects Travis only)',
     '  --stdin      read from stdin',
     '',
@@ -58,6 +62,7 @@ var cli = meow(
       help: {type: 'boolean', alias: 'h'},
       stdin: {type: 'boolean'},
       text: {type: 'boolean', alias: 't'},
+      html: {type: 'boolean', alias: 'l'},
       diff: {type: 'boolean', alias: 'd'},
       quiet: {type: 'boolean', alias: 'q'},
       why: {type: 'boolean', alias: 'w'}
@@ -119,7 +124,11 @@ function transform(options) {
     [equality, {noBinary: settings.noBinary}]
   ]
 
-  if (!cli.flags.text) {
+  if (cli.flags.html) {
+    plugins = [html, [rehype2retext, unified().use({plugins: plugins})]]
+  }
+
+  if (!(cli.flags.text || cli.flags.html)) {
     plugins = [
       markdown,
       [frontmatter, ['yaml', 'toml']],
