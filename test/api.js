@@ -40,3 +40,28 @@ test('alex.text()', function(t) {
     '1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead'
   ])
 })
+
+test('alex.html()', function(t) {
+  t.deepEqual(
+    alex.html(`
+      <!doctype html>
+      <html>
+      <!-- The Chinese student walked to class. -->
+      <head><title>Church website</title></head>
+      <body>
+      <script>console.log("The boogeyman walked to class.")</script>
+      <style>.black {color: black;}</style>
+      <button disabled>Press me</button>
+      <p class="black">He walked to class.</p>
+      She walked to class.
+      <code>var adult = 2</code>
+      </body>
+      </html>
+      `)
+    .messages
+    .map(String), [
+      '10:24-10:26: `He` may be insensitive, use `They`, `It` instead',
+      '11:7-11:10: `She` may be insensitive, use `They`, `It` instead',
+    ]
+  )
+})
