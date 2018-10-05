@@ -1,5 +1,7 @@
 'use strict'
 
+var fs = require('fs')
+var path = require('path')
 var test = require('ava')
 var alex = require('..')
 
@@ -38,5 +40,15 @@ test('alex.markdown()', function(t) {
 test('alex.text()', function(t) {
   t.deepEqual(alex.text('The `boogeyman`.').messages.map(String), [
     '1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead'
+  ])
+})
+
+test('alex.html()', function(t) {
+  var fp = path.join(__dirname, 'fixtures', 'three.html')
+  var fixture = fs.readFileSync(fp)
+
+  t.deepEqual(alex.html(fixture).messages.map(String), [
+    '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
+    '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
   ])
 })

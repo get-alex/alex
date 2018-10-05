@@ -29,7 +29,7 @@ Give **alex** a spin on the [Online demo »][demo].
 *   [x] Helps to get better at considerate writing
 *   [x] Catches many possible offences
 *   [x] Suggests helpful alternatives
-*   [x] Reads plain-text and markdown as input
+*   [x] Reads plain-text, HTML, and markdown as input
 *   [x] Stylish
 
 ## Install
@@ -46,6 +46,7 @@ $ npm install alex --global
 *   [API](#api)
     *   [alex(value\[, allow\])](#alexvalue-allow)
     *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
+    *   [alex.html(value)](#alexhtmlvalue)
     *   [alex.text(value)](#alextextvalue)
 *   [Integrations](#integrations)
 *   [Support](#support)
@@ -143,6 +144,32 @@ Yields:
 [`VFile`][vfile].  You’ll probably be interested in its
 [`messages`][vfile-message] property, as demonstrated in the example
 above, as it holds the possible violations.
+
+### `alex.html(value)`
+
+Works just like [`alex()`][alex-api] and [`alex.text()`](#alextextvalue), but parses it as HTML.
+It will break your writing out of it’s HTML-wrapped tags and examine them.
+
+###### Example
+
+```js
+alex.html('<p class="black">He walked to class.</p>').messages
+```
+
+Yields:
+
+```js
+[ { [1:18-1:20: `He` may be insensitive, use `They`, `It` instead]
+    message: '`He` may be insensitive, use `They`, `It` instead',
+    name: '1:18-1:20',
+    reason: '`He` may be insensitive, use `They`, `It` instead',
+    line: 1,
+    column: 18,
+    location: { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'he-she',
+    fatal: false } ]
+```
 
 ### `alex.text(value)`
 
