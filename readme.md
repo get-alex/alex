@@ -153,28 +153,18 @@ It will break your writing out of it’s HTML-wrapped tags and examine them.
 ###### Example
 
 ```js
-alex.html('<button disabled>Press me</button><p class="black">He walked to class.</p>').messages // => []
+alex.html('<p class="black">He walked to class.</p>').messages
 ```
 
 Yields:
 
 ```js
-[ { [1:52-1:54: `He` may be insensitive, use `They`, `It` instead]
+[ { [1:18-1:20: `He` may be insensitive, use `They`, `It` instead]
     message: '`He` may be insensitive, use `They`, `It` instead',
-    name: '1:52-1:54',
+    name: '1:18-1:20',
     reason: '`He` may be insensitive, use `They`, `It` instead',
     line: 1,
-    column: 52,
-    location: { start: [Object], end: [Object] },
-    source: 'retext-equality',
-    ruleId: 'he-she',
-    fatal: false },
-  { [1:52-1:54: `He` may be insensitive, use `They`, `It` instead]
-    message: '`He` may be insensitive, use `They`, `It` instead',
-    name: '1:52-1:54',
-    reason: '`He` may be insensitive, use `They`, `It` instead',
-    line: 1,
-    column: 52,
+    column: 18,
     location: { start: [Object], end: [Object] },
     source: 'retext-equality',
     ruleId: 'he-she',
