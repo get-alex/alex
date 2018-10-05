@@ -43,7 +43,9 @@ test('alex.text()', function(t) {
 
 test('alex.html()', function(t) {
   t.deepEqual(
-    alex.html(`
+    alex
+      .html(
+        `
       <!doctype html>
       <html>
       <!-- The Chinese student walked to class. -->
@@ -57,11 +59,12 @@ test('alex.html()', function(t) {
       <code>var adult = 2</code>
       </body>
       </html>
-      `)
-    .messages
-    .map(String), [
+      `
+      )
+      .messages.map(String),
+    [
       '10:24-10:26: `He` may be insensitive, use `They`, `It` instead',
-      '11:7-11:10: `She` may be insensitive, use `They`, `It` instead',
+      '11:7-11:10: `She` may be insensitive, use `They`, `It` instead'
     ]
   )
 })

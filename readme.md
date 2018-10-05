@@ -46,8 +46,8 @@ $ npm install alex --global
 *   [API](#api)
     *   [alex(value\[, allow\])](#alexvalue-allow)
     *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
-    *   [alex.text(value)](#alextextvalue)
     *   [alex.html(value)](#alexhtmlvalue)
+    *   [alex.text(value)](#alextextvalue)
 *   [Integrations](#integrations)
 *   [Support](#support)
 *   [Ignoring files](#ignoring-files)
@@ -148,7 +148,7 @@ above, as it holds the possible violations.
 ### `alex.html(value)`
 
 Works just like [`alex()`][alex-api] and [`alex.text()`](#alextextvalue), but parses it as HTML.
-It will break your writing out of it's HTML-wrapped tags and examine them.
+It will break your writing out of it’s HTML-wrapped tags and examine them.
 
 ###### Example
 
