@@ -25,6 +25,7 @@ let us know!
     *   [Give feedback on issues](#give-feedback-on-issues)
     *   [Write code](#write-code)
     *   [Website contributions](#website-contributions)
+    *   [Adding profanities and other words](#adding-profanities-and-other-words)
 *   [Submitting an issue](#submitting-an-issue)
 *   [Submitting a pull request](#submitting-a-pull-request)
 *   [Resources](#resources)
@@ -86,12 +87,20 @@ prevent you from doing unnecessary work.
 
 ### Website contributions
 
-There are ways in which our [website][website] can be improved as well, and 
+There are ways in which our [website][website] can be improved as well, and
 we are open to contributions.
-Switch to the [`website`][website-branch] branch (with `git checkout website`) 
-and start contributing! 
-Changes made to the [`src`][src-folder] folder are automatically 
+Switch to the [`website`][website-branch] branch (with `git checkout website`)
+and start contributing!
+Changes made to the [`src`][src-folder] folder are automatically
 built to the [`dest`][dest-folder] folder.
+
+### Adding profanities and other words
+
+If you have profanities, insensitive words, and/or any other additions to add
+to our repository, you’ll need to make a PR to [`profanities`][profanities], 
+and then [`cuss`][cuss] after the former is released.  The words will
+automatically be added into [`retext-profanities`][profanities] and Alex as
+well.
 
 ## Submitting an issue
 
@@ -128,6 +137,8 @@ built to the [`dest`][dest-folder] folder.
 *   [GitHub Help](https://help.github.com)
 
 [coc]: https://github.com/get-alex/alex/blob/master/code-of-conduct.md
+
+[cuss]: https://github.com/words/cuss
 
 [unified]: https://github.com/unifiedjs/unified
 
