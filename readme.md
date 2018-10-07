@@ -148,7 +148,7 @@ above, as it holds the possible violations.
 ### `alex.html(value)`
 
 Works just like [`alex()`][alex-api] and [`alex.text()`](#alextextvalue), but parses it as HTML.
-It will break your writing out of it’s HTML-wrapped tags and examine them.
+It will break your writing out of its HTML-wrapped tags and examine them.
 
 ###### Example
 
