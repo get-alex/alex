@@ -33,7 +33,7 @@ body {
   text-align: center;
 }
 
-.cover::after {
+.section-jump {
   content: '';
   position: absolute;
   left: 50%;
