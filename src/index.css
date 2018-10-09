@@ -1,5 +1,6 @@
 html {
   font-family: Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", sans-serif;
+  scroll-behavior: smooth;
 }
 
 body {
