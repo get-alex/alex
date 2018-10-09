@@ -1,5 +1,6 @@
 html {
   font-family: Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", sans-serif;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -33,7 +34,7 @@ body {
   text-align: center;
 }
 
-.cover::after {
+.section-jump {
   content: '';
   position: absolute;
   left: 50%;

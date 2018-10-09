@@ -20,7 +20,7 @@ var processor = unified()
   .use(equality)
   .use(profanities)
   .use(severity)
-
+  
 var root = doc.getElementById('root')
 var tree = render(doc.getElementsByTagName('template')[0].innerHTML)
 var dom = root.appendChild(createElement(tree))
@@ -244,4 +244,7 @@ function severity() {
   function transform(message) {
     message.fatal = map[message.profanitySeverity]
   }
+ 
+ 
+
 }
