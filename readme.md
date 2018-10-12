@@ -34,10 +34,16 @@ Give **alex** a spin on the [Online demo »][demo].
 
 ## Install
 
-[npm][] (with [Node.js][node]):
+Using [npm][] (with [Node.js][node]):
 
 ```sh
 $ npm install alex --global
+```
+
+Using [yarn][]:
+
+```sh
+$ yarn global add alex
 ```
 
 ## Table of Contents
@@ -491,3 +497,5 @@ or community you agree to abide by its terms.
 [profanities]: https://github.com/retextjs/retext-profanities/blob/master/rules.md
 
 [equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md
+
+[yarn]: https://yarnpkg.com/
