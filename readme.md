@@ -39,7 +39,9 @@ Using [npm][] (with [Node.js][node]):
 ```sh
 $ npm install alex --global
 ```
+
 Using [yarn][]:
+
 ```sh
 $ yarn global add alex
 ```
