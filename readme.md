@@ -499,3 +499,4 @@ or community you agree to abide by its terms.
 [equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md
 
 [yarn]: https://yarnpkg.com/
+school
