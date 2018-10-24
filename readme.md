@@ -57,7 +57,7 @@ $ yarn global add alex
 *   [Integrations](#integrations)
 *   [Support](#support)
 *   [Ignoring files](#ignoring-files)
-*   [.alexignore](#alexignore)
+    *   [.alexignore](#alexignore)
 *   [Ignoring messages](#ignoring-messages)
     *   [.alexrc](#alexrc)
     *   [package.json](#packagejson)
