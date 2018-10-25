@@ -1,20 +1,18 @@
-
 ![](./media/api.png)
-
 
 [npm](https://docs.npmjs.com/cli/install)
 
 ```bash
 npm install alex --save
 ```
+
 **alex** is also available as an AMD, CommonJS, and globals module, [uncompressed and compressed.](https://github.com/get-alex/alex/releases)
 
 `alex(value[, allow])`
 
 `alex.markdown(value[, allow])`
 
-
- **Exemple**
+**Exemple**
 
 ```js
 alex('We’ve confirmed his identity.').messages
@@ -36,6 +34,7 @@ alex('We’ve confirmed his identity.').messages
 ```
 
 **Parameters**
+
 - `value` (`VFile or string`) — Markdown or plain-text
 - `allow` (`Array.<string>`, `optional`) — List of allowed rules
 
@@ -43,11 +42,12 @@ alex('We’ve confirmed his identity.').messages
 `VFile`. You’ll probably be interested in its `messages` property, as demonstrated in the example above, as it holds the possible violations.
 
 ---
+
 `alex.html(value)`
 
 Works just like `alex()` and `alex.text()`, but parses it as HTML. It will break your writing out of its HTML-wrapped tags and examine them.
 
- **Exemple**
+**Exemple**
 
 ```js
 alex('We’ve confirmed his identity.').messages
@@ -74,7 +74,7 @@ alex('We’ve confirmed his identity.').messages
 
 Works just like `alex()`, but does not parse as markdown (thus things like code are not ignored)
 
- **Exemple**
+**Exemple**
 
 ```js
 alex('The `boogeyman`.').messages // => []
