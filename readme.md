@@ -49,11 +49,7 @@ $ yarn global add alex
 ## Table of Contents
 
 *   [Command Line](#command-line)
-*   [API](#api)
-    *   [alex(value\[, allow\])](#alexvalue-allow)
-    *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
-    *   [alex.html(value)](#alexhtmlvalue)
-    *   [alex.text(value)](#alextextvalue)
+*   [API](./api.md)
 *   [Integrations](#integrations)
 *   [Support](#support)
 *   [Ignoring files](#ignoring-files)
