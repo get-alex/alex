@@ -35,15 +35,17 @@ alex('We’ve confirmed his identity.').messages
 
 **Parameters**
 
-- `value` (`VFile or string`) — Markdown or plain-text
-- `allow` (`Array.<string>`, `optional`) — List of allowed rules
+* `value` (`VFile or string`) — Markdown or plain-text
+* `allow` (`Array.<string>`, `optional`) — List of allowed rules
 
 **Returns**
+
 `VFile`. You’ll probably be interested in its `messages` property, as demonstrated in the example above, as it holds the possible violations.
 
----
+* * *
 
 `alex.html(value)`
+
 
 Works just like `alex()` and `alex.text()`, but parses it as HTML. It will break your writing out of its HTML-wrapped tags and examine them.
 
@@ -68,7 +70,7 @@ alex('We’ve confirmed his identity.').messages
     fatal: false } ]
 ```
 
----
+* * *
 
 `alex.text(value)`
 
