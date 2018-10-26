@@ -26,11 +26,11 @@ Give **alex** a spin on the [Online demo »][demo].
 
 ## Why
 
-*   [x] Helps to get better at considerate writing
-*   [x] Catches many possible offences
-*   [x] Suggests helpful alternatives
-*   [x] Reads plain-text, HTML, and markdown as input
-*   [x] Stylish
+- [x] Helps to get better at considerate writing
+- [x] Catches many possible offences
+- [x] Suggests helpful alternatives
+- [x] Reads plain-text, HTML, and markdown as input
+- [x] Stylish
 
 ## Install
 
@@ -48,26 +48,26 @@ $ yarn global add alex
 
 ## Table of Contents
 
-*   [Command Line](#command-line)
-*   [API](#api)
-    *   [alex(value\[, allow\])](#alexvalue-allow)
-    *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
-    *   [alex.html(value)](#alexhtmlvalue)
-    *   [alex.text(value)](#alextextvalue)
-*   [Integrations](#integrations)
-*   [Support](#support)
-*   [Ignoring files](#ignoring-files)
-*   [.alexignore](#alexignore)
-*   [Ignoring messages](#ignoring-messages)
-    *   [.alexrc](#alexrc)
-    *   [package.json](#packagejson)
-    *   [Control](#control)
-*   [Workflow](#workflow)
-*   [FAQ](#faq)
-    *   [Why is this named alex?](#why-is-this-named-alex)
-    *   [Alex didn’t check “X”!](#alex-didnt-check-x)
-*   [Contributing](#contributing)
-*   [License](#license)
+- [Command Line](#command-line)
+- [API](#api)
+  - [alex(value\[, allow\])](#alexvalue-allow)
+  - [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
+  - [alex.html(value)](#alexhtmlvalue)
+  - [alex.text(value)](#alextextvalue)
+- [Integrations](#integrations)
+- [Support](#support)
+- [Ignoring files](#ignoring-files)
+- [.alexignore](#alexignore)
+- [Ignoring messages](#ignoring-messages)
+  - [.alexrc](#alexrc)
+  - [package.json](#packagejson)
+  - [Control](#control)
+- [Workflow](#workflow)
+- [FAQ](#faq)
+  - [Why is this named alex?](#why-is-this-named-alex)
+  - [Alex didn’t check “X”!](#alex-didnt-check-x)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Command Line
 
@@ -96,7 +96,7 @@ example.md
   2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
   2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple                retext-equality
 
-⚠ 5 warnings
+⚠ 5 warnings found
 ```
 
 See `$ alex --help` for more information.
@@ -142,12 +142,12 @@ Yields:
 
 ###### Parameters
 
-*   `value` ([`VFile`][vfile] or `string`) — Markdown or plain-text
-*   `allow` (`Array.<string>`, optional) — List of allowed rules
+- `value` ([`VFile`][vfile] or `string`) — Markdown or plain-text
+- `allow` (`Array.<string>`, optional) — List of allowed rules
 
 ###### Returns
 
-[`VFile`][vfile].  You’ll probably be interested in its
+[`VFile`][vfile]. You’ll probably be interested in its
 [`messages`][vfile-message] property, as demonstrated in the example
 above, as it holds the possible violations.
 
@@ -207,28 +207,28 @@ Yields:
 
 ## Integrations
 
-*   Atom — [`get-alex/atom-linter-alex`](https://github.com/get-alex/atom-linter-alex)
-*   Sublime — [`sindresorhus/SublimeLinter-contrib-alex`](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
-*   Visual Studio Code — [`shinnn/vscode-alex`](https://github.com/shinnn/vscode-alex)
-*   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
-*   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
-*   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
-*   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
-*   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
+- Atom — [`get-alex/atom-linter-alex`](https://github.com/get-alex/atom-linter-alex)
+- Sublime — [`sindresorhus/SublimeLinter-contrib-alex`](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
+- Visual Studio Code — [`shinnn/vscode-alex`](https://github.com/shinnn/vscode-alex)
+- Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
+- Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
+- Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
+- Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
+- Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
 
 ## Support
 
 **alex** checks for many patterns of English language, and warns for:
 
-*   Gendered work-titles, for example warning about `garbageman` and suggesting
-    `garbage collector` instead
-*   Gendered proverbs, such as warning about `like a man` and suggesting
-    `bravely` instead, or `ladylike` and suggesting `courteous`
-*   Blunt phrases, such as warning about `cripple` and suggesting
-    `person with a limp` instead
-*   Intolerant phrasing, such as warning about using `master` and `slave`
-    together, and suggesting `primary` and `replica` instead
-*   Profanities, the least of which being `butt`
+- Gendered work-titles, for example warning about `garbageman` and suggesting
+  `garbage collector` instead
+- Gendered proverbs, such as warning about `like a man` and suggesting
+  `bravely` instead, or `ladylike` and suggesting `courteous`
+- Blunt phrases, such as warning about `cripple` and suggesting
+  `person with a limp` instead
+- Intolerant phrasing, such as warning about using `master` and `slave`
+  together, and suggesting `primary` and `replica` instead
+- Profanities, the least of which being `butt`
 
 See [**retext-equality**][equality] and [**retext-profanities**][profanities]
 for all checked rules.
@@ -245,9 +245,9 @@ To prevent files from being found by **alex**, add an
 
 ## `.alexignore`
 
-The **alex** CLI will sometimes [search for files][ignoring-files].  To prevent
+The **alex** CLI will sometimes [search for files][ignoring-files]. To prevent
 files from being found, add a file named `.alexignore` in one of the
-directories above the current working directory.  The format of these files is
+directories above the current working directory. The format of these files is
 similar to [`.eslintignore`][eslintignore] (which is in turn similar to
 `.gitignore` files).
 
@@ -293,7 +293,7 @@ The `allow` field is expected to be an array of rule identifier strings.
 All `allow` fields in all `package.json` and `.alexrc` files are
 detected and used when processing.
 
-Next to `allow`, `noBinary` can also be passed.  Setting it to true
+Next to `allow`, `noBinary` can also be passed. Setting it to true
 counts `he and she`, `garbageman or garbagewoman` and similar pairs
 as errors, whereas the default (`false`), treats it as OK.
 
@@ -372,7 +372,7 @@ The recommended workflow is to add **alex** to `package.json`
 and to run it with your tests in Travis.
 
 You can opt to ignore warnings through [alexrc][] files and
-[control comments][control].  For example, with a `package.json`.
+[control comments][control]. For example, with a `package.json`.
 
 A `package.json` file with [npm scripts][npm-scripts],
 and additionally using [AVA][] for unit tests, could look
@@ -404,7 +404,7 @@ like the following in your `.travis.yml`:
 Make sure to still install alex though!
 
 If the `--diff` flag is used, and Travis is detected, unchanged
-lines are ignored.  Using this workflow, you can merge PRs
+lines are ignored. Using this workflow, you can merge PRs
 with warnings, and not be bothered by them afterwards.
 
 ## FAQ
@@ -413,7 +413,7 @@ with warnings, and not be bothered by them afterwards.
 
 ### Why is this named alex?
 
-It’s a nice androgynous/unisex name, it was free on npm, I like it!  :smile:
+It’s a nice androgynous/unisex name, it was free on npm, I like it! :smile:
 
 ### Alex didn’t check “X”!
 
@@ -424,10 +424,10 @@ See
 
 ## Contributing
 
-**alex** is built by people just like you!  Check out
+**alex** is built by people just like you! Check out
 [`contributing.md`][contributing] for ways to get started.
 
-This project has a [Code of Conduct][coc].  By interacting with this repository
+This project has a [Code of Conduct][coc]. By interacting with this repository
 or community you agree to abide by its terms.
 
 ## License
@@ -437,65 +437,34 @@ or community you agree to abide by its terms.
 <!-- Definitions. -->
 
 [first-timers-badge]: https://img.shields.io/badge/first--timers--only-friendly-blue.svg
-
 [first-timers]: https://www.firsttimersonly.com/
-
 [travis-badge]: https://img.shields.io/travis/get-alex/alex.svg
-
 [travis]: https://travis-ci.org/get-alex/alex
-
 [codecov-badge]: https://img.shields.io/codecov/c/github/get-alex/alex.svg
-
 [codecov]: https://codecov.io/github/get-alex/alex
-
 [hacktoberfest-badge]: https://img.shields.io/badge/hacktoberfest-%F0%9F%8E%83-fe962f.svg
-
 [hacktoberfest]: https://hacktoberfest.digitalocean.com
-
 [demo]: http://alexjs.com/#demo
-
 [npm]: https://docs.npmjs.com/cli/install
-
 [node]: https://nodejs.org/en/download/
-
 [screenshot]: screenshot.png
-
 [releases]: https://github.com/get-alex/alex/releases
-
 [vfile]: https://github.com/vfile/vfile
-
 [vfile-message]: https://github.com/vfile/vfile#vfilemessages
-
 [alex-api]: #alexvalue-allow
-
 [literals]: https://github.com/syntax-tree/nlcst-is-literal#isliteralparent-index
-
 [alexignore]: #alexignore
-
 [alexrc]: #alexrc
-
 [control]: #control
-
 [ignoring-files]: #ignoring-files
-
 [eslintignore]: http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories
-
 [.alexignore]: https://github.com/get-alex/alex/blob/master/.alexignore
-
 [npm-scripts]: https://docs.npmjs.com/misc/scripts
-
 [ava]: http://ava.li
-
 [contributing]: contributing.md
-
 [coc]: code-of-conduct.md
-
 [license]: LICENSE
-
 [author]: http://wooorm.com
-
 [profanities]: https://github.com/retextjs/retext-profanities/blob/master/rules.md
-
 [equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md
-
 [yarn]: https://yarnpkg.com/
