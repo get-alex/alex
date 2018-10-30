@@ -218,12 +218,12 @@ Yields:
 
 ## Support
 
-**alex** checks for many patterns of English language, and warns for:
+**alex** checks for many patterns of English language, and generates warnings for:
 
 *   Gendered work-titles, for example warning about `garbageman` and suggesting
     `garbage collector` instead
 *   Gendered proverbs, such as warning about `like a man` and suggesting
-    `bravely` instead, or `ladylike` and suggesting `courteous`
+    `bravely` instead, or suggesting `courteous` for `ladylike`.
 *   Blunt phrases, such as warning about `cripple` and suggesting
     `person with a limp` instead
 *   Intolerant phrasing, such as warning about using `master` and `slave`
@@ -302,7 +302,7 @@ as errors, whereas the default (`false`), treats it as OK.
 Sometimes, **alex** makes mistakes:
 
 ```markdown
-A window will pop up.
+A message for this sentence will pop up.
 ```
 
 Yields:
@@ -319,7 +319,7 @@ readme.md
 ```markdown
 <!--alex ignore dad-mom-->
 
-A window will **not** pop up.
+A message for this sentence will **not** pop up.
 ```
 
 Yields:
@@ -336,13 +336,15 @@ It’s also possible to turn off messages after a comment by using
 ```markdown
 <!--alex disable dad-mom-->
 
-A window will **not** pop up.
+A message for this sentence will **not** pop up.
 
-A window will **not** pop up.
+A message for this sentence will also **not** pop up.
+
+Yet another sentence where a message will **not** pop up.
 
 <!--alex enable dad-mom-->
 
-A window will pop up.
+A message for this sentence will pop up.
 ```
 
 Yields:
