@@ -1,7 +1,7 @@
 <!--lint disable no-html first-heading-level maximum-line-length no-shell-dollars-->
 
 <h1 align="center">
-  <img width="400" src="https://rawgit.com/get-alex/alex/master/media/logo.svg" alt="alex">
+  <img width="400" src="https://raw.githubusercontent.com/get-alex/alex/c30ec12/media/logo.svg?sanitize=true" alt="alex">
   <br>
   <br>
 </h1>
