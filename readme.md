@@ -10,7 +10,6 @@
 
 [![Build Status][travis-badge]][travis]
 [![Coverage Status][codecov-badge]][codecov]
-[![Hacktoberfest][hacktoberfest-badge]][hacktoberfest]
 [![First timers friendly][first-timers-badge]][first-timers]
 
 Whether your own or someone else’s writing, **alex** helps you find gender
@@ -449,10 +448,6 @@ or community you agree to abide by its terms.
 [codecov-badge]: https://img.shields.io/codecov/c/github/get-alex/alex.svg
 
 [codecov]: https://codecov.io/github/get-alex/alex
-
-[hacktoberfest-badge]: https://img.shields.io/badge/hacktoberfest-%F0%9F%8E%83-fe962f.svg
-
-[hacktoberfest]: https://hacktoberfest.digitalocean.com
 
 [demo]: http://alexjs.com/#demo
 
