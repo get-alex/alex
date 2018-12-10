@@ -127,10 +127,10 @@ alex('We’ve confirmed his identity.').messages
 Yields:
 
 ```js
-[ { [1:17-1:20: `his` may be insensitive, use `their`, `theirs`, `them` instead]
-    message: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
+[ { [1:17-1:20: `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead]
+    message: '`his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead',
     name: '1:17-1:20',
-    reason: '`his` may be insensitive, use `their`, `theirs`, `them` instead',
+    reason: '`his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead',
     line: 1,
     column: 17,
     location: { start: [Object], end: [Object] },

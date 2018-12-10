@@ -24,7 +24,7 @@ test('stdin', function(t) {
         error.stderr,
         [
           '<stdin>',
-          '  1:1-1:4  warning  `His` may be insensitive, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
+          '  1:1-1:4  warning  `His` may be insensitive, when referring to a person, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
           '',
           '⚠ 1 warning',
           ''
@@ -59,7 +59,7 @@ test('text optional', function(t) {
       error.stderr,
       [
         rp,
-        '  1:18-1:21  warning  `his` may be insensitive, use `their`, `theirs`, `them` instead  her-him  retext-equality',
+        '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
         '',
         '⚠ 1 warning',
         ''
@@ -117,7 +117,7 @@ test('quiet on nok files', function(t) {
       error.stderr,
       [
         rp,
-        '  1:18-1:21  warning  `his` may be insensitive, use `their`, `theirs`, `them` instead  her-him  retext-equality',
+        '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
         '',
         '⚠ 1 warning',
         ''
