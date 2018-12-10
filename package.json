@@ -70,7 +70,7 @@
     "execa": "^1.0.0",
     "nyc": "^13.0.0",
     "prettier": "^1.13.7",
-    "remark-cli": "^5.0.0",
+    "remark-cli": "^6.0.0",
     "remark-preset-wooorm": "^4.0.0",
     "tinyify": "^2.4.3",
     "xo": "^0.23.0"
