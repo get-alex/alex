@@ -93,15 +93,18 @@ example.md
   1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave           retext-equality
   1:69-1:75  warning  Don’t use “slaves”, it’s profane                                           slaves                 retext-profanities
   2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
-  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             cripple                retext-equality
+  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             gimp                   retext-equality
 
 ⚠ 5 warnings
 ```
 
 See `$ alex --help` for more information.
 
-> When no input files are given to **alex**, it searches for markdown and
-> text files in the current directory, `doc`, and `docs`.
+> When no input files are given to **alex**, it searches for files in the
+> current directory, `doc`, and `docs`.
+> If `--html` is given, it searches for `htm` and `html` extensions.
+> Otherwise, it searches for `txt`, `text`, `md`, `mkd`, `mkdn`, `mkdown`,
+> `ron`, and `markdown` extensions.
 
 ## API
 
