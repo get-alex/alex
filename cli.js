@@ -19,7 +19,7 @@ var diff = require('unified-diff')
 var pack = require('./package')
 var filter = require('./filter')
 
-var extensions = [
+var textExtensions = [
   'txt',
   'text',
   'md',
@@ -27,9 +27,9 @@ var extensions = [
   'mkd',
   'mkdn',
   'mkdown',
-  'ron',
-  'html'
+  'ron'
 ]
+var htmlExtensions = ['htm', 'html']
 
 // Update messages.
 notifier({pkg: pack}).notify()
@@ -71,6 +71,7 @@ var cli = meow(
 )
 
 // Set-up.
+var extensions = cli.flags.html ? htmlExtensions : textExtensions
 var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
 var silentlyIgnore
 var globs
@@ -126,9 +127,7 @@ function transform(options) {
 
   if (cli.flags.html) {
     plugins = [html, [rehype2retext, unified().use({plugins: plugins})]]
-  }
-
-  if (!(cli.flags.text || cli.flags.html)) {
+  } else if (!cli.flags.text) {
     plugins = [
       markdown,
       [frontmatter, ['yaml', 'toml']],
