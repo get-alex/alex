@@ -33,6 +33,14 @@ test('alex()', function(t) {
   )
 })
 
+test('alex() with an allow array', function(t) {
+  let {messages} = alex(
+    'Eric is pretty set on beating your butt for sheriff.',
+    ['butt']
+  )
+  t.is(messages.length, 0)
+})
+
 test('alex() with profantity config', function(t) {
   let {messages} = alex(
     'Eric, the asshat, is pretty set on beating your butt for sheriff.',
