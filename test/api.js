@@ -33,6 +33,19 @@ test('alex()', function(t) {
   )
 })
 
+test('alex() with profantity config', function(t) {
+  let {messages} = alex(
+    'Eric, the asshat, is pretty set on beating your butt for sheriff.',
+    {
+      allow: ['asshat'],
+      profanities: {
+        sureness: 1
+      }
+    }
+  )
+  t.is(messages.length, 0, 'We dont expect any messages')
+})
+
 test('alex.markdown()', function(t) {
   t.deepEqual(alex.markdown('The `boogeyman`.').messages.map(String), [])
 })
