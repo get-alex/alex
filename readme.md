@@ -61,6 +61,9 @@ $ yarn global add alex
     *   [.alexrc](#alexrc)
     *   [package.json](#packagejson)
     *   [Control](#control)
+*   [Configuring Profanity](#configuring-profanity)
+    *   [.alexrc](#alexrc-1)
+    *   [package.json](#packagejson-1)
 *   [Workflow](#workflow)
 *   [FAQ](#faq)
     *   [Why is this named alex?](#why-is-this-named-alex)
@@ -369,6 +372,49 @@ Multiple messages can be controlled in one go:
 ```md
 <!--alex ignore-->
 ```
+
+## Configuring Profanity
+
+### `.alexrc`
+
+### `package.json`
+
+The profanity checker in **alex** can be configured to define the level of
+“sureness” to warn for.  The underlying library uses
+[cuss](https://github.com/words/cuss) which has a dictionary of words that have
+a rating between 0 and 2 of how “sure” it is a profanity.  Here is the table from
+[the cuss documentation](https://github.com/words/cuss/blob/master/readme.md#cuss)
+
+| Rating | Use as a profanity | Use in clean text | Example |
+| ------ | ------------------ | ----------------- | ------- |
+| 2      | likely             | unlikely          | asshat  |
+| 1      | maybe              | maybe             | addict  |
+| 0      | unlikely           | likely            | beaver  |
+
+You can define what level of profanity you want **alex** to warn for in the
+`.alexrc` configuration:
+
+```json
+{
+  "profanitySureness": 1
+}
+```
+
+...or the `alex` field in `package.json`:
+
+```txt
+{
+  ...
+  "alex": {
+    "profanitySureness": 1
+  },
+  ...
+}
+```
+
+The `profanitySureness` is a number that _includes_ the level of profanity you
+want to check for.  For example, if you set it to 1 then it will warn for level 1
+and 2 profanities, but not for level 0 (unlikely).
 
 ## Workflow
 
