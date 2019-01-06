@@ -22,7 +22,9 @@ function makeText(config) {
   return unified()
     .use(english)
     .use(equality)
-    .use(profanities, config ? config.profanities : null)
+    .use(profanities, {
+      sureness: config && config.profanitySureness
+    })
 }
 
 // Alex’s core.

@@ -151,6 +151,30 @@ test('non-binary (optional)', function(t) {
   })
 })
 
+test('profanity (default)', function(t) {
+  var rp = path.join('test', 'fixtures', 'profanity', 'two.md')
+
+  return execa.stderr('./cli.js', [rp]).catch(function(error) {
+    var expected = [
+      rp,
+      '  1:5-1:11  warning  Be careful with “beaver”, it’s profane in some cases  beaver  retext-profanities',
+      '',
+      '⚠ 1 warning',
+      ''
+    ].join('\n')
+
+    t.is(error.stderr, expected)
+  })
+})
+
+test('profanity (profanitySureness: 1)', function(t) {
+  var rp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+
+  return execa.stderr('./cli.js', [rp]).then(function(result) {
+    t.is(result, rp + ': no issues found')
+  })
+})
+
 test('default globs', function(t) {
   return execa.stderr('./cli.js').then(function(stderr) {
     var expected = [

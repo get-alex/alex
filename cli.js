@@ -121,7 +121,7 @@ function transform(options) {
   var settings = options || {}
   var plugins = [
     english,
-    profanities,
+    [profanities, {sureness: settings.profanitySureness}],
     [equality, {noBinary: settings.noBinary}]
   ]
 

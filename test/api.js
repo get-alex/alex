@@ -46,9 +46,7 @@ test('alex() with profantity config', function(t) {
     'Eric, the asshat, is pretty set on beating your butt for sheriff.',
     {
       allow: ['asshat'],
-      profanities: {
-        sureness: 1
-      }
+      profanitySureness: 1
     }
   )
   t.is(messages.length, 0, 'We dont expect any messages')
