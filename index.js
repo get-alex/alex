@@ -41,7 +41,7 @@ function core(value, processor) {
 
 // Alex.
 function alex(value, config) {
-  let allow
+  var allow
 
   if (Array.isArray(config)) {
     allow = config

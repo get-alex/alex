@@ -34,21 +34,23 @@ test('alex()', function(t) {
 })
 
 test('alex() with an allow array', function(t) {
-  let {messages} = alex(
+  var messages = alex(
     'Eric is pretty set on beating your butt for sheriff.',
     ['butt']
-  )
+  ).messages
+
   t.is(messages.length, 0)
 })
 
 test('alex() with profantity config', function(t) {
-  let {messages} = alex(
+  var messages = alex(
     'Eric, the asshat, is pretty set on beating your butt for sheriff.',
     {
       allow: ['asshat'],
       profanitySureness: 1
     }
-  )
+  ).messages
+
   t.is(messages.length, 0, 'We dont expect any messages')
 })
 
