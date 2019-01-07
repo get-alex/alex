@@ -79,6 +79,18 @@ function htmlParse(value, config) {
 }
 
 // Alex, without the markdown.
-function noMarkdown(value) {
-  return core(value, makeText())
+function noMarkdown(value, config) {
+  var allow
+
+  if (Array.isArray(config)) {
+    allow = config
+  } else if (config) {
+    allow = config.allow
+  }
+
+  return core(
+    value,
+    makeText(config)
+      .use(filter, {allow: allow})
+  )
 }
