@@ -88,9 +88,5 @@ function noMarkdown(value, config) {
     allow = config.allow
   }
 
-  return core(
-    value,
-    makeText(config)
-      .use(filter, {allow: allow})
-  )
+  return core(value, makeText(config).use(filter, {allow: allow}))
 }
