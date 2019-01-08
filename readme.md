@@ -49,18 +49,18 @@ $ yarn global add alex
 
 *   [Command Line](#command-line)
 *   [API](#api)
-    *   [alex(value\[, allow\])](#alexvalue-allow)
-    *   [alex.markdown(value\[, allow\])](#alexmarkdownvalue-allow)
-    *   [alex.html(value)](#alexhtmlvalue)
-    *   [alex.text(value)](#alextextvalue)
+    *   [alex(value, config)](#alexvalue-config)
+    *   [alex.markdown(value, config)](#alexmarkdownvalue-config)
+    *   [alex.html(value, config)](#alexhtmlvalue-config)
+    *   [alex.text(value, config)](#alextextvalue-config)
 *   [Integrations](#integrations)
 *   [Support](#support)
 *   [Ignoring files](#ignoring-files)
 *   [.alexignore](#alexignore)
-*   [Ignoring messages](#ignoring-messages)
-    *   [.alexrc](#alexrc)
-    *   [package.json](#packagejson)
     *   [Control](#control)
+*   [Configuration](#configuration)
+    *   [Ignoring messages](#ignoring-messages)
+    *   [Configuring Profanities](#configuring-profanities)
 *   [Workflow](#workflow)
 *   [FAQ](#faq)
     *   [Why is this named alex?](#why-is-this-named-alex)
@@ -117,9 +117,9 @@ $ npm install alex --save
 **alex** is also available as an AMD, CommonJS, and globals module,
 [uncompressed and compressed][releases].
 
-### `alex(value[, allow])`
+### `alex(value, config)`
 
-### `alex.markdown(value[, allow])`
+### `alex.markdown(value, config)`
 
 ###### Example
 
@@ -145,7 +145,7 @@ Yields:
 ###### Parameters
 
 *   `value` ([`VFile`][vfile] or `string`) — Markdown or plain-text
-*   `allow` (`Array.<string>`, optional) — List of allowed rules
+*   `config` (`Object`, optional) — See [Configuration](#configuration) section below
 
 ###### Returns
 
@@ -153,9 +153,9 @@ Yields:
 [`messages`][vfile-message] property, as demonstrated in the example
 above, as it holds the possible violations.
 
-### `alex.html(value)`
+### `alex.html(value, config)`
 
-Works just like [`alex()`][alex-api] and [`alex.text()`](#alextextvalue), but parses it as HTML.
+Works just like [`alex()`][alex-api] and [`alex.text()`](#alextextvalue-config), but parses it as HTML.
 It will break your writing out of its HTML-wrapped tags and examine them.
 
 ###### Example
@@ -179,7 +179,12 @@ Yields:
     fatal: false } ]
 ```
 
-### `alex.text(value)`
+###### Parameters
+
+*   `value` ([`VFile`][vfile] or `string`) — HTML content
+*   `config` (`Object`, optional) — See [Configuration](#configuration) section below
+
+### `alex.text(value, config)`
 
 Works just like [`alex()`][alex-api], but does not parse as markdown
 (thus things like code are not ignored)
@@ -206,6 +211,11 @@ Yields:
     ruleId: 'boogeyman-boogeywoman',
     fatal: false } ]
 ```
+
+###### Parameters
+
+*   `value` ([`VFile`][vfile] or `string`) — Text content
+*   `config` (`Object`, optional) — See [Configuration](#configuration) section below
 
 ## Integrations
 
@@ -263,41 +273,6 @@ looks as follows:
 # `node_modules` is ignored by default.
 example.md
 ```
-
-## Ignoring messages
-
-### `.alexrc`
-
-### `package.json`
-
-**alex** can silence messages through `.alexrc` configuration:
-
-```json
-{
-  "allow": ["boogeyman-boogeywoman"]
-}
-```
-
-...or the `alex` field in `package.json`:
-
-```txt
-{
-  ...
-  "alex": {
-    "allow": ["butt"]
-  },
-  ...
-}
-```
-
-The `allow` field is expected to be an array of rule identifier strings.
-
-All `allow` fields in all `package.json` and `.alexrc` files are
-detected and used when processing.
-
-Next to `allow`, `noBinary` can also be passed.  Setting it to true
-counts `he and she`, `garbageman or garbagewoman` and similar pairs
-as errors, whereas the default (`false`), treats it as OK.
 
 ### Control
 
@@ -370,12 +345,84 @@ Multiple messages can be controlled in one go:
 <!--alex ignore-->
 ```
 
+## Configuration
+
+### Ignoring messages
+
+**alex** can silence messages through `.alexrc` configuration:
+
+```json
+{
+  "allow": ["boogeyman-boogeywoman"]
+}
+```
+
+...or the `alex` field in `package.json`:
+
+```txt
+{
+  ...
+  "alex": {
+    "allow": ["butt"]
+  },
+  ...
+}
+```
+
+The `allow` field is expected to be an array of rule identifier strings.
+
+All `allow` fields in all `package.json` and `.alexrc` files are
+detected and used when processing.
+
+Next to `allow`, `noBinary` can also be passed.  Setting it to true
+counts `he and she`, `garbageman or garbagewoman` and similar pairs
+as errors, whereas the default (`false`), treats it as OK.
+
+### Configuring Profanities
+
+The profanity checker in **alex** can be configured to define the level of
+“sureness” to warn for.  The underlying library uses
+[cuss](https://github.com/words/cuss) which has a dictionary of words that have
+a rating between 0 and 2 of how “sure” it is a profanity.  Here is the table from
+[the cuss documentation](https://github.com/words/cuss/blob/master/readme.md#cuss)
+
+| Rating | Use as a profanity | Use in clean text | Example |
+| ------ | ------------------ | ----------------- | ------- |
+| 2      | likely             | unlikely          | asshat  |
+| 1      | maybe              | maybe             | addict  |
+| 0      | unlikely           | likely            | beaver  |
+
+You can define what level of profanity you want **alex** to warn for in the
+`.alexrc` configuration:
+
+```json
+{
+  "profanitySureness": 1
+}
+```
+
+...or the `alex` field in `package.json`:
+
+```txt
+{
+  ...
+  "alex": {
+    "profanitySureness": 1
+  },
+  ...
+}
+```
+
+The `profanitySureness` is a number that _includes_ the level of profanity you
+want to check for.  For example, if you set it to 1 then it will warn for level 1
+and 2 profanities, but not for level 0 (unlikely).
+
 ## Workflow
 
 The recommended workflow is to add **alex** to `package.json`
 and to run it with your tests in Travis.
 
-You can opt to ignore warnings through [alexrc][] files and
+You can opt to ignore warnings through [alexrc](#configuration) files and
 [control comments][control].  For example, with a `package.json`.
 
 A `package.json` file with [npm scripts][npm-scripts],
@@ -466,13 +513,11 @@ or community you agree to abide by its terms.
 
 [vfile-message]: https://github.com/vfile/vfile#vfilemessages
 
-[alex-api]: #alexvalue-allow
+[alex-api]: #alexvalue-config
 
 [literals]: https://github.com/syntax-tree/nlcst-is-literal#isliteralparent-index
 
 [alexignore]: #alexignore
-
-[alexrc]: #alexrc
 
 [control]: #control
 

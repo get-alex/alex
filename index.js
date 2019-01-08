@@ -18,10 +18,14 @@ alex.text = noMarkdown
 alex.markdown = alex
 alex.html = htmlParse
 
-var text = unified()
-  .use(english)
-  .use(equality)
-  .use(profanities)
+function makeText(config) {
+  return unified()
+    .use(english)
+    .use(equality)
+    .use(profanities, {
+      sureness: config && config.profanitySureness
+    })
+}
 
 // Alex’s core.
 function core(value, processor) {
@@ -36,29 +40,53 @@ function core(value, processor) {
 }
 
 // Alex.
-function alex(value, allow) {
+function alex(value, config) {
+  var allow
+
+  if (Array.isArray(config)) {
+    allow = config
+  } else if (config) {
+    allow = config.allow
+  }
+
   return core(
     value,
     unified()
       .use(markdown)
       .use(frontmatter, ['yaml', 'toml'])
-      .use(remark2retext, text)
+      .use(remark2retext, makeText(config))
       .use(filter, {allow: allow})
   )
 }
 
 // Alex, for HTML.
-function htmlParse(value, allow) {
+function htmlParse(value, config) {
+  var allow
+
+  if (Array.isArray(config)) {
+    allow = config
+  } else if (config) {
+    allow = config.allow
+  }
+
   return core(
     value,
     unified()
       .use(html)
-      .use(rehype2retext, text)
+      .use(rehype2retext, makeText(config))
       .use(filter, {allow: allow})
   )
 }
 
 // Alex, without the markdown.
-function noMarkdown(value) {
-  return core(value, text)
+function noMarkdown(value, config) {
+  var allow
+
+  if (Array.isArray(config)) {
+    allow = config
+  } else if (config) {
+    allow = config.allow
+  }
+
+  return core(value, makeText(config).use(filter, {allow: allow}))
 }
