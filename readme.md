@@ -227,6 +227,7 @@ Yields:
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
 *   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
+*   Browser Extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
 
 ## Support
 
