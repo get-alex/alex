@@ -83,9 +83,9 @@
     "xo": "^0.25.0"
   },
   "scripts": {
-    "format": "remark . -qfo && prettier --write '**/*.js' && xo --fix",
-    "build-bundle": "browserify . -s alex > alex.js",
-    "build-mangle": "browserify . -s alex -p tinyify > alex.min.js",
+    "format": "remark . -qfo && prettier --write \"**/*.js\" && xo --fix",
+    "build-bundle": "browserify . -s alex -o alex.js",
+    "build-mangle": "browserify . -s alex -p tinyify -o alex.min.js",
     "build": "npm run build-bundle && npm run build-mangle",
     "test-api": "ava",
     "test-coverage": "nyc --reporter lcov ava",
@@ -113,9 +113,6 @@
   "xo": {
     "prettier": true,
     "esnext": false,
-    "rules": {
-      "ava/prefer-async-await": "off"
-    },
     "ignores": [
       "alex.js"
     ]
