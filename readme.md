@@ -228,6 +228,7 @@ Yields:
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
 *   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
 *   Browser Extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
+*   Contentful - [`stefanjudis/alex-js-contentful-ui-extension`](https://github.com/stefanjudis/alex-js-contentful-ui-extension)
 
 ## Support
 
