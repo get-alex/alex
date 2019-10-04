@@ -71,6 +71,7 @@ body {
 }
 
 .cover .title-inner {
+  text-transform: uppercase;
   position: relative;
   padding-left: 0.025em;
   border-bottom: 0.03125em solid currentcolor;
