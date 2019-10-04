@@ -5,64 +5,58 @@ var test = require('ava')
 var execa = require('execa')
 
 test('version', function(t) {
-  return execa.stdout('./cli.js', ['-v']).then(function(result) {
-    t.is(result, require('../package').version)
+  return execa('./cli.js', ['-v']).then(function(result) {
+    t.is(result.stdout, require('../package').version)
   })
 })
 
 test('help', function(t) {
-  return execa.stdout('./cli.js', ['-h']).then(function(result) {
-    t.regex(result, /Usage: alex \[<glob> ...] /)
+  return execa('./cli.js', ['-h']).then(function(result) {
+    t.regex(result.stdout, /Usage: alex \[<glob> ...] /)
   })
 })
 
 test('stdin', function(t) {
-  return execa
-    .stderr('./cli.js', ['--stdin'], {input: 'His'})
-    .catch(function(error) {
-      t.is(
-        error.stderr,
-        [
-          '<stdin>',
-          '  1:1-1:4  warning  `His` may be insensitive, when referring to a person, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
-          '',
-          '⚠ 1 warning',
-          ''
-        ].join('\n')
-      )
-    })
+  return execa('./cli.js', ['--stdin'], {input: 'His'}).catch(function(error) {
+    t.is(
+      error.stderr,
+      [
+        '<stdin>',
+        '  1:1-1:4  warning  `His` may be insensitive, when referring to a person, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
+        '',
+        '⚠ 1 warning'
+      ].join('\n')
+    )
+  })
 })
 
 test('stdin and globs', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
-  return execa
-    .stderr('./cli.js', ['--stdin', rp], {input: 'His'})
-    .catch(function(error) {
-      t.regex(error.stderr, /Do not pass globs with `--stdin`/)
-    })
+  return execa('./cli.js', ['--stdin', rp]).catch(function(error) {
+    t.regex(error.stderr, /Do not pass globs with `--stdin`/)
+  })
 })
 
 test('markdown by default', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
-  return execa.stderr('./cli.js', [rp]).then(function(result) {
-    t.is(result, rp + ': no issues found')
+  return execa('./cli.js', [rp]).then(function(result) {
+    t.is(result.stderr, rp + ': no issues found')
   })
 })
 
 test('text optional', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
-  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
+  return execa('./cli.js', [rp, '--text']).catch(function(error) {
     t.is(
       error.stderr,
       [
         rp,
         '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
         '',
-        '⚠ 1 warning',
-        ''
+        '⚠ 1 warning'
       ].join('\n')
     )
   })
@@ -70,7 +64,7 @@ test('text optional', function(t) {
 
 test('text on html', function(t) {
   var rp = path.join('test', 'fixtures', 'three.html')
-  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
+  return execa('./cli.js', [rp, '--text']).catch(function(error) {
     t.regex(error.stderr, /9 warnings/)
   })
 })
@@ -78,7 +72,7 @@ test('text on html', function(t) {
 test('html optional', function(t) {
   var rp = path.join('test', 'fixtures', 'three.html')
 
-  return execa.stderr('./cli.js', [rp, '--html']).catch(function(error) {
+  return execa('./cli.js', [rp, '--html']).catch(function(error) {
     t.is(
       error.stderr,
       [
@@ -86,8 +80,7 @@ test('html optional', function(t) {
         '  9:18-9:20  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
         '  10:1-10:4  warning  `She` may be insensitive, use `They`, `It` instead  he-she  retext-equality',
         '',
-        '⚠ 2 warnings',
-        ''
+        '⚠ 2 warnings'
       ].join('\n')
     )
   })
@@ -96,31 +89,30 @@ test('html optional', function(t) {
 test('successful files', function(t) {
   var rp = path.join('test', 'fixtures', 'ok.txt')
 
-  return execa.stderr('./cli.js', [rp]).then(function(result) {
-    t.is(result, rp + ': no issues found')
+  return execa('./cli.js', [rp]).then(function(result) {
+    t.is(result.stderr, rp + ': no issues found')
   })
 })
 
 test('quiet on ok files', function(t) {
   var fp = path.join(__dirname, 'fixtures', 'ok.txt')
 
-  return execa.stderr('./cli.js', [fp, '-q']).then(function(result) {
-    t.is(result, '')
+  return execa('./cli.js', [fp, '-q']).then(function(result) {
+    t.is(result.stderr, '')
   })
 })
 
 test('quiet on nok files', function(t) {
   var rp = path.join('test', 'fixtures', 'one.md')
 
-  return execa.stderr('./cli.js', [rp, '--text']).catch(function(error) {
+  return execa('./cli.js', [rp, '--text']).catch(function(error) {
     t.is(
       error.stderr,
       [
         rp,
         '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
         '',
-        '⚠ 1 warning',
-        ''
+        '⚠ 1 warning'
       ].join('\n')
     )
   })
@@ -129,38 +121,37 @@ test('quiet on nok files', function(t) {
 test('binary (default)', function(t) {
   var rp = path.join('test', 'fixtures', 'binary', 'two.md')
 
-  return execa.stderr('./cli.js', [rp]).then(function(result) {
-    t.is(result, rp + ': no issues found')
+  return execa('./cli.js', [rp]).then(function(result) {
+    t.is(result.stderr, rp + ': no issues found')
   })
 })
 
 test('non-binary (optional)', function(t) {
   var rp = path.join('test', 'fixtures', 'non-binary', 'two.md')
 
-  return execa.stderr('./cli.js', [rp]).catch(function(error) {
-    var expected = [
-      rp,
-      '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
-      '  1:7-1:10  warning  `she` may be insensitive, use `they`, `it` instead  he-she  retext-equality',
-      '',
-      '⚠ 2 warnings',
-      ''
-    ].join('\n')
-
-    t.is(error.stderr, expected)
+  return execa('./cli.js', [rp]).catch(function(error) {
+    t.is(
+      error.stderr,
+      [
+        rp,
+        '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
+        '  1:7-1:10  warning  `she` may be insensitive, use `they`, `it` instead  he-she  retext-equality',
+        '',
+        '⚠ 2 warnings'
+      ].join('\n')
+    )
   })
 })
 
 test('profanity (default)', function(t) {
   var rp = path.join('test', 'fixtures', 'profanity', 'two.md')
 
-  return execa.stderr('./cli.js', [rp]).catch(function(error) {
+  return execa('./cli.js', [rp]).catch(function(error) {
     var expected = [
       rp,
       '  1:5-1:11  warning  Be careful with “beaver”, it’s profane in some cases  beaver  retext-profanities',
       '',
-      '⚠ 1 warning',
-      ''
+      '⚠ 1 warning'
     ].join('\n')
 
     t.is(error.stderr, expected)
@@ -170,18 +161,16 @@ test('profanity (default)', function(t) {
 test('profanity (profanitySureness: 1)', function(t) {
   var rp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
-  return execa.stderr('./cli.js', [rp]).then(function(result) {
-    t.is(result, rp + ': no issues found')
+  return execa('./cli.js', [rp]).then(function(result) {
+    t.is(result.stderr, rp + ': no issues found')
   })
 })
 
 test('default globs', function(t) {
-  return execa.stderr('./cli.js').then(function(stderr) {
-    var expected = [
-      'contributing.md: no issues found',
-      'readme.md: no issues found'
-    ].join('\n')
-
-    t.is(stderr, expected)
+  return execa('./cli.js').then(function(result) {
+    t.is(
+      result.stderr,
+      'contributing.md: no issues found\nreadme.md: no issues found'
+    )
   })
 })

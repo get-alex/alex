@@ -49,15 +49,15 @@ $ yarn global add alex
 
 *   [Command Line](#command-line)
 *   [API](#api)
-    *   [alex(value, config)](#alexvalue-config)
-    *   [alex.markdown(value, config)](#alexmarkdownvalue-config)
-    *   [alex.html(value, config)](#alexhtmlvalue-config)
-    *   [alex.text(value, config)](#alextextvalue-config)
+    *   [`alex(value, config)`](#alexvalue-config)
+    *   [`alex.markdown(value, config)`](#alexmarkdownvalue-config)
+    *   [`alex.html(value, config)`](#alexhtmlvalue-config)
+    *   [`alex.text(value, config)`](#alextextvalue-config)
 *   [Integrations](#integrations)
 *   [Support](#support)
 *   [Ignoring files](#ignoring-files)
-*   [.alexignore](#alexignore)
-    *   [Control](#control)
+    *   [`.alexignore`](#alexignore)
+*   [Control](#control)
 *   [Configuration](#configuration)
     *   [Ignoring messages](#ignoring-messages)
     *   [Configuring Profanities](#configuring-profanities)
@@ -257,7 +257,7 @@ directories (e.g., `$ alex .` will find `readme.md` and `foo/bar/baz.txt`).
 To prevent files from being found by **alex**, add an
 [`.alexignore`][alexignore] file.
 
-## `.alexignore`
+### `.alexignore`
 
 The **alex** CLI will sometimes [search for files][ignoring-files].  To prevent
 files from being found, add a file named `.alexignore` in one of the
@@ -276,7 +276,7 @@ looks as follows:
 example.md
 ```
 
-### Control
+## Control
 
 Sometimes, **alex** makes mistakes:
 
@@ -415,7 +415,7 @@ You can define what level of profanity you want **alex** to warn for in the
 }
 ```
 
-The `profanitySureness` is a number that _includes_ the level of profanity you
+The `profanitySureness` is a number that *includes* the level of profanity you
 want to check for.  For example, if you set it to 1 then it will warn for level 1
 and 2 profanities, but not for level 0 (unlikely).
 

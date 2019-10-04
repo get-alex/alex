@@ -87,7 +87,7 @@ prevent you from doing unnecessary work.
 
 ### Website contributions
 
-There are ways in which our [website][website] can be improved as well, and
+There are ways in which our [website][] can be improved as well, and
 we are open to contributions.
 Switch to the [`website`][website-branch] branch (with `git checkout website`)
 and start contributing!
@@ -97,7 +97,7 @@ built to the [`dest`][dest-folder] folder.
 ### Adding profanities and other words
 
 If you have profanities, insensitive words, and/or any other additions to add
-to our repository, you’ll need to make a PR to [`profanities`][profanities], 
+to our repository, you’ll need to make a PR to [`profanities`][profanities],
 and then [`cuss`][cuss] after the former is released.  The words will
 automatically be added into [`retext-profanities`][profanities] and Alex as
 well.
