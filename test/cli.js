@@ -149,7 +149,7 @@ test('profanity (default)', function(t) {
   return execa('./cli.js', [rp]).catch(function(error) {
     var expected = [
       rp,
-      '  1:5-1:11  warning  Be careful with “beaver”, it’s profane in some cases  beaver  retext-profanities',
+      '  1:5-1:11  warning  Be careful with `beaver`, it’s profane in some cases  beaver  retext-profanities',
       '',
       '⚠ 1 warning'
     ].join('\n')

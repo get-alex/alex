@@ -155,7 +155,8 @@ above, as it holds the possible violations.
 
 ### `alex.html(value, config)`
 
-Works just like [`alex()`][alex-api] and [`alex.text()`](#alextextvalue-config), but parses it as HTML.
+Works the same as [`alex()`][alex-api] and
+[`alex.text()`](#alextextvalue-config), but parses it as HTML.
 It will break your writing out of its HTML-wrapped tags and examine them.
 
 ###### Example
@@ -186,7 +187,7 @@ Yields:
 
 ### `alex.text(value, config)`
 
-Works just like [`alex()`][alex-api], but does not parse as markdown
+Works the same as [`alex()`][alex-api], but does not parse as markdown
 (thus things like code are not ignored)
 
 ###### Example
@@ -477,7 +478,7 @@ See
 
 ## Contributing
 
-**alex** is built by people just like you!  Check out
+**alex** is built by people like you!  Check out
 [`contributing.md`][contributing] for ways to get started.
 
 This project has a [Code of Conduct][coc].  By interacting with this repository

@@ -62,7 +62,7 @@ npm test
 
 ## Contributions
 
-There’s several ways to contribute, not just by writing code.
+There’s several ways to contribute, not only by writing code.
 
 ### Improve documentation
 
@@ -72,7 +72,7 @@ Anything!
 
 ### Improve issues
 
-Some issues lack information, aren’t reproducible, or are just incorrect.
+Some issues lack information, aren’t reproducible, or are incorrect.
 Help make them easier to resolve.
 
 ### Give feedback on issues
