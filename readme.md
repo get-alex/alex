@@ -66,6 +66,7 @@ $ yarn global add alex
     *   [Why is this named alex?](#why-is-this-named-alex)
 *   [Contribute](#contribute)
 *   [Origin story](#origin-story)
+*   [Acknowledgments](#acknowledgments)
 *   [License](#license)
 
 ## Checks
@@ -517,6 +518,13 @@ Then there was a [lot][tnw] [of][dailydot] [press][vice] [coverage][bustle].
 
 There there was some backlash 🤷
 
+## Acknowledgments
+
+Preliminary work for alex was done [in 2015][preliminary].
+The project was authored by [**@wooorm**][wooorm].
+
+Lot’s of [people helped since][contributors]!
+
 ## License
 
 [MIT][license] © [Titus Wormer][author]
@@ -594,6 +602,10 @@ There there was some backlash 🤷
 [sindre]: https://github.com/sindresorhus
 
 [wooorm]: https://github.com/wooorm
+
+[preliminary]: https://github.com/get-alex/alex/commit/3621b0a
+
+[contributors]: https://github.com/get-alex/alex/graphs/contributors
 
 [.alexignore]: .alexignore
 
