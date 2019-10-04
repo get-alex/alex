@@ -47,9 +47,6 @@
     "Carolyn Stransky <carolynstransky@gmail.com>"
   ],
   "bin": "cli.js",
-  "engines": {
-    "node": ">=0.10.0"
-  },
   "files": [
     "index.js",
     "filter.js",
