@@ -1,4 +1,4 @@
-<!--lint disable no-html first-heading-level maximum-line-length no-shell-dollars-->
+<!--lint disable no-html first-heading-level no-shell-dollars-->
 
 <h1 align="center">
   <img width="400" src="https://raw.githubusercontent.com/get-alex/alex/c30ec12/media/logo.svg?sanitize=true" alt="alex">
@@ -8,18 +8,16 @@
 
 > 📝 **alex** — Catch insensitive, inconsiderate writing.
 
-[![Build Status][travis-badge]][travis]
-[![Coverage Status][codecov-badge]][codecov]
+[![Build][build-badge]][build]
+[![Coverage][coverage-badge]][coverage]
 [![First timers friendly][first-timers-badge]][first-timers]
 
 Whether your own or someone else’s writing, **alex** helps you find gender
 favouring, polarising, race related, religion inconsiderate, or other
 **unequal** phrasing in text.
 
-For example, when `We’ve confirmed his identity` is given to **alex**,
-it will warn you and suggest using `their` instead of `his`.
-
-> Suggestions, feature requests, and issues are more than welcome!
+For example, when `We’ve confirmed his identity` is given, **alex** will warn
+you and suggest using `their` instead of `his`.
 
 Give **alex** a spin on the [Online demo »][demo].
 
@@ -45,178 +43,53 @@ Using [yarn][]:
 $ yarn global add alex
 ```
 
+<!--alex disable wacko stupid-->
+
 ## Table of Contents
 
-*   [Command Line](#command-line)
+*   [Checks](#checks)
+*   [Integrations](#integrations)
+*   [Ignoring files](#ignoring-files)
+    *   [`.alexignore`](#alexignore)
+*   [Control](#control)
+*   [Configuration](#configuration)
+*   [CLI](#cli)
 *   [API](#api)
     *   [`alex(value, config)`](#alexvalue-config)
     *   [`alex.markdown(value, config)`](#alexmarkdownvalue-config)
     *   [`alex.html(value, config)`](#alexhtmlvalue-config)
     *   [`alex.text(value, config)`](#alextextvalue-config)
-*   [Integrations](#integrations)
-*   [Support](#support)
-*   [Ignoring files](#ignoring-files)
-    *   [`.alexignore`](#alexignore)
-*   [Control](#control)
-*   [Configuration](#configuration)
-    *   [Ignoring messages](#ignoring-messages)
-    *   [Configuring Profanities](#configuring-profanities)
 *   [Workflow](#workflow)
 *   [FAQ](#faq)
+    *   [This is stupid!](#this-is-stupid)
+    *   [alex didn’t check “X”!](#alex-didnt-check-x)
     *   [Why is this named alex?](#why-is-this-named-alex)
-    *   [Alex didn’t check “X”!](#alex-didnt-check-x)
 *   [Contributing](#contributing)
 *   [License](#license)
 
-## Command Line
+## Checks
 
-![Example of how alex looks on screen][screenshot]
+**alex** checks things such as:
 
-Let’s say `example.md` looks as follows:
+*   Gendered work-titles, such as suggesting `garbage collector` for
+    `garbageman` and `proprietor` for `landlord`
+*   Gendered proverbs, such as suggesting `bravely` for `like a man`, or
+    `courteous` for `ladylike`.
+*   Ablist language, such as suggesting `person with learning disabilities` for
+    `learning disabled`
+*   Condescending language, such as warning for `obviously`, `everyone knows`,
+    etc
+*   Intolerant phrasing, such as suggesting `primary` and `replica` instead of
+    `master` and `slave`
+*   Profanities, such as `butt` 🍑
 
-```markdown
-The boogeyman wrote all changes to the **master server**. Thus, the slaves
-were read-only copies of master. But not to worry, he was a cripple.
-```
+…and much more!
 
-Now, run **alex** on `example.md`:
+See [`retext-equality`][equality] and [`retext-profanities`][profanities] for
+all rules.
 
-```sh
-$ alex example.md
-```
-
-Yields:
-
-```txt
-example.md
-   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman  retext-equality
-  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave           retext-equality
-  1:69-1:75  warning  Don’t use “slaves”, it’s profane                                           slaves                 retext-profanities
-  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
-  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             gimp                   retext-equality
-
-⚠ 5 warnings
-```
-
-See `$ alex --help` for more information.
-
-> When no input files are given to **alex**, it searches for files in the
-> current directory, `doc`, and `docs`.
-> If `--html` is given, it searches for `htm` and `html` extensions.
-> Otherwise, it searches for `txt`, `text`, `md`, `mkd`, `mkdn`, `mkdown`,
-> `ron`, and `markdown` extensions.
-
-## API
-
-[npm][]:
-
-```sh
-$ npm install alex --save
-```
-
-**alex** is also available as an AMD, CommonJS, and globals module,
-[uncompressed and compressed][releases].
-
-### `alex(value, config)`
-
-### `alex.markdown(value, config)`
-
-###### Example
-
-```js
-alex('We’ve confirmed his identity.').messages
-```
-
-Yields:
-
-```js
-[ { [1:17-1:20: `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead]
-    message: '`his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead',
-    name: '1:17-1:20',
-    reason: '`his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead',
-    line: 1,
-    column: 17,
-    location: { start: [Object], end: [Object] },
-    source: 'retext-equality',
-    ruleId: 'her-him',
-    fatal: false } ]
-```
-
-###### Parameters
-
-*   `value` ([`VFile`][vfile] or `string`) — Markdown or plain-text
-*   `config` (`Object`, optional) — See [Configuration](#configuration) section below
-
-###### Returns
-
-[`VFile`][vfile].  You’ll probably be interested in its
-[`messages`][vfile-message] property, as demonstrated in the example
-above, as it holds the possible violations.
-
-### `alex.html(value, config)`
-
-Works the same as [`alex()`][alex-api] and
-[`alex.text()`](#alextextvalue-config), but parses it as HTML.
-It will break your writing out of its HTML-wrapped tags and examine them.
-
-###### Example
-
-```js
-alex.html('<p class="black">He walked to class.</p>').messages
-```
-
-Yields:
-
-```js
-[ { [1:18-1:20: `He` may be insensitive, use `They`, `It` instead]
-    message: '`He` may be insensitive, use `They`, `It` instead',
-    name: '1:18-1:20',
-    reason: '`He` may be insensitive, use `They`, `It` instead',
-    line: 1,
-    column: 18,
-    location: { start: [Object], end: [Object] },
-    source: 'retext-equality',
-    ruleId: 'he-she',
-    fatal: false } ]
-```
-
-###### Parameters
-
-*   `value` ([`VFile`][vfile] or `string`) — HTML content
-*   `config` (`Object`, optional) — See [Configuration](#configuration) section below
-
-### `alex.text(value, config)`
-
-Works the same as [`alex()`][alex-api], but does not parse as markdown
-(thus things like code are not ignored)
-
-###### Example
-
-```js
-alex('The `boogeyman`.').messages // => []
-
-alex.text('The `boogeyman`.').messages
-```
-
-Yields:
-
-```js
-[ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
-    message: '`boogeyman` may be insensitive, use `boogey` instead',
-    name: '1:6-1:15',
-    reason: '`boogeyman` may be insensitive, use `boogey` instead',
-    line: 1,
-    column: 6,
-    location: Position { start: [Object], end: [Object] },
-    source: 'retext-equality',
-    ruleId: 'boogeyman-boogeywoman',
-    fatal: false } ]
-```
-
-###### Parameters
-
-*   `value` ([`VFile`][vfile] or `string`) — Text content
-*   `config` (`Object`, optional) — See [Configuration](#configuration) section below
+**alex** ignores words meant literally, so `“he”`, `He — ...`, and [the
+like][literals] are not warned about.
 
 ## Integrations
 
@@ -228,49 +101,27 @@ Yields:
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
 *   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
-*   Browser Extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
+*   Browser extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
 *   Contentful - [`stefanjudis/alex-js-contentful-ui-extension`](https://github.com/stefanjudis/alex-js-contentful-ui-extension)
-
-## Support
-
-**alex** checks for many patterns of English language, and generates warnings for:
-
-*   Gendered work-titles, for example warning about `garbageman` and suggesting
-    `garbage collector` instead
-*   Gendered proverbs, such as warning about `like a man` and suggesting
-    `bravely` instead, or suggesting `courteous` for `ladylike`.
-*   Blunt phrases, such as warning about `cripple` and suggesting
-    `person with a limp` instead
-*   Intolerant phrasing, such as warning about using `master` and `slave`
-    together, and suggesting `primary` and `replica` instead
-*   Profanities, the least of which being `butt`
-
-See [**retext-equality**][equality] and [**retext-profanities**][profanities]
-for all checked rules.
-
-**alex** ignores words meant literally, so `“he”`, `He — ...`, and [the
-like][literals] are not warned about
 
 ## Ignoring files
 
-**alex** CLI searches for files with a markdown or text extension when given
-directories (e.g., `$ alex .` will find `readme.md` and `foo/bar/baz.txt`).
-To prevent files from being found by **alex**, add an
-[`.alexignore`][alexignore] file.
+The CLI searches for files with a markdown or text extension when given
+directories (so `$ alex .` will find `readme.md` and `path/to/file.txt`).
+To prevent files from being found, create an [`.alexignore`][alexignore] file.
 
 ### `.alexignore`
 
-The **alex** CLI will sometimes [search for files][ignoring-files].  To prevent
-files from being found, add a file named `.alexignore` in one of the
-directories above the current working directory.  The format of these files is
-similar to [`.eslintignore`][eslintignore] (which is in turn similar to
-`.gitignore` files).
+The CLI will sometimes [search for files][ignoring-files].
+To prevent files from being found, add a file named `.alexignore` in one of the
+directories above the current working directory (the place you run `alex` from).
+The format of these files is similar to [`.eslintignore`][eslintignore] (which
+is in turn similar to `.gitignore` files).
 
-For example, when working in `~/alpha/bravo/charlie`, the ignore file can be
-in `charlie`, but also in `~`.
+For example, when working in `~/path/to/place`, the ignore file can be in
+`place`, but also in `~`.
 
-The ignore file for [this project itself][.alexignore]
-looks as follows:
+The ignore file for [this project itself][.alexignore] looks like this:
 
 ```txt
 # `node_modules` is ignored by default.
@@ -279,7 +130,7 @@ example.md
 
 ## Control
 
-Sometimes, **alex** makes mistakes:
+Sometimes **alex** makes mistakes:
 
 ```markdown
 A message for this sentence will pop up.
@@ -294,7 +145,7 @@ readme.md
 ⚠ 1 warning
 ```
 
-**alex** can silence message through HTML comments in markdown:
+HTML comments in markdown can be used to ignore them:
 
 ```markdown
 <!--alex ignore dad-mom-->
@@ -308,10 +159,10 @@ Yields:
 readme.md: no issues found
 ```
 
-`ignore` turns off messages for the thing after the comment (in this
-case, the paragraph).
-It’s also possible to turn off messages after a comment by using
-`disable`, and, turn those messages back on using `enable`:
+`ignore` turns off messages for the thing after the comment (in this case, the
+paragraph).
+It’s also possible to turn off messages after a comment by using `disable`, and,
+turn those messages back on using `enable`:
 
 ```markdown
 <!--alex disable dad-mom-->
@@ -342,7 +193,7 @@ Multiple messages can be controlled in one go:
 <!--alex disable he-her his-hers dad-mom-->
 ```
 
-...and all messages can be controlled by omitting all rule identifiers:
+…and all messages can be controlled by omitting all rule identifiers:
 
 ```md
 <!--alex ignore-->
@@ -350,9 +201,7 @@ Multiple messages can be controlled in one go:
 
 ## Configuration
 
-### Ignoring messages
-
-**alex** can silence messages through `.alexrc` configuration:
+You can control **alex** through `.alexrc` configuration files:
 
 ```json
 {
@@ -360,34 +209,42 @@ Multiple messages can be controlled in one go:
 }
 ```
 
-...or the `alex` field in `package.json`:
+…you can use YAML if the file is named `.alexrc.yml` or `.alexrc.yaml`:
+
+```yml
+allow:
+  - dad-mom
+```
+
+…you can also use JavaScript if the file is named `.alexrc.js`:
+
+```js
+exports.profanitySureness = Math.floor(Math.random() * 3)
+```
+
+…and finally it is possible to use an `alex` field in `package.json`:
 
 ```txt
 {
-  ...
+  …
   "alex": {
-    "allow": ["butt"]
+    "noBinary": true
   },
-  ...
+  …
 }
 ```
 
-The `allow` field is expected to be an array of rule identifier strings.
+The `allow` field should be an array of rules (the default is `[]`).
 
-All `allow` fields in all `package.json` and `.alexrc` files are
-detected and used when processing.
+The `noBinary` field should be a boolean (the default is `false`).
+When turned on (`true`), pairs such as `he and she`, `garbageman or
+garbagewoman`, are seen as errors.
+When turned off (`false`, the default), such pairs are seen as OK.
 
-Next to `allow`, `noBinary` can also be passed.  Setting it to true
-counts `he and she`, `garbageman or garbagewoman` and similar pairs
-as errors, whereas the default (`false`), treats it as OK.
-
-### Configuring Profanities
-
-The profanity checker in **alex** can be configured to define the level of
-“sureness” to warn for.  The underlying library uses
-[cuss](https://github.com/words/cuss) which has a dictionary of words that have
-a rating between 0 and 2 of how “sure” it is a profanity.  Here is the table from
-[the cuss documentation](https://github.com/words/cuss/blob/master/readme.md#cuss)
+The `profanitySureness` field is a number (the default is `0`).
+We use [cuss][], which has a dictionary of words that have a rating between 0
+and 2 of how likely it is that a word or phrase is a profanity (not how “bad” it
+is):
 
 | Rating | Use as a profanity | Use in clean text | Example |
 | ------ | ------------------ | ----------------- | ------- |
@@ -395,42 +252,194 @@ a rating between 0 and 2 of how “sure” it is a profanity.  Here is the table
 | 1      | maybe              | maybe             | addict  |
 | 0      | unlikely           | likely            | beaver  |
 
-You can define what level of profanity you want **alex** to warn for in the
-`.alexrc` configuration:
+The `profanitySureness` field is the minimum rating (including) that you want to
+check for.
+If you set it to `1` (maybe) then it will warn for level `1` *and* `2` (likely)
+profanities, but not for level `0` (unlikely).
 
-```json
-{
-  "profanitySureness": 1
-}
+## CLI
+
+<!--alex enable wacko stupid-->
+
+![][screenshot]
+
+Let’s say `example.md` looks as follows:
+
+```markdown
+The boogeyman wrote all changes to the **master server**. Thus, the slaves
+were read-only copies of master. But not to worry, he was a cripple.
 ```
 
-...or the `alex` field in `package.json`:
+Now, run **alex** on `example.md`:
+
+```sh
+$ alex example.md
+```
+
+Yields:
 
 ```txt
-{
-  ...
-  "alex": {
-    "profanitySureness": 1
-  },
-  ...
-}
+example.md
+   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman  retext-equality
+  1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave           retext-equality
+  1:70-1:76  warning  Don’t use `slaves`, it’s profane                                           slaves                 retext-profanities
+  2:53-2:55  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
+  2:62-2:69  warning  `cripple` may be insensitive, use `person with a limp` instead             gimp                   retext-equality
+
+⚠ 5 warnings
 ```
 
-The `profanitySureness` is a number that *includes* the level of profanity you
-want to check for.  For example, if you set it to 1 then it will warn for level 1
-and 2 profanities, but not for level 0 (unlikely).
+See `$ alex --help` for more information.
+
+> When no input files are given to **alex**, it searches for files in the
+> current directory, `doc`, and `docs`.
+> If `--html` is given, it searches for `htm` and `html` extensions.
+> Otherwise, it searches for `txt`, `text`, `md`, `mkd`, `mkdn`, `mkdown`,
+> `ron`, and `markdown` extensions.
+
+## API
+
+[npm][]:
+
+```sh
+$ npm install alex --save
+```
+
+**alex** is also available as an AMD, CommonJS, and globals module,
+[uncompressed and compressed][releases].
+
+### `alex(value, config)`
+
+### `alex.markdown(value, config)`
+
+Check markdown (ignoring syntax).
+
+###### Parameters
+
+*   `value` ([`VFile`][vfile] or `string`) — Markdown document
+*   `config` (`Object`, optional) — See the [Configuration][] section
+
+###### Returns
+
+[`VFile`][vfile].
+You are probably interested in its [`messages`][vfile-message] property, as
+shown in the example above, because it holds the possible violations.
+
+###### Example
+
+```js
+alex('We’ve confirmed his identity.').messages
+```
+
+Yields:
+
+```js
+[
+  [1:17-1:20: `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead] {
+    message: '`his` may be insensitive, when referring to a ' +
+      'person, use `their`, `theirs`, `them` instead',
+    name: '1:17-1:20',
+    reason: '`his` may be insensitive, when referring to a ' +
+      'person, use `their`, `theirs`, `them` instead',
+    line: 1,
+    column: 17,
+    location: { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'her-him',
+    fatal: false,
+    actual: 'his',
+    expected: [ 'their', 'theirs', 'them' ]
+  }
+]
+```
+
+### `alex.html(value, config)`
+
+Check HTML (ignoring syntax).
+Similar to [`alex()`][alex-api] and [`alex.text()`][alex-text]).
+
+###### Parameters
+
+*   `value` ([`VFile`][vfile] or `string`) — HTML document
+*   `config` (`Object`, optional) — See the [Configuration][] section
+
+###### Returns
+
+[`VFile`][vfile].
+
+###### Example
+
+```js
+alex.html('<p class="black">He walked to class.</p>').messages
+```
+
+Yields:
+
+```js
+[
+  [1:18-1:20: `He` may be insensitive, use `They`, `It` instead] {
+    message: '`He` may be insensitive, use `They`, `It` instead',
+    name: '1:18-1:20',
+    reason: '`He` may be insensitive, use `They`, `It` instead',
+    line: 1,
+    column: 18,
+    location: { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'he-she',
+    fatal: false,
+    actual: 'He',
+    expected: [ 'They', 'It' ]
+  }
+]
+```
+
+### `alex.text(value, config)`
+
+Check plain text (so syntax is checked).
+Similar to [`alex()`][alex-api] and [`alex.html()`][alex-html]).
+
+###### Parameters
+
+*   `value` ([`VFile`][vfile] or `string`) — Text document
+*   `config` (`Object`, optional) — See the [Configuration][] section
+
+###### Returns
+
+[`VFile`][vfile].
+
+###### Example
+
+```js
+alex('The `boogeyman`.').messages // => []
+
+alex.text('The `boogeyman`.').messages
+```
+
+Yields:
+
+```js
+[ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
+    message: '`boogeyman` may be insensitive, use `boogey` instead',
+    name: '1:6-1:15',
+    reason: '`boogeyman` may be insensitive, use `boogey` instead',
+    line: 1,
+    column: 6,
+    location: Position { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'boogeyman-boogeywoman',
+    fatal: false } ]
+```
 
 ## Workflow
 
-The recommended workflow is to add **alex** to `package.json`
-and to run it with your tests in Travis.
+The recommended workflow is to add **alex** to `package.json` and to run it with
+your tests in Travis.
 
-You can opt to ignore warnings through [alexrc](#configuration) files and
-[control comments][control].  For example, with a `package.json`.
+You can opt to ignore warnings through [alexrc][configuration] files and
+[control comments][control].
 
-A `package.json` file with [npm scripts][npm-scripts],
-and additionally using [AVA][] for unit tests, could look
-as follows:
+A `package.json` file with [npm scripts][npm-scripts], and additionally using
+[AVA][] for unit tests, could look like so:
 
 ```json
 {
@@ -446,8 +455,8 @@ as follows:
 }
 ```
 
-Alternatively, if you’re using Travis to test, set up something
-like the following in your `.travis.yml`:
+If you’re using Travis for continuous integration, set up something like the
+following in your `.travis.yml`:
 
 ```diff
  script:
@@ -457,32 +466,43 @@ like the following in your `.travis.yml`:
 
 Make sure to still install alex though!
 
-If the `--diff` flag is used, and Travis is detected, unchanged
-lines are ignored.  Using this workflow, you can merge PRs
-with warnings, and not be bothered by them afterwards.
+If the `--diff` flag is used, and Travis is detected, lines that are not changes
+in this push are ignored.
+Using this workflow, you can merge PRs if it has warnings, and then if someone
+edits an entirely different file, they won’t be bothered about existing
+warnings, only about the things they added!
 
 ## FAQ
 
 <!--lint disable no-heading-punctuation-->
 
+<!--alex ignore wacko stupid-->
+
+### This is stupid!
+
+Not a question.
+And yeah, alex isn’t very smart.
+People are much better at this.
+But people make mistakes, and alex is there to help.
+
+### alex didn’t check “X”!
+
+See [`contributing.md`][contributing] on how to get “X” checked by alex.
+
 ### Why is this named alex?
 
-It’s a nice androgynous/unisex name, it was free on npm, I like it!  :smile:
-
-### Alex didn’t check “X”!
-
-See
-[`contributing.md`][contributing] on how to get “X” checked by alex.
+It’s a nice unisex name, it was free on npm, I like it!  :smile:
 
 <!--lint enable no-heading-punctuation-->
 
 ## Contributing
 
-**alex** is built by people like you!  Check out
-[`contributing.md`][contributing] for ways to get started.
+**alex** is built by people like you!
+Check out [`contributing.md`][contributing] for ways to get started.
 
-This project has a [Code of Conduct][coc].  By interacting with this repository
-or community you agree to abide by its terms.
+This project has a [Code of Conduct][coc].
+By interacting with this repository or community you agree to abide by its
+terms.
 
 ## License
 
@@ -490,23 +510,25 @@ or community you agree to abide by its terms.
 
 <!-- Definitions. -->
 
-[first-timers-badge]: https://img.shields.io/badge/first--timers--only-friendly-blue.svg
+[build]: https://travis-ci.org/get-alex/alex
+
+[build-badge]: https://img.shields.io/travis/get-alex/alex.svg
+
+[coverage]: https://codecov.io/github/get-alex/alex
+
+[coverage-badge]: https://img.shields.io/codecov/c/github/get-alex/alex.svg
 
 [first-timers]: https://www.firsttimersonly.com/
 
-[travis-badge]: https://img.shields.io/travis/get-alex/alex.svg
+[first-timers-badge]: https://img.shields.io/badge/first--timers--only-friendly-blue.svg
 
-[travis]: https://travis-ci.org/get-alex/alex
-
-[codecov-badge]: https://img.shields.io/codecov/c/github/get-alex/alex.svg
-
-[codecov]: https://codecov.io/github/get-alex/alex
-
-[demo]: http://alexjs.com/#demo
+[node]: https://nodejs.org/en/download/
 
 [npm]: https://docs.npmjs.com/cli/install
 
-[node]: https://nodejs.org/en/download/
+[yarn]: https://yarnpkg.com/
+
+[demo]: http://alexjs.com/#demo
 
 [screenshot]: screenshot.png
 
@@ -514,36 +536,42 @@ or community you agree to abide by its terms.
 
 [vfile]: https://github.com/vfile/vfile
 
-[vfile-message]: https://github.com/vfile/vfile#vfilemessages
+[profanities]: https://github.com/retextjs/retext-profanities/blob/master/rules.md
 
-[alex-api]: #alexvalue-config
+[equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md
+
+[vfile-message]: https://github.com/vfile/vfile#vfilemessages
 
 [literals]: https://github.com/syntax-tree/nlcst-is-literal#isliteralparent-index
 
-[alexignore]: #alexignore
-
-[control]: #control
-
-[ignoring-files]: #ignoring-files
-
 [eslintignore]: http://eslint.org/docs/user-guide/configuring.html#ignoring-files-and-directories
 
-[.alexignore]: https://github.com/get-alex/alex/blob/master/.alexignore
+[cuss]: https://github.com/words/cuss
 
 [npm-scripts]: https://docs.npmjs.com/misc/scripts
 
 [ava]: http://ava.li
 
+[author]: http://wooorm.com
+
+[.alexignore]: .alexignore
+
 [contributing]: contributing.md
 
 [coc]: code-of-conduct.md
 
-[license]: LICENSE
+[license]: license
 
-[author]: http://wooorm.com
+[alex-api]: #alexvalue-config
 
-[profanities]: https://github.com/retextjs/retext-profanities/blob/master/rules.md
+[alex-html]: #alexhtmlvalue-config
 
-[equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md
+[alex-text]: #alextextvalue-config
 
-[yarn]: https://yarnpkg.com/
+[control]: #control
+
+[configuration]: #configuration
+
+[ignoring-files]: #ignoring-files
+
+[alexignore]: #alexignore
