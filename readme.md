@@ -64,7 +64,7 @@ $ yarn global add alex
     *   [This is stupid!](#this-is-stupid)
     *   [alex didn’t check “X”!](#alex-didnt-check-x)
     *   [Why is this named alex?](#why-is-this-named-alex)
-*   [Contributing](#contributing)
+*   [Contribute](#contribute)
 *   [License](#license)
 
 ## Checks
@@ -495,14 +495,15 @@ It’s a nice unisex name, it was free on npm, I like it!  :smile:
 
 <!--lint enable no-heading-punctuation-->
 
-## Contributing
+## Contribute
 
-**alex** is built by people like you!
-Check out [`contributing.md`][contributing] for ways to get started.
+See [`contributing.md`][contributing] in [`get-alex/.github`][health] for ways
+to get started.
+See [`support.md`][support] for ways to get help.
 
-This project has a [Code of Conduct][coc].
-By interacting with this repository or community you agree to abide by its
-terms.
+This project has a [Code of conduct][coc].
+By interacting with this repository, organisation, or community you agree to
+abide by its terms.
 
 ## License
 
@@ -554,11 +555,15 @@ terms.
 
 [author]: http://wooorm.com
 
+[health]: https://github.com/get-alex/.github
+
+[contributing]: https://github.com/get-alex/.github/blob/master/contributing.md
+
+[support]: https://github.com/get-alex/.github/blob/master/support.md
+
+[coc]: https://github.com/get-alex/.github/blob/master/code-of-conduct.md
+
 [.alexignore]: .alexignore
-
-[contributing]: contributing.md
-
-[coc]: code-of-conduct.md
 
 [license]: license
 

@@ -179,8 +179,5 @@ test('profanity (profanitySureness: 1)', async function(t) {
 test('default globs', async function(t) {
   var result = await execa('./cli.js')
 
-  t.is(
-    result.stderr,
-    'contributing.md: no issues found\nreadme.md: no issues found'
-  )
+  t.is(result.stderr, 'readme.md: no issues found')
 })
