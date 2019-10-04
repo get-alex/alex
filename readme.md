@@ -65,6 +65,7 @@ $ yarn global add alex
     *   [alex didn’t check “X”!](#alex-didnt-check-x)
     *   [Why is this named alex?](#why-is-this-named-alex)
 *   [Contribute](#contribute)
+*   [Origin story](#origin-story)
 *   [License](#license)
 
 ## Checks
@@ -505,6 +506,17 @@ This project has a [Code of conduct][coc].
 By interacting with this repository, organisation, or community you agree to
 abide by its terms.
 
+## Origin story
+
+Thanks to [**@iheanyi**][iheany] for [raising the problem][tweet] and
+[**@sindresorhus**][sindre] for inspiring me ([**@wooorm**][wooorm]) to do
+something about it.
+
+When alex launched, it got some traction on [twitter][] and [producthunt][].
+Then there was a [lot][tnw] [of][dailydot] [press][vice] [coverage][bustle].
+
+There there was some backlash 🤷
+
 ## License
 
 [MIT][license] © [Titus Wormer][author]
@@ -562,6 +574,26 @@ abide by its terms.
 [support]: https://github.com/get-alex/.github/blob/master/support.md
 
 [coc]: https://github.com/get-alex/.github/blob/master/code-of-conduct.md
+
+[tweet]: https://twitter.com/kwuchu/status/618799087006130176
+
+[twitter]: https://twitter.com/wooorm/status/639123753490907136
+
+[producthunt]: https://www.producthunt.com/posts/alex
+
+[tnw]: http://thenextweb.com/apps/2015/09/11/alex-stops-you-from-publishing-inconsiderate-content/
+
+[vice]: https://www.vice.com/en_us/article/nzeawx/meet-alex-the-javascript-tool-to-make-your-code-less-offensive
+
+[bustle]: https://www.bustle.com/articles/108684-alex-javascript-tool-corrects-harmful-language-in-your-writing-because-there-are-some-mistakes-spell-check
+
+[dailydot]: https://www.dailydot.com/debug/alex-coding-tool-offensive/
+
+[iheany]: https://github.com/iheanyi
+
+[sindre]: https://github.com/sindresorhus
+
+[wooorm]: https://github.com/wooorm
 
 [.alexignore]: .alexignore
 
