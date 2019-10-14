@@ -516,7 +516,6 @@ something about it.
 When alex launched, it got some traction on [twitter][] and [producthunt][].
 Then there was a [lot][tnw] [of][dailydot] [press][vice] [coverage][bustle].
 
-
 ## Acknowledgments
 
 Preliminary work for alex was done [in 2015][preliminary].
