@@ -21,7 +21,7 @@ body {
 .footer {
   position: relative;
   min-height: 100vh;
-  background-color: #8060e5;
+  background-color: #7c5be5;
   color: white;
   display: flex;
   justify-content: center;
@@ -185,7 +185,7 @@ h3 {
 /* Links */
 
 a {
-  color: #8060e5;
+  color: #7c5be5;
   text-decoration: none;
   transition: color 200ms;
 }
