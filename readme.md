@@ -242,7 +242,13 @@ exports.profanitySureness = Math.floor(Math.random() * 3)
 }
 ```
 
-The `allow` field should be an array of rules (the default is `[]`).
+The `allow` field should be an array of rules or `undefined` (the default is
+`undefined`).  When provided, the rules specified are skipped and not reported.
+
+The `deny` field should be an array of rules or `undefined` (the default is
+`undefined`).  When provided, *only* the rules specified are reported.
+
+You cannot use both `allow` and `deny` at the same time.
 
 The `noBinary` field should be a boolean (the default is `false`).
 When turned on (`true`), pairs such as `he and she` and `garbageman or

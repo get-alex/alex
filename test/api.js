@@ -60,6 +60,27 @@ test('alex()', function(t) {
     alex(
       'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
       {
+        deny: ['butt']
+      }
+    ).messages.map(String),
+    ['1:52-1:56: Be careful with `butt`, it’s profane in some cases'],
+    'should work with deny config'
+  )
+
+  t.throws(function() {
+    alex(
+      'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
+      {
+        allow: ['asshat'],
+        deny: ['boogeyman-boogeywoman']
+      }
+    )
+  }, 'should throw an error with allow and deny config')
+
+  t.deepEqual(
+    alex(
+      'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
+      {
         profanitySureness: 1
       }
     ).messages.map(String),
@@ -80,6 +101,18 @@ test('alex()', function(t) {
     ).messages.map(String),
     ['1:5-1:14: `boogeyman` may be insensitive, use `boogeymonster` instead'],
     'should work with allow and profanity config'
+  )
+
+  t.deepEqual(
+    alex(
+      'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
+      {
+        deny: ['boogeyman-boogeywoman'],
+        profanitySureness: 1
+      }
+    ).messages.map(String),
+    ['1:5-1:14: `boogeyman` may be insensitive, use `boogeymonster` instead'],
+    'should work with deny and profanity config'
   )
 
   t.deepEqual(alex.markdown, alex, 'alex.markdown is an alias of alex')
@@ -141,6 +174,29 @@ test('alex()', function(t) {
     alex
       .text(
         'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
+        {
+          deny: ['butt']
+        }
+      )
+      .messages.map(String),
+    ['1:52-1:56: Be careful with `butt`, it’s profane in some cases'],
+    'alex.text() with deny config'
+  )
+
+  t.throws(function() {
+    alex.text(
+      'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
+      {
+        allow: ['asshat'],
+        deny: ['boogeyman-boogeywoman']
+      }
+    )
+  }, 'alex.text() with allow and deny config')
+
+  t.deepEqual(
+    alex
+      .text(
+        'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
         {profanitySureness: 1}
       )
       .messages.map(String),
@@ -166,11 +222,26 @@ test('alex()', function(t) {
   )
 
   t.deepEqual(
+    alex
+      .text(
+        'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
+        {
+          deny: ['boogeyman-boogeywoman'],
+          profanitySureness: 1
+        }
+      )
+      .messages.map(String),
+    ['1:5-1:14: `boogeyman` may be insensitive, use `boogeymonster` instead'],
+    'alex.text() with deny and profanity config'
+  )
+
+  t.deepEqual(
     alex.html(html).messages.map(String),
     [
       '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
       '18:5-18:8: `She` may be insensitive, use `They`, `It` instead',
-      '18:61-18:65: Be careful with `butt`, it’s profane in some cases'
+      '18:36-18:42: Don’t use `asshat`, it’s profane',
+      '18:74-18:78: Be careful with `butt`, it’s profane in some cases'
     ],
     'alex.html()'
   )
@@ -179,7 +250,8 @@ test('alex()', function(t) {
     alex.html(html, ['butt']).messages.map(String),
     [
       '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
-      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead',
+      '18:36-18:42: Don’t use `asshat`, it’s profane'
     ],
     'alex.html() with allow array'
   )
@@ -188,16 +260,35 @@ test('alex()', function(t) {
     alex.html(html, {allow: ['butt']}).messages.map(String),
     [
       '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
-      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead',
+      '18:36-18:42: Don’t use `asshat`, it’s profane'
     ],
     'alex.html() with allow config'
   )
 
   t.deepEqual(
+    alex
+      .html(html, {
+        deny: ['butt']
+      })
+      .messages.map(String),
+    ['18:74-18:78: Be careful with `butt`, it’s profane in some cases'],
+    'alex.html() with deny config'
+  )
+
+  t.throws(function() {
+    alex.html(html, {
+      allow: ['he-she'],
+      deny: ['butt']
+    })
+  }, 'alex.html() with allow and deny config')
+
+  t.deepEqual(
     alex.html(html, {profanitySureness: 1}).messages.map(String),
     [
       '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
-      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead',
+      '18:36-18:42: Don’t use `asshat`, it’s profane'
     ],
     'alex.html() with profanity config'
   )
@@ -209,8 +300,22 @@ test('alex()', function(t) {
         profanitySureness: 1
       })
       .messages.map(String),
-    [],
-    'alex.html() with allow and profantity config'
+    ['18:36-18:42: Don’t use `asshat`, it’s profane'],
+    'alex.html() with allow and profanity config'
+  )
+
+  t.deepEqual(
+    alex
+      .html(html, {
+        deny: ['he-she'],
+        profanitySureness: 1
+      })
+      .messages.map(String),
+    [
+      '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
+    ],
+    'alex.html() with deny and profanity config'
   )
 
   t.end()

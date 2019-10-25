@@ -30,15 +30,17 @@ function makeText(config) {
 // Alex’s core.
 function core(value, config, processor) {
   var allow
+  var deny
 
   if (Array.isArray(config)) {
     allow = config
   } else if (config) {
     allow = config.allow
+    deny = config.deny
   }
 
   var file = new VFile(value)
-  var tree = processor.use(filter, {allow: allow}).parse(file)
+  var tree = processor.use(filter, {allow: allow, deny: deny}).parse(file)
 
   processor.runSync(tree, file)
 
