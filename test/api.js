@@ -104,9 +104,9 @@ test('alex()', function(t) {
   t.deepEqual(
     alex.html(html).messages.map(String),
     [
-      '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
-      '10:1-10:4: `She` may be insensitive, use `They`, `It` instead',
-      '11:36-11:40: Be careful with `butt`, it’s profane in some cases'
+      '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead',
+      '18:61-18:65: Be careful with `butt`, it’s profane in some cases'
     ],
     'alex.html()'
   )
@@ -114,8 +114,8 @@ test('alex()', function(t) {
   t.deepEqual(
     alex.html(html, {allow: ['butt']}).messages.map(String),
     [
-      '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
-      '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
+      '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
     ],
     'alex.html() with allow config'
   )
@@ -123,8 +123,8 @@ test('alex()', function(t) {
   t.deepEqual(
     alex.html(html, ['butt']).messages.map(String),
     [
-      '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
-      '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
+      '17:22-17:24: `He` may be insensitive, use `They`, `It` instead',
+      '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
     ],
     'alex.html() with allow array'
   )
