@@ -21,7 +21,7 @@ body {
 .footer {
   position: relative;
   min-height: 100vh;
-  background-color: #7c5be5;
+  background-color: #6f42c1;
   color: white;
   display: flex;
   justify-content: center;
@@ -75,6 +75,11 @@ body {
   position: relative;
   padding-left: 0.025em;
   border-bottom: 0.03125em solid currentcolor;
+}
+
+.cover .logo {
+  width: 40%;
+  margin: 0 auto 4em auto;
 }
 
 .byline {
@@ -185,7 +190,7 @@ h3 {
 /* Links */
 
 a {
-  color: #7c5be5;
+  color: #6f42c1;
   text-decoration: none;
   transition: color 200ms;
 }
@@ -471,7 +476,7 @@ textarea {
 
 .github-corner svg {
   fill: #fff;
-  color: #7c5be5;
+  color: #6f42c1;
   position: absolute;
   top: 0;
   border: 0;
