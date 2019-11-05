@@ -1,7 +1,7 @@
 <!--lint disable no-html first-heading-level no-shell-dollars-->
 
 <h1 align="center">
-  <img width="400" src="https://raw.githubusercontent.com/get-alex/alex/c30ec12/media/logo.svg?sanitize=true" alt="alex">
+  <img width="300" src="https://raw.githubusercontent.com/get-alex/alex/a192b46/media/logo-alex-purple.svg?sanitize=true" alt="alex">
   <br>
   <br>
 </h1>
