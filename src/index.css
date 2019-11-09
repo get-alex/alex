@@ -1,11 +1,13 @@
-html {
-  font-family: Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", "Oxygen", "Ubuntu", "Cantarell", "Open Sans", sans-serif;
+:root {
+  color-scheme: light dark;
+  font-family: system-ui;
+  background-color: hsl(0, 0%, 95%);
+  color: hsl(0, 0, 0, 0.75);
   scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  background-color: #fdfdfc;
 }
 
 * {
@@ -144,7 +146,13 @@ p {
 /* Code */
 pre,
 code {
-  font-family: monospace;
+  font-family:
+    SFMono-Regular,
+    Consolas,
+    Liberation Mono,
+    Menlo,
+    Courier,
+    monospace;
 }
 
 pre {
@@ -191,26 +199,23 @@ h3 {
 
 a {
   color: #6f42c1;
-  text-decoration: none;
   transition: color 200ms;
 }
 
 a:hover,
 a:focus {
-  color: initial;
+  color: inherit;
 }
 
 .footer a {
   color: inherit;
   font-weight: bold;
   padding-bottom: 0.125em;
-  border-bottom: 1px dotted transparent;
-  transition: border-bottom-color 200ms;
 }
 
 .footer a:hover,
 .footer a:focus {
-  border-bottom-color: currentcolor;
+  color: black;
 }
 
 /* Labels */
@@ -226,21 +231,8 @@ a:focus {
   background-color: #ce4037;
 }
 
-/* Code. */
-.code.string {
-  color: #63a35c;
-}
-
-.code.key {
-  color: #a71d5d;
-}
-
-.code.fn {
-  color: #0086b3;
-}
-
-.code.operator {
-  color: #ed6a43;
+.code-keyword {
+  color: #005cc5;
 }
 
 /* Windows (editors and terminals). */
@@ -356,7 +348,7 @@ a:focus {
 .draw,
 textarea {
   margin: 0;
-  padding: 0;
+  padding: calc(0.25 * 1em + 1ex);
   width: 100%;
   border: none;
   outline: none;
@@ -364,12 +356,18 @@ textarea {
   overflow: hidden;
 
   /* Can’t use a nice font: kerning renders differently in textareas. */
-  font-family: monospace;
+  font-family:
+    SFMono-Regular,
+    Consolas,
+    Liberation Mono,
+    Menlo,
+    Courier,
+    monospace;
   background: transparent;
   white-space: pre-wrap;
   word-wrap: break-word;
   font-size: inherit;
-  line-height: inherit;
+  line-height: calc(1em + 1ex);
 }
 
 .draw {
@@ -439,15 +437,6 @@ textarea {
   color: #657b83;
 }
 
-.terminal pre {
-  padding: 7px 12px;
-  margin: 0;
-  line-height: 1.6;
-  overflow: scroll;
-  background-color: transparent;
-  border-radius: 0;
-}
-
 .terminal .command::before,
 .terminal .input::before {
   content: '$ ';
@@ -472,6 +461,15 @@ textarea {
 
 .terminal .fullscreen {
   background-color: #859900;
+}
+
+.terminal pre {
+  padding: 7px 12px;
+  margin: 0;
+  line-height: 1.6;
+  overflow: scroll;
+  background-color: transparent;
+  border-radius: 0;
 }
 
 .github-corner svg {
@@ -511,5 +509,39 @@ textarea {
 
   .github-corner:hover .octo-arm {
     animation: none;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    background-color: hsl(214, 13%, 7.5%);
+    color: hsl(214, 13%, 95%);
+  }
+
+  pre {
+    background-color: #16191d;
+  }
+
+  p code,
+  li code {
+    background-color: hsla(0, 0%, 97.5%, 0.08);
+  }
+
+  .editor {
+    border-color: hsl(214, 13%, 12.5%);
+    color: hsl(214, 13%, 97.5%);
+    background-color: hsl(214, 13%, 7.5%);
+  }
+
+  .editor .chrome.button {
+    background-color: hsl(214, 13%, 15%);
+  }
+
+  .editor figcaption {
+    background-color: hsl(214, 13%, 10%);
+  }
+
+  .code-keyword {
+    color: #81a1c1;
   }
 }
