@@ -43,6 +43,8 @@ Using [yarn][]:
 $ yarn global add alex
 ```
 
+For a practical, step-by-step guide to integrating alex into your project's workflow, check out this tutorial: [Setting up alex in your project][setup-tutorial]
+
 <!--alex disable wacko stupid-->
 
 ## Table of Contents
@@ -546,6 +548,8 @@ Lot’s of [people helped since][contributors]!
 [npm]: https://docs.npmjs.com/cli/install
 
 [yarn]: https://yarnpkg.com/
+
+[setup-tutorial]: https://dev.to/unmock/setting-up-the-alex-js-language-linter-in-your-project-3bpl
 
 [demo]: http://alexjs.com/#demo
 
