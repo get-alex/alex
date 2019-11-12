@@ -43,7 +43,8 @@ Using [yarn][]:
 $ yarn global add alex
 ```
 
-Or you can follow this step-by-step tutorial: [Setting up alex in your project][setup-tutorial]
+Or you can follow this step-by-step tutorial: 
+[Setting up alex in your project][setup-tutorial]
 
 <!--alex disable wacko stupid-->
 
