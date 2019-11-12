@@ -5,6 +5,9 @@
   "license": "MIT",
   "repository": "https://github.com/get-alex/alex",
   "bugs": "https://github.com/get-alex/alex/issues",
+  "funding": {
+     "url": "https://github.com/sponsors/wooorm"
+   },
   "homepage": "https://alexjs.com",
   "keywords": [
     "cli-app",
