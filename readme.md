@@ -43,7 +43,7 @@ Using [yarn][]:
 $ yarn global add alex
 ```
 
-Or you can follow this step-by-step tutorial: 
+Or you can follow this step-by-step tutorial:
 [Setting up alex in your project][setup-tutorial]
 
 <!--alex disable wacko stupid-->
@@ -285,11 +285,11 @@ Yields:
 
 ```txt
 example.md
-   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogey` instead                       boogeyman-boogeywoman  retext-equality
+   1:5-1:14  warning  `boogeyman` may be insensitive, use `boogeymonster` instead                boogeyman-boogeywoman  retext-equality
   1:42-1:48  warning  `master` / `slaves` may be insensitive, use `primary` / `replica` instead  master-slave           retext-equality
-  1:70-1:76  warning  Don’t use `slaves`, it’s profane                                           slaves                 retext-profanities
-  2:53-2:55  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
-  2:62-2:69  warning  `cripple` may be insensitive, use `person with a limp` instead             gimp                   retext-equality
+  1:69-1:75  warning  Don’t use `slaves`, it’s profane                                           slaves                 retext-profanities
+  2:52-2:54  warning  `he` may be insensitive, use `they`, `it` instead                          he-she                 retext-equality
+  2:61-2:68  warning  `cripple` may be insensitive, use `person with a limp` instead             gimp                   retext-equality
 
 ⚠ 5 warnings
 ```
@@ -423,16 +423,21 @@ alex.text('The `boogeyman`.').messages
 Yields:
 
 ```js
-[ { [1:6-1:15: `boogeyman` may be insensitive, use `boogey` instead]
-    message: '`boogeyman` may be insensitive, use `boogey` instead',
+[
+  [1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead] {
+    message: '`boogeyman` may be insensitive, use `boogeymonster` instead',
     name: '1:6-1:15',
-    reason: '`boogeyman` may be insensitive, use `boogey` instead',
+    reason: '`boogeyman` may be insensitive, use `boogeymonster` instead',
     line: 1,
     column: 6,
     location: Position { start: [Object], end: [Object] },
     source: 'retext-equality',
     ruleId: 'boogeyman-boogeywoman',
-    fatal: false } ]
+    fatal: false,
+    actual: 'boogeyman',
+    expected: [ 'boogeymonster' ]
+  }
+]
 ```
 
 ## Workflow

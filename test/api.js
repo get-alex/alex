@@ -21,7 +21,7 @@ test('alex()', function(t) {
       ].join('\n')
     ).messages.map(String),
     [
-      '1:5-1:14: `boogeyman` may be insensitive, use `boogeymonster`, `boogey` instead',
+      '1:5-1:14: `boogeyman` may be insensitive, use `boogeymonster` instead',
       '1:42-1:48: `master` / `slaves` may be insensitive, use ' +
         '`primary` / `replica` instead',
       '2:5-2:11: Don’t use `slaves`, it’s profane',
@@ -68,7 +68,7 @@ test('alex.text()', function(t) {
       )
       .messages.map(String),
     [
-      '1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster`, `boogey` instead',
+      '1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead',
       '2:36-2:40: Be careful with `butt`, it’s profane in some cases'
     ]
   )
@@ -85,9 +85,7 @@ test('alex.text() with allow config', function(t) {
         {allow: ['butt']}
       )
       .messages.map(String),
-    [
-      '1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster`, `boogey` instead'
-    ]
+    ['1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead']
   )
 })
 
@@ -102,9 +100,7 @@ test('alex.text() with allow array', function(t) {
         ['butt']
       )
       .messages.map(String),
-    [
-      '1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster`, `boogey` instead'
-    ]
+    ['1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead']
   )
 })
 
