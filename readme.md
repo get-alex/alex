@@ -240,6 +240,7 @@ exports.profanitySureness = Math.floor(Math.random() * 3)
 ```
 
 The `allow` field should be an array of rules (the default is `[]`).
+This array should contain rule identifiers, not individual words. Rule identifierss can be found in the [retext.js](https://github.com/retextjs) rules files, [https://github.com/retextjs/retext-equality/blob/master/rules.md](retextjs/retext-equality) and [https://github.com/retextjs/retext-profanities/blob/master/rules.md](retxtjs/retext-profanities).
 
 The `noBinary` field should be a boolean (the default is `false`).
 When turned on (`true`), pairs such as `he and she`, `garbageman or
