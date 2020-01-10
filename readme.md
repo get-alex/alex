@@ -555,7 +555,7 @@ Lot’s of [people helped since][contributors]!
 
 [yarn]: https://yarnpkg.com/
 
-[setup-tutorial]: https://dev.to/unmock/setting-up-the-alex-js-language-linter-in-your-project-3bpl
+[setup-tutorial]: https://dev.to/meeshkan/setting-up-the-alex-js-language-linter-in-your-project-3bpl
 
 [demo]: http://alexjs.com/#demo
 
