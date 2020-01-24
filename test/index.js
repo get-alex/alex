@@ -1,6 +1,6 @@
 'use strict'
 
-/* eslint-disable import/no-unassigned-import, ava/no-import-test-files */
+/* eslint-disable import/no-unassigned-import */
 require('./api')
 require('./cli')
-/* eslint-enable import/no-unassigned-import, ava/no-import-test-files */
+/* eslint-enable import/no-unassigned-import */

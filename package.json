@@ -115,6 +115,9 @@
   "xo": {
     "prettier": true,
     "esnext": false,
+    "rules": {
+      "ava/no-import-test-files": "off"
+    },
     "ignores": [
       "alex.js"
     ]
