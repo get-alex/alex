@@ -76,19 +76,21 @@ Or you can follow this step-by-step tutorial:
 
 **alex** checks things such as:
 
-*   Gendered work-titles, such as suggesting `garbage collector` for
-    `garbageman` and `proprietor` for `landlord`
-*   Gendered proverbs, such as suggesting `bravely` for `like a man`, or
-    `courteous` for `ladylike`.
-*   Ablist language, such as suggesting `person with learning disabilities` for
-    `learning disabled`
-*   Condescending language, such as warning for `obviously`, `everyone knows`,
-    etc
-*   Intolerant phrasing, such as suggesting `primary` and `replica` instead of
-    `master` and `slave`
-*   Profanities, such as `butt` 🍑
+*   Gendered work-titles (if you write `garbageman` alex suggests `garbage
+    collector`; if you write `landlord` alex suggests `proprietor`)
+*   Gendered proverbs (if you write `like a man` alex suggests `bravely`; if you
+    write `ladylike` alex suggests `courteous`)
+*   Ableist language (if you write `learning disabled` alex suggests `person
+    with learning disabilities`)
+*   Condescending language (if you write `obviously` or `everyone knows` alex
+    warns about it)
+*   Intolerant phrasing (if you write `master` and `slave` alex suggests
+    `primary` and `replica`)
+*   Profanities (if you write `butt` 🍑 alex warns about it)
 
 …and much more!
+
+Note: alex assumes good intent: that you don’t mean to offend!
 
 See [`retext-equality`][equality] and [`retext-profanities`][profanities] for
 all rules.
