@@ -6,8 +6,8 @@
   "repository": "https://github.com/get-alex/alex",
   "bugs": "https://github.com/get-alex/alex/issues",
   "funding": {
-     "url": "https://github.com/sponsors/wooorm"
-   },
+    "url": "https://github.com/sponsors/wooorm"
+  },
   "homepage": "https://alexjs.com",
   "keywords": [
     "cli-app",
@@ -75,13 +75,12 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
-    "ava": "^2.0.0",
     "browserify": "^16.0.0",
-    "execa": "^3.0.0",
-    "nyc": "^14.0.0",
+    "nyc": "^15.0.0",
     "prettier": "^1.0.0",
     "remark-cli": "^7.0.0",
     "remark-preset-wooorm": "^6.0.0",
+    "tape": "^4.0.0",
     "tinyify": "^2.0.0",
     "xo": "^0.25.0"
   },
@@ -90,8 +89,8 @@
     "build-bundle": "browserify . -s alex -o alex.js",
     "build-mangle": "browserify . -s alex -p tinyify -o alex.min.js",
     "build": "npm run build-bundle && npm run build-mangle",
-    "test-api": "ava",
-    "test-coverage": "nyc --reporter lcov ava",
+    "test-api": "node test",
+    "test-coverage": "nyc --reporter lcov tape test/index.js",
     "test": "npm run format && npm run build && npm run test-coverage"
   },
   "alex": {

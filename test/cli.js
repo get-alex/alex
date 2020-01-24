@@ -1,183 +1,302 @@
 'use strict'
 
 var path = require('path')
-var test = require('ava')
-var execa = require('execa')
+var childProcess = require('child_process')
+var test = require('tape')
 
-test('version', async function(t) {
-  var result = await execa('./cli.js', ['-v'])
-  t.is(result.stdout, require('../package').version)
-})
+var pkg = require('../package')
 
-test('help', async function(t) {
-  var result = await execa('./cli.js', ['-h'])
-  t.regex(result.stdout, /Usage: alex \[<glob> ...] /)
-})
+test('alex-cli', function(t) {
+  t.test('version', function(t) {
+    t.plan(1)
 
-test('stdin', async function(t) {
-  try {
-    await execa('./cli.js', ['--stdin'], {input: 'His'})
-  } catch (error) {
-    t.is(
-      error.stderr,
-      [
-        '<stdin>',
-        '  1:1-1:4  warning  `His` may be insensitive, when referring to a person, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
-        '',
-        '⚠ 1 warning'
-      ].join('\n')
-    )
-  }
-})
+    childProcess.exec('./cli.js -v', onexec)
 
-test('stdin and globs', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'one.md')
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, '', pkg.version + '\n'],
+        'should work'
+      )
+    }
+  })
 
-  try {
-    await execa('./cli.js', ['--stdin', filePath])
-  } catch (error) {
-    t.regex(error.stderr, /Do not pass globs with `--stdin`/)
-  }
-})
+  t.test('help', function(t) {
+    t.plan(1)
 
-test('markdown by default', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'one.md')
-  var result = await execa('./cli.js', [filePath])
+    childProcess.exec('./cli.js -h', onexec)
 
-  t.is(result.stderr, filePath + ': no issues found')
-})
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, /Usage: alex \[<glob> ...] /.test(stdout)],
+        [null, '', true],
+        'should work'
+      )
+    }
+  })
 
-test('text optional', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'one.md')
+  t.test('stdin', function(t) {
+    t.plan(1)
 
-  try {
-    await execa('./cli.js', [filePath, '--text'])
-  } catch (error) {
-    t.is(
-      error.stderr,
-      [
-        filePath,
-        '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
-        '',
-        '⚠ 1 warning'
-      ].join('\n')
-    )
-  }
-})
+    var subprocess = childProcess.exec('./cli.js --stdin', onexec)
 
-test('text on html', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'three.html')
+    setTimeout(end, 10)
 
-  try {
-    await execa('./cli.js', [filePath, '--text'])
-  } catch (error) {
-    t.regex(error.stderr, /9 warnings/)
-  }
-})
+    function end() {
+      subprocess.stdin.end('His')
+    }
 
-test('html optional', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'three.html')
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stderr, stdout],
+        [
+          1,
+          [
+            '<stdin>',
+            '  1:1-1:4  warning  `His` may be insensitive, when referring to a person, use `Their`, `Theirs`, `Them` instead  her-him  retext-equality',
+            '',
+            '⚠ 1 warning',
+            ''
+          ].join('\n'),
+          ''
+        ],
+        'should work'
+      )
+    }
+  })
 
-  try {
-    await execa('./cli.js', [filePath, '--html'])
-  } catch (error) {
-    t.is(
-      error.stderr,
-      [
-        filePath,
-        '  9:18-9:20  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
-        '  10:1-10:4  warning  `She` may be insensitive, use `They`, `It` instead  he-she  retext-equality',
-        '',
-        '⚠ 2 warnings'
-      ].join('\n')
-    )
-  }
-})
+  t.test('stdin and globs', function(t) {
+    var fp = path.join('test', 'fixtures', 'one.md')
 
-test('successful files', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'ok.txt')
-  var result = await execa('./cli.js', [filePath])
+    t.plan(1)
 
-  t.is(result.stderr, filePath + ': no issues found')
-})
+    childProcess.exec('./cli.js --stdin ' + fp, onexec)
 
-test('quiet on ok files', async function(t) {
-  var fp = path.join(__dirname, 'fixtures', 'ok.txt')
-  var result = await execa('./cli.js', [fp, '-q'])
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, /Do not pass globs with `--stdin`/.test(stderr), stdout],
+        [1, true, ''],
+        'should work'
+      )
+    }
+  })
 
-  t.is(result.stderr, '')
-})
+  t.test('markdown by default', function(t) {
+    var fp = path.join('test', 'fixtures', 'one.md')
 
-test('quiet on nok files', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'one.md')
+    t.plan(1)
 
-  try {
-    await execa('./cli.js', [filePath, '--text'])
-  } catch (error) {
-    t.is(
-      error.stderr,
-      [
-        filePath,
-        '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
-        '',
-        '⚠ 1 warning'
-      ].join('\n')
-    )
-  }
-})
+    childProcess.exec('./cli.js ' + fp, onexec)
 
-test('binary (default)', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'binary', 'two.md')
-  var result = await execa('./cli.js', [filePath])
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, fp + ': no issues found\n', ''],
+        'should work'
+      )
+    }
+  })
 
-  t.is(result.stderr, filePath + ': no issues found')
-})
+  t.test('optionally html', function(t) {
+    var fp = path.join('test', 'fixtures', 'three.html')
 
-test('non-binary (optional)', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'non-binary', 'two.md')
+    t.plan(1)
 
-  try {
-    await execa('./cli.js', [filePath])
-  } catch (error) {
-    t.is(
-      error.stderr,
-      [
-        filePath,
-        '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
-        '  1:7-1:10  warning  `she` may be insensitive, use `they`, `it` instead  he-she  retext-equality',
-        '',
-        '⚠ 2 warnings'
-      ].join('\n')
-    )
-  }
-})
+    childProcess.exec('./cli.js ' + fp + ' --html', onexec)
 
-test('profanity (default)', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'profanity', 'two.md')
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, /2 warnings/.test(stderr), stdout],
+        [1, true, ''],
+        'should work'
+      )
+    }
+  })
 
-  try {
-    await execa('./cli.js', [filePath])
-  } catch (error) {
-    var expected = [
-      filePath,
-      '  1:5-1:11  warning  Be careful with `beaver`, it’s profane in some cases  beaver  retext-profanities',
-      '',
-      '⚠ 1 warning'
-    ].join('\n')
+  t.test('optionally text (on markdown)', function(t) {
+    var fp = path.join('test', 'fixtures', 'one.md')
 
-    t.is(error.stderr, expected)
-  }
-})
+    t.plan(1)
 
-test('profanity (profanitySureness: 1)', async function(t) {
-  var filePath = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
-  var result = await execa('./cli.js', [filePath])
+    childProcess.exec('./cli.js ' + fp + ' --text', onexec)
 
-  t.is(result.stderr, filePath + ': no issues found')
-})
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, /1 warning/.test(stderr), stdout],
+        [1, true, ''],
+        'should work'
+      )
+    }
+  })
 
-test('default globs', async function(t) {
-  var result = await execa('./cli.js')
+  t.test('optionally text (on html)', function(t) {
+    var fp = path.join('test', 'fixtures', 'three.html')
 
-  t.is(result.stderr, 'readme.md: no issues found')
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp + ' --text', onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, /9 warnings/.test(stderr), stdout],
+        [1, true, ''],
+        'should work'
+      )
+    }
+  })
+
+  t.test('successful', function(t) {
+    var fp = path.join('test', 'fixtures', 'ok.txt')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, fp + ': no issues found\n', ''],
+        'should work'
+      )
+    }
+  })
+
+  t.test('quiet (ok)', function(t) {
+    var fp = path.join('test', 'fixtures', 'ok.txt')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp + ' -q', onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual([err, stderr, stdout], [null, '', ''], 'should work')
+    }
+  })
+
+  t.test('quiet (on error)', function(t) {
+    var fp = path.join('test', 'fixtures', 'one.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp + ' -q --text', onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stderr, stdout],
+        [
+          1,
+          [
+            fp,
+            '  1:18-1:21  warning  `his` may be insensitive, when referring to a person, use `their`, `theirs`, `them` instead  her-him  retext-equality',
+            '',
+            '⚠ 1 warning',
+            ''
+          ].join('\n'),
+          ''
+        ],
+        'should work'
+      )
+    }
+  })
+
+  t.test('binary (default: ok)', function(t) {
+    var fp = path.join('test', 'fixtures', 'binary', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, fp + ': no issues found\n', ''],
+        'should work'
+      )
+    }
+  })
+
+  t.test('binary (with config file)', function(t) {
+    var fp = path.join('test', 'fixtures', 'non-binary', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stderr, stdout],
+        [
+          1,
+          [
+            fp,
+            '   1:1-1:3  warning  `He` may be insensitive, use `They`, `It` instead   he-she  retext-equality',
+            '  1:7-1:10  warning  `she` may be insensitive, use `they`, `it` instead  he-she  retext-equality',
+            '',
+            '⚠ 2 warnings',
+            ''
+          ].join('\n'),
+          ''
+        ],
+        'should work'
+      )
+    }
+  })
+
+  t.test('profanity (default)', function(t) {
+    var fp = path.join('test', 'fixtures', 'profanity', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stderr, stdout],
+        [
+          1,
+          [
+            fp,
+            '  1:5-1:11  warning  Be careful with `beaver`, it’s profane in some cases  beaver  retext-profanities',
+            '',
+            '⚠ 1 warning',
+            ''
+          ].join('\n'),
+          ''
+        ],
+        'should work'
+      )
+    }
+  })
+
+  t.test('profanity (with config file)', function(t) {
+    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, fp + ': no issues found\n', ''],
+        'should work'
+      )
+    }
+  })
+
+  t.test('default globs', function(t) {
+    t.plan(1)
+
+    childProcess.exec('./cli.js', onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, 'readme.md: no issues found\n', ''],
+        'should work'
+      )
+    }
+  })
+
+  t.end()
 })

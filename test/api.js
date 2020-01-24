@@ -2,8 +2,10 @@
 
 var fs = require('fs')
 var path = require('path')
-var test = require('ava')
+var test = require('tape')
 var alex = require('..')
+
+var html = fs.readFileSync(path.join(__dirname, 'fixtures', 'three.html'))
 
 // Tests. Note that these are small because alex is in fact
 // just a collection of well-tested modules.
@@ -29,35 +31,32 @@ test('alex()', function(t) {
       '3:10-3:17: `cripple` may be insensitive, use `person with a ' +
         'limp` instead',
       '5:36-5:40: Be careful with `butt`, it’s profane in some cases'
-    ]
+    ],
+    'should work'
   )
-})
 
-test('alex() with an allow array', function(t) {
-  var messages = alex('Eric is pretty set on beating your butt for sheriff.', [
-    'butt'
-  ]).messages
+  t.deepEqual(
+    alex('Eric is pretty set on beating your butt for sheriff.', ['butt'])
+      .messages,
+    [],
+    'should work with an allow array'
+  )
 
-  t.is(messages.length, 0)
-})
-
-test('alex() with profantity config', function(t) {
-  var messages = alex(
-    'Eric, the asshat, is pretty set on beating your butt for sheriff.',
-    {
+  t.deepEqual(
+    alex('Eric, the asshat, is pretty set on beating your butt for sheriff.', {
       allow: ['asshat'],
       profanitySureness: 1
-    }
-  ).messages
+    }).messages,
+    [],
+    'should work with profantity config'
+  )
 
-  t.is(messages.length, 0, 'We dont expect any messages')
-})
+  t.deepEqual(
+    alex.markdown('The `boogeyman`.').messages.map(String),
+    [],
+    'alex.markdown()'
+  )
 
-test('alex.markdown()', function(t) {
-  t.deepEqual(alex.markdown('The `boogeyman`.').messages.map(String), [])
-})
-
-test('alex.text()', function(t) {
   t.deepEqual(
     alex
       .text(
@@ -70,11 +69,10 @@ test('alex.text()', function(t) {
     [
       '1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead',
       '2:36-2:40: Be careful with `butt`, it’s profane in some cases'
-    ]
+    ],
+    'alex.text()'
   )
-})
 
-test('alex.text() with allow config', function(t) {
   t.deepEqual(
     alex
       .text(
@@ -85,11 +83,10 @@ test('alex.text() with allow config', function(t) {
         {allow: ['butt']}
       )
       .messages.map(String),
-    ['1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead']
+    ['1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead'],
+    'alex.text() with allow config'
   )
-})
 
-test('alex.text() with allow array', function(t) {
   t.deepEqual(
     alex
       .text(
@@ -100,37 +97,37 @@ test('alex.text() with allow array', function(t) {
         ['butt']
       )
       .messages.map(String),
-    ['1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead']
+    ['1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead'],
+    'alex.text() with allow array'
   )
-})
 
-test('alex.html()', function(t) {
-  var fp = path.join(__dirname, 'fixtures', 'three.html')
-  var fixture = fs.readFileSync(fp)
+  t.deepEqual(
+    alex.html(html).messages.map(String),
+    [
+      '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
+      '10:1-10:4: `She` may be insensitive, use `They`, `It` instead',
+      '11:36-11:40: Be careful with `butt`, it’s profane in some cases'
+    ],
+    'alex.html()'
+  )
 
-  t.deepEqual(alex.html(fixture).messages.map(String), [
-    '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
-    '10:1-10:4: `She` may be insensitive, use `They`, `It` instead',
-    '11:36-11:40: Be careful with `butt`, it’s profane in some cases'
-  ])
-})
+  t.deepEqual(
+    alex.html(html, {allow: ['butt']}).messages.map(String),
+    [
+      '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
+      '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
+    ],
+    'alex.html() with allow config'
+  )
 
-test('alex.html() with allow config', function(t) {
-  var fp = path.join(__dirname, 'fixtures', 'three.html')
-  var fixture = fs.readFileSync(fp)
+  t.deepEqual(
+    alex.html(html, ['butt']).messages.map(String),
+    [
+      '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
+      '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
+    ],
+    'alex.html() with allow array'
+  )
 
-  t.deepEqual(alex.html(fixture, {allow: ['butt']}).messages.map(String), [
-    '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
-    '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
-  ])
-})
-
-test('alex.html() with allow array', function(t) {
-  var fp = path.join(__dirname, 'fixtures', 'three.html')
-  var fixture = fs.readFileSync(fp)
-
-  t.deepEqual(alex.html(fixture, ['butt']).messages.map(String), [
-    '9:18-9:20: `He` may be insensitive, use `They`, `It` instead',
-    '10:1-10:4: `She` may be insensitive, use `They`, `It` instead'
-  ])
+  t.end()
 })
