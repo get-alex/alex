@@ -13,8 +13,8 @@
 [![First timers friendly][first-timers-badge]][first-timers]
 
 Whether your own or someone else’s writing, **alex** helps you find gender
-favouring, polarising, race related, religion inconsiderate, or other
-**unequal** phrasing in text.
+favoring, polarizing, race related, religion inconsiderate, or other **unequal**
+phrasing in text.
 
 For example, when `We’ve confirmed his identity` is given, **alex** will warn
 you and suggest using `their` instead of `his`.
@@ -26,7 +26,7 @@ Give **alex** a spin on the [Online demo »][demo].
 *   [x] Helps to get better at considerate writing
 *   [x] Catches many possible offences
 *   [x] Suggests helpful alternatives
-*   [x] Reads plain-text, HTML, and markdown as input
+*   [x] Reads plain text, HTML, and markdown as input
 *   [x] Stylish
 
 ## Install
@@ -48,7 +48,7 @@ Or you can follow this step-by-step tutorial:
 
 <!--alex disable wacko stupid-->
 
-## Table of Contents
+## Contents
 
 *   [Checks](#checks)
 *   [Integrations](#integrations)
@@ -123,10 +123,10 @@ The CLI will sometimes [search for files][ignoring-files].
 To prevent files from being found, add a file named `.alexignore` in one of the
 directories above the current working directory (the place you run `alex` from).
 The format of these files is similar to [`.eslintignore`][eslintignore] (which
-is in turn similar to `.gitignore` files).
+in turn is similar to `.gitignore` files).
 
 For example, when working in `~/path/to/place`, the ignore file can be in
-`place`, but also in `~`.
+`to`, `place`, or `~`.
 
 The ignore file for [this project itself][.alexignore] looks like this:
 
@@ -152,7 +152,7 @@ readme.md
 ⚠ 1 warning
 ```
 
-HTML comments in markdown can be used to ignore them:
+HTML comments in Markdown can be used to ignore them:
 
 ```markdown
 <!--alex ignore dad-mom-->
@@ -226,6 +226,7 @@ allow:
 …you can also use JavaScript if the file is named `.alexrc.js`:
 
 ```js
+// But making it random like this is a bad idea!
 exports.profanitySureness = Math.floor(Math.random() * 3)
 ```
 
@@ -244,14 +245,14 @@ exports.profanitySureness = Math.floor(Math.random() * 3)
 The `allow` field should be an array of rules (the default is `[]`).
 
 The `noBinary` field should be a boolean (the default is `false`).
-When turned on (`true`), pairs such as `he and she`, `garbageman or
-garbagewoman`, are seen as errors.
-When turned off (`false`, the default), such pairs are seen as OK.
+When turned on (`true`), pairs such as `he and she` and `garbageman or
+garbagewoman` are seen as errors.
+When turned off (`false`, the default), such pairs are okay.
 
 The `profanitySureness` field is a number (the default is `0`).
-We use [cuss][], which has a dictionary of words that have a rating between 0
-and 2 of how likely it is that a word or phrase is a profanity (not how “bad” it
-is):
+We use [`cuss`][cuss], which has a dictionary of words that have a rating
+between 0 and 2 of how likely it is that a word or phrase is a profanity (not
+how “bad” it is):
 
 | Rating | Use as a profanity | Use in clean text | Example |
 | ------ | ------------------ | ----------------- | ------- |
@@ -319,7 +320,7 @@ $ npm install alex --save
 
 ### `alex.markdown(value, config)`
 
-Check markdown (ignoring syntax).
+Check Markdown (ignoring syntax).
 
 ###### Parameters
 
@@ -330,7 +331,7 @@ Check markdown (ignoring syntax).
 
 [`VFile`][vfile].
 You are probably interested in its [`messages`][vfile-message] property, as
-shown in the example above, because it holds the possible violations.
+shown in the example below, because it holds the possible violations.
 
 ###### Example
 
@@ -363,7 +364,6 @@ Yields:
 ### `alex.html(value, config)`
 
 Check HTML (ignoring syntax).
-Similar to [`alex()`][alex-api] and [`alex.text()`][alex-text]).
 
 ###### Parameters
 
@@ -402,8 +402,7 @@ Yields:
 
 ### `alex.text(value, config)`
 
-Check plain text (so syntax is checked).
-Similar to [`alex()`][alex-api] and [`alex.html()`][alex-html]).
+Check plain text (as in, syntax is checked).
 
 ###### Parameters
 
@@ -514,7 +513,7 @@ to get started.
 See [`support.md`][support] for ways to get help.
 
 This project has a [Code of conduct][coc].
-By interacting with this repository, organisation, or community you agree to
+By interacting with this repository, organization, or community you agree to
 abide by its terms.
 
 ## Origin story
@@ -620,12 +619,6 @@ Lot’s of [people helped since][contributors]!
 [.alexignore]: .alexignore
 
 [license]: license
-
-[alex-api]: #alexvalue-config
-
-[alex-html]: #alexhtmlvalue-config
-
-[alex-text]: #alextextvalue-config
 
 [control]: #control
 
