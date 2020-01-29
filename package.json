@@ -60,6 +60,7 @@
     "rehype-parse": "^6.0.0",
     "rehype-retext": "^2.0.1",
     "remark-frontmatter": "^1.1.0",
+    "remark-mdx": "^1.5.5",
     "remark-message-control": "^5.0.0",
     "remark-parse": "^7.0.0",
     "remark-retext": "^3.0.0",

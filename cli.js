@@ -23,6 +23,7 @@ var textExtensions = [
   'txt',
   'text',
   'md',
+  'mdx',
   'markdown',
   'mkd',
   'mkdn',

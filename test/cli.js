@@ -215,6 +215,32 @@ test('alex-cli', function(t) {
     }
   })
 
+  t.test('mdx processing', function(t) {
+    var fp = path.join('test', 'fixtures', 'mdx', 'test.mdx')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stderr, stdout],
+        [
+          1,
+          [
+            fp,
+            '  1:3-1:12  warning  `boogeyman` may be insensitive, use `boogeymonster` instead  boogeyman-boogeywoman  retext-equality',
+            '',
+            '⚠ 1 warning',
+            ''
+          ].join('\n'),
+          ''
+        ],
+        'should work'
+      )
+    }
+  })
+
   t.test('binary (with config file)', function(t) {
     var fp = path.join('test', 'fixtures', 'non-binary', 'two.md')
 
