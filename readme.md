@@ -102,7 +102,6 @@ like][literals] are not warned about.
 
 *   Atom — [`get-alex/atom-linter-alex`](https://github.com/get-alex/atom-linter-alex)
 *   Sublime — [`sindresorhus/SublimeLinter-contrib-alex`](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
-*   Visual Studio Code — [`shinnn/vscode-alex`](https://github.com/shinnn/vscode-alex)
 *   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
 *   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
