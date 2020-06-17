@@ -106,6 +106,7 @@ like][literals] are not warned about.
 *   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
+*   GitHub Actions - [`brown-ccv/alex-recommends`](https://github.com/marketplace/actions/alex-recommends)
 *   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
 *   Browser extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
 *   Contentful - [`stefanjudis/alex-js-contentful-ui-extension`](https://github.com/stefanjudis/alex-js-contentful-ui-extension)
