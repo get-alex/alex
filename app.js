@@ -26,10 +26,7 @@ var textExtensions = [
 ]
 var htmlExtensions = ['htm', 'html']
 
-module.exports = function app(
-  input,
-  {stdin, text, html, diff, quiet, why}
-) {
+module.exports = function app(input, {stdin, text, html, diff, quiet, why}) {
   var extensions = html ? htmlExtensions : textExtensions
   var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
   var silentlyIgnore
@@ -46,35 +43,37 @@ module.exports = function app(
     globs = input
   }
 
-  engine(
-    {
-      processor: unified(),
-      files: globs,
-      extensions: extensions,
-      configTransform: transform,
-      output: false,
-      out: false,
-      streamError: new PassThrough(),
-      rcName: '.alexrc',
-      packageField: 'alex',
-      ignoreName: '.alexignore',
-      silentlyIgnore: silentlyIgnore,
-      frail: true,
-      defaultConfig: transform()
-    },
-    function(err, code, result) {
-      var out = report(err || result.files, {
-        verbose: why,
-        quiet: quiet
-      })
+  return new Promise(resolve => {
+    engine(
+      {
+        processor: unified(),
+        files: globs,
+        extensions: extensions,
+        configTransform: transform,
+        output: false,
+        out: false,
+        streamError: new PassThrough(),
+        rcName: '.alexrc',
+        packageField: 'alex',
+        ignoreName: '.alexignore',
+        silentlyIgnore: silentlyIgnore,
+        frail: true,
+        defaultConfig: transform()
+      },
+      function(err, code, result) {
+        var out = report(err || result.files, {
+          verbose: why,
+          quiet: quiet
+        })
 
-      if (out) {
-        console.error(out)
+        if (out) {
+          console.error(out)
+        }
+
+        resolve(code)
       }
-
-      process.exit(code)
-    }
-  )
+    )
+  })
 
   function transform(options) {
     var settings = options || {}
