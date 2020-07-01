@@ -53,7 +53,8 @@
   "files": [
     "index.js",
     "filter.js",
-    "cli.js"
+    "cli.js",
+    "app.js"
   ],
   "dependencies": {
     "meow": "^7.0.0",
