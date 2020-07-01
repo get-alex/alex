@@ -45,4 +45,4 @@ var cli = meow(
   }
 )
 
-app(cli.input, cli.flags).then(code => process.exit(code))
+app(cli.input, cli.flags).then(process.exit)
