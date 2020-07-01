@@ -26,7 +26,13 @@ var textExtensions = [
 ]
 var htmlExtensions = ['htm', 'html']
 
-module.exports = function app(input, {stdin, text, html, diff, quiet, why}) {
+/**
+ * Executes the CLI Application
+ * @param {string[]} input
+ * @param {{stdin?: boolean, text?: boolean, html?: boolean, diff?: boolean, quiet?: boolean, why?: boolean}} flags
+ * @returns {Promise<number>} The exit code of the task
+ */
+module.exports = function(input, {stdin, text, html, diff, quiet, why} = {}) {
   var extensions = html ? htmlExtensions : textExtensions
   var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
   var silentlyIgnore
