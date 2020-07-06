@@ -106,7 +106,7 @@ test('alex-cli', function(t) {
 
     function onexec(err, stdout, stderr) {
       t.deepEqual(
-        [err.code, /2 warnings/.test(stderr), stdout],
+        [err.code, /3 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
@@ -138,7 +138,7 @@ test('alex-cli', function(t) {
 
     function onexec(err, stdout, stderr) {
       t.deepEqual(
-        [err.code, /9 warnings/.test(stderr), stdout],
+        [err.code, /10 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )

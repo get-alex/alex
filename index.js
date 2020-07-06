@@ -28,9 +28,19 @@ function makeText(config) {
 }
 
 // Alex’s core.
-function core(value, processor) {
+function core(value, config, processor) {
+  var allow
+  var deny
+
+  if (Array.isArray(config)) {
+    allow = config
+  } else if (config) {
+    allow = config.allow
+    deny = config.deny
+  }
+
   var file = new VFile(value)
-  var tree = processor.parse(file)
+  var tree = processor.use(filter, {allow: allow, deny: deny}).parse(file)
 
   processor.runSync(tree, file)
 
@@ -41,52 +51,28 @@ function core(value, processor) {
 
 // Alex.
 function alex(value, config) {
-  var allow
-
-  if (Array.isArray(config)) {
-    allow = config
-  } else if (config) {
-    allow = config.allow
-  }
-
   return core(
     value,
+    config,
     unified()
       .use(markdown)
       .use(frontmatter, ['yaml', 'toml'])
       .use(remark2retext, makeText(config))
-      .use(filter, {allow: allow})
   )
 }
 
 // Alex, for HTML.
 function htmlParse(value, config) {
-  var allow
-
-  if (Array.isArray(config)) {
-    allow = config
-  } else if (config) {
-    allow = config.allow
-  }
-
   return core(
     value,
+    config,
     unified()
       .use(html)
       .use(rehype2retext, makeText(config))
-      .use(filter, {allow: allow})
   )
 }
 
 // Alex, without the markdown.
 function noMarkdown(value, config) {
-  var allow
-
-  if (Array.isArray(config)) {
-    allow = config
-  } else if (config) {
-    allow = config.allow
-  }
-
-  return core(value, makeText(config).use(filter, {allow: allow}))
+  return core(value, config, makeText(config))
 }
