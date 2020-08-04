@@ -21,7 +21,9 @@ alex.html = htmlParse
 function makeText(config) {
   return unified()
     .use(english)
-    .use(equality)
+    .use(equality, {
+      noBinary: config && config.noBinary
+    })
     .use(profanities, {
       sureness: config && config.profanitySureness
     })
