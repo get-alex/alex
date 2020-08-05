@@ -537,7 +537,7 @@ Then there was a [lot][tnw] [of][dailydot] [press][vice] [coverage][bustle].
 Preliminary work for alex was done [in 2015][preliminary].
 The project was authored by [**@wooorm**][wooorm].
 
-Lot’s of [people helped since][contributors]!
+Lots of [people helped since][contributors]!
 
 ## License
 
