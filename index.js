@@ -4,6 +4,7 @@ var VFile = require('vfile')
 var unified = require('unified')
 var markdown = require('remark-parse')
 var frontmatter = require('remark-frontmatter')
+var mdx = require('remark-mdx')
 var html = require('rehype-parse')
 var english = require('retext-english')
 var equality = require('retext-equality')
@@ -16,6 +17,7 @@ var filter = require('./filter')
 module.exports = alex
 alex.text = noMarkdown
 alex.markdown = alex
+alex.mdx = mdxParse
 alex.html = htmlParse
 
 function makeText(config) {
@@ -60,6 +62,15 @@ function alex(value, config) {
       .use(markdown)
       .use(frontmatter, ['yaml', 'toml'])
       .use(remark2retext, makeText(config))
+  )
+}
+
+// Alex, for MDX.
+function mdxParse(value, config) {
+  return core(
+    value,
+    config,
+    unified().use(markdown).use(mdx).use(remark2retext, makeText(config))
   )
 }
 

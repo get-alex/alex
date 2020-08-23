@@ -9,6 +9,7 @@ var unified = require('unified')
 var markdown = require('remark-parse')
 var html = require('rehype-parse')
 var frontmatter = require('remark-frontmatter')
+var mdx = require('remark-mdx')
 var english = require('retext-english')
 var remark2retext = require('remark-retext')
 var rehype2retext = require('rehype-retext')
@@ -30,6 +31,7 @@ var textExtensions = [
   'ron'
 ]
 var htmlExtensions = ['htm', 'html']
+var mdxExtensions = ['mdx']
 
 // Update messages.
 notifier({pkg: pack}).notify()
@@ -45,6 +47,7 @@ var cli = meow(
     '  -q, --quiet  output only warnings and errors',
     '  -t, --text   treat input as plain-text (not markdown)',
     '  -l, --html   treat input as html (not markdown)',
+    '      --mdx    treat input as mdx (not markdown)',
     '  -d, --diff   ignore unchanged lines (affects Travis only)',
     '  --stdin      read from stdin',
     '',
@@ -62,6 +65,7 @@ var cli = meow(
       help: {type: 'boolean', alias: 'h'},
       stdin: {type: 'boolean'},
       text: {type: 'boolean', alias: 't'},
+      mdx: {type: 'boolean'},
       html: {type: 'boolean', alias: 'l'},
       diff: {type: 'boolean', alias: 'd'},
       quiet: {type: 'boolean', alias: 'q'},
@@ -71,7 +75,11 @@ var cli = meow(
 )
 
 // Set-up.
-var extensions = cli.flags.html ? htmlExtensions : textExtensions
+var extensions = cli.flags.html
+  ? htmlExtensions
+  : cli.flags.mdx
+  ? mdxExtensions
+  : textExtensions
 var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
 var silentlyIgnore
 var globs
@@ -127,6 +135,12 @@ function transform(options) {
 
   if (cli.flags.html) {
     plugins = [html, [rehype2retext, unified().use({plugins: plugins})]]
+  } else if (cli.flags.mdx) {
+    plugins = [
+      markdown,
+      mdx,
+      [remark2retext, unified().use({plugins: plugins})]
+    ]
   } else if (!cli.flags.text) {
     plugins = [
       markdown,

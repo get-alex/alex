@@ -26,7 +26,7 @@ Give **alex** a spin on the [Online demo »][demo].
 *   [x] Helps to get better at considerate writing
 *   [x] Catches many possible offences
 *   [x] Suggests helpful alternatives
-*   [x] Reads plain text, HTML, and markdown as input
+*   [x] Reads plain text, HTML, MDX, or markdown as input
 *   [x] Stylish
 
 ## Install
@@ -60,6 +60,7 @@ Or you can follow this step-by-step tutorial:
 *   [API](#api)
     *   [`alex(value, config)`](#alexvalue-config)
     *   [`alex.markdown(value, config)`](#alexmarkdownvalue-config)
+    *   [`alex.mdx(value, config)`](#alexmdxvalue-config)
     *   [`alex.html(value, config)`](#alexhtmlvalue-config)
     *   [`alex.text(value, config)`](#alextextvalue-config)
 *   [Workflow](#workflow)
@@ -107,7 +108,7 @@ like][literals] are not warned about.
 *   Ember — [`yohanmishkin/ember-cli-alex`](https://github.com/yohanmishkin/ember-cli-alex)
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
 *   GitHub Actions — [`brown-ccv/alex-recommends`](https://github.com/marketplace/actions/alex-recommends)
-*   GitHub Actions (reviewdog) — [`reviewdog/action-alex`](https://github.com/marketplace/actions/run-alex-with-reviewdog) 
+*   GitHub Actions (reviewdog) — [`reviewdog/action-alex`](https://github.com/marketplace/actions/run-alex-with-reviewdog)
 *   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
 *   Browser extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
 *   Contentful - [`stefanjudis/alex-js-contentful-ui-extension`](https://github.com/stefanjudis/alex-js-contentful-ui-extension)
@@ -309,6 +310,7 @@ See `$ alex --help` for more information.
 
 > When no input files are given to **alex**, it searches for files in the
 > current directory, `doc`, and `docs`.
+> If `--mdx` is given, it searches for `mdx` extensions.
 > If `--html` is given, it searches for `htm` and `html` extensions.
 > Otherwise, it searches for `txt`, `text`, `md`, `mkd`, `mkdn`, `mkdown`,
 > `ron`, and `markdown` extensions.
@@ -365,6 +367,46 @@ Yields:
     fatal: false,
     actual: 'his',
     expected: [ 'their', 'theirs', 'them' ]
+  }
+]
+```
+
+### `alex.mdx(value, config)`
+
+Check [MDX][] (ignoring syntax).
+
+> Note: the syntax for [MDX@2][mdx-next], while currently in beta, is used in
+> alex.
+
+###### Parameters
+
+*   `value` ([`VFile`][vfile] or `string`) — MDX document
+*   `config` (`Object`, optional) — See the [Configuration][] section
+
+###### Returns
+
+[`VFile`][vfile].
+
+###### Example
+
+```js
+alex.mdx('<Component>He walked to class.</Component>').messages
+```
+
+Yields:
+
+```js
+[
+  [1:12-1:14: `He` may be insensitive, use `They`, `It` instead] {
+    reason: '`He` may be insensitive, use `They`, `It` instead',
+    line: 1,
+    column: 12,
+    location: { start: [Object], end: [Object] },
+    source: 'retext-equality',
+    ruleId: 'he-she',
+    fatal: false,
+    actual: 'He',
+    expected: [ 'They', 'It' ]
   }
 ]
 ```
@@ -635,3 +677,7 @@ Lots of [people helped since][contributors]!
 [ignoring-files]: #ignoring-files
 
 [alexignore]: #alexignore
+
+[mdx]: https://mdxjs.com
+
+[mdx-next]: https://github.com/mdx-js/mdx/issues/1041

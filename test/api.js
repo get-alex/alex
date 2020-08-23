@@ -6,6 +6,7 @@ var test = require('tape')
 var alex = require('..')
 
 var html = fs.readFileSync(path.join(__dirname, 'fixtures', 'three.html'))
+var mdx = fs.readFileSync(path.join(__dirname, 'fixtures', 'four.mdx'))
 
 // Tests. Note that these are small because alex is in fact
 // just a collection of well-tested modules.
@@ -316,6 +317,25 @@ test('alex()', function (t) {
       '18:5-18:8: `She` may be insensitive, use `They`, `It` instead'
     ],
     'alex.html() with deny and profanity config'
+  )
+
+  t.deepEqual(
+    alex.mdx(mdx).messages.map(String),
+    [
+      '3:1-3:4: `She` may be insensitive, use `They`, `It` instead',
+      '3:32-3:38: Don’t use `asshat`, it’s profane',
+      '3:70-3:74: Be careful with `butt`, it’s profane in some cases'
+    ],
+    'alex.mdx()'
+  )
+
+  t.deepEqual(
+    alex.mdx(mdx, ['butt']).messages.map(String),
+    [
+      '3:1-3:4: `She` may be insensitive, use `They`, `It` instead',
+      '3:32-3:38: Don’t use `asshat`, it’s profane'
+    ],
+    'alex.mdx() with options'
   )
 
   t.end()

@@ -145,6 +145,22 @@ test('alex-cli', function (t) {
     }
   })
 
+  t.test('mdx', function (t) {
+    var fp = path.join('test', 'fixtures')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp + ' --mdx', onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, /2 warnings/.test(stderr), stdout],
+        [1, true, ''],
+        'should work'
+      )
+    }
+  })
+
   t.test('successful', function (t) {
     var fp = path.join('test', 'fixtures', 'ok.txt')
 
