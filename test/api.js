@@ -23,8 +23,9 @@ test('alex()', function (t) {
       ].join('\n')
     ).messages.map(String),
     [
-      '1:44-1:50: `master` / `slaves` may be insensitive, use `primary` / `replica` instead',
+      '1:44-1:50: `master` may be insensitive, use `primary`, `hub`, `reference` instead',
       '2:5-2:11: Don’t use `slaves`, it’s profane',
+      '2:37-2:43: `master` may be insensitive, use `primary`, `hub`, `reference` instead',
       '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
       '3:11-3:18: `cripple` may be insensitive, use `person with a limp` instead',
       '5:36-5:40: Be careful with `butt`, it’s profane in some cases'
@@ -131,12 +132,11 @@ test('alex()', function (t) {
       .messages.map(String),
     [
       '1:6-1:15: `boogeyman` may be insensitive, use `boogeymonster` instead',
-      '1:44-1:50: `master` / `slaves` may be insensitive, use ' +
-        '`primary` / `replica` instead',
+      '1:44-1:50: `master` may be insensitive, use `primary`, `hub`, `reference` instead',
       '2:5-2:11: Don’t use `slaves`, it’s profane',
+      '2:37-2:43: `master` may be insensitive, use `primary`, `hub`, `reference` instead',
       '3:1-3:3: `he` may be insensitive, use `they`, `it` instead',
-      '3:11-3:18: `cripple` may be insensitive, use `person with a ' +
-        'limp` instead',
+      '3:11-3:18: `cripple` may be insensitive, use `person with a limp` instead',
       '5:36-5:40: Be careful with `butt`, it’s profane in some cases'
     ],
     'alex.text()'
