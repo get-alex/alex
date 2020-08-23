@@ -103,7 +103,7 @@ engine(
     frail: true,
     defaultConfig: transform()
   },
-  function(err, code, result) {
+  function (err, code, result) {
     var out = report(err || result.files, {
       verbose: cli.flags.why,
       quiet: cli.flags.quiet

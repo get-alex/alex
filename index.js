@@ -68,9 +68,7 @@ function htmlParse(value, config) {
   return core(
     value,
     config,
-    unified()
-      .use(html)
-      .use(rehype2retext, makeText(config))
+    unified().use(html).use(rehype2retext, makeText(config))
   )
 }
 

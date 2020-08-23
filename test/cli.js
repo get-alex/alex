@@ -6,8 +6,8 @@ var test = require('tape')
 
 var pkg = require('../package')
 
-test('alex-cli', function(t) {
-  t.test('version', function(t) {
+test('alex-cli', function (t) {
+  t.test('version', function (t) {
     t.plan(1)
 
     childProcess.exec('./cli.js -v', onexec)
@@ -21,7 +21,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('help', function(t) {
+  t.test('help', function (t) {
     t.plan(1)
 
     childProcess.exec('./cli.js -h', onexec)
@@ -35,7 +35,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('stdin', function(t) {
+  t.test('stdin', function (t) {
     t.plan(1)
 
     var subprocess = childProcess.exec('./cli.js --stdin', onexec)
@@ -65,7 +65,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('stdin and globs', function(t) {
+  t.test('stdin and globs', function (t) {
     var fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
@@ -81,7 +81,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('markdown by default', function(t) {
+  t.test('markdown by default', function (t) {
     var fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
@@ -97,7 +97,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('optionally html', function(t) {
+  t.test('optionally html', function (t) {
     var fp = path.join('test', 'fixtures', 'three.html')
 
     t.plan(1)
@@ -113,7 +113,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('optionally text (on markdown)', function(t) {
+  t.test('optionally text (on markdown)', function (t) {
     var fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
@@ -129,7 +129,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('optionally text (on html)', function(t) {
+  t.test('optionally text (on html)', function (t) {
     var fp = path.join('test', 'fixtures', 'three.html')
 
     t.plan(1)
@@ -145,7 +145,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('successful', function(t) {
+  t.test('successful', function (t) {
     var fp = path.join('test', 'fixtures', 'ok.txt')
 
     t.plan(1)
@@ -161,7 +161,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('quiet (ok)', function(t) {
+  t.test('quiet (ok)', function (t) {
     var fp = path.join('test', 'fixtures', 'ok.txt')
 
     t.plan(1)
@@ -173,7 +173,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('quiet (on error)', function(t) {
+  t.test('quiet (on error)', function (t) {
     var fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
@@ -199,7 +199,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('binary (default: ok)', function(t) {
+  t.test('binary (default: ok)', function (t) {
     var fp = path.join('test', 'fixtures', 'binary', 'two.md')
 
     t.plan(1)
@@ -215,7 +215,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('binary (with config file)', function(t) {
+  t.test('binary (with config file)', function (t) {
     var fp = path.join('test', 'fixtures', 'non-binary', 'two.md')
 
     t.plan(1)
@@ -242,7 +242,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('profanity (default)', function(t) {
+  t.test('profanity (default)', function (t) {
     var fp = path.join('test', 'fixtures', 'profanity', 'two.md')
 
     t.plan(1)
@@ -268,7 +268,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('profanity (with config file)', function(t) {
+  t.test('profanity (with config file)', function (t) {
     var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
     t.plan(1)
@@ -284,7 +284,7 @@ test('alex-cli', function(t) {
     }
   })
 
-  t.test('default globs', function(t) {
+  t.test('default globs', function (t) {
     t.plan(1)
 
     childProcess.exec('./cli.js', onexec)

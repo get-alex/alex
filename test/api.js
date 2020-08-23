@@ -11,7 +11,7 @@ var html = fs.readFileSync(path.join(__dirname, 'fixtures', 'three.html'))
 // just a collection of well-tested modules.
 // See `retextjs/retext-equality` for the gist of what
 // warnings are exposed.
-test('alex()', function(t) {
+test('alex()', function (t) {
   t.deepEqual(
     alex(
       [
@@ -67,7 +67,7 @@ test('alex()', function(t) {
     'should work with deny config'
   )
 
-  t.throws(function() {
+  t.throws(function () {
     alex(
       'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
       {
@@ -183,7 +183,7 @@ test('alex()', function(t) {
     'alex.text() with deny config'
   )
 
-  t.throws(function() {
+  t.throws(function () {
     alex.text(
       'The boogeyman asked Eric, the asshat, to beat your butt for the sheriff.',
       {
@@ -276,7 +276,7 @@ test('alex()', function(t) {
     'alex.html() with deny config'
   )
 
-  t.throws(function() {
+  t.throws(function () {
     alex.html(html, {
       allow: ['he-she'],
       deny: ['butt']
