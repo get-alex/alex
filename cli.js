@@ -149,7 +149,7 @@ function transform(options) {
     ]
   }
 
-  plugins.push([filter, {allow: settings.allow}])
+  plugins.push([filter, {allow: settings.allow, deny: settings.deny}])
 
   /* istanbul ignore if - hard to check. */
   if (cli.flags.diff) {

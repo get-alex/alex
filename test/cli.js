@@ -300,6 +300,32 @@ test('alex-cli', function (t) {
     }
   })
 
+  t.test('deny', function (t) {
+    var fp = path.join('test', 'fixtures', 'deny', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stderr, stdout],
+        [
+          1,
+          [
+            fp,
+            '  1:5-1:11  warning  Be careful with `beaver`, it’s profane in some cases  beaver  retext-profanities',
+            '',
+            '⚠ 1 warning',
+            ''
+          ].join('\n'),
+          ''
+        ],
+        'should work'
+      )
+    }
+  })
+
   t.test('default globs', function (t) {
     t.plan(1)
 
