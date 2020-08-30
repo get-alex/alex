@@ -552,7 +552,7 @@ See [`contributing.md`][contributing] on how to get “X” checked by alex.
 
 ### Why is this named alex?
 
-It’s a nice unisex name, it was free on npm, I like it!  :smile:
+It’s a nice gender-neutral name, it was free on npm, I like it!  :smile:
 
 <!--lint enable no-heading-punctuation-->
 
