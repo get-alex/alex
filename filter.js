@@ -19,5 +19,5 @@ function filter(options) {
     enable: settings.deny,
     disable: settings.allow,
     source: ['retext-equality', 'retext-profanities']
-  })
+  });
 }

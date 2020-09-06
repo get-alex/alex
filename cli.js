@@ -1,24 +1,24 @@
 #!/usr/bin/env node
 'use strict'
 
-var PassThrough = require('stream').PassThrough
-var notifier = require('update-notifier')
-var meow = require('meow')
-var engine = require('unified-engine')
-var unified = require('unified')
-var markdown = require('remark-parse')
-var html = require('rehype-parse')
-var frontmatter = require('remark-frontmatter')
-var mdx = require('remark-mdx')
-var english = require('retext-english')
-var remark2retext = require('remark-retext')
-var rehype2retext = require('rehype-retext')
-var report = require('vfile-reporter')
-var equality = require('retext-equality')
-var profanities = require('retext-profanities')
-var diff = require('unified-diff')
-var pack = require('./package')
-var filter = require('./filter')
+var PassThrough = require('stream').PassThrough;
+var notifier = require('update-notifier');
+var meow = require('meow');
+var engine = require('unified-engine');
+var unified = require('unified');
+var markdown = require('remark-parse');
+var html = require('rehype-parse');
+var frontmatter = require('remark-frontmatter');
+var mdx = require('remark-mdx');
+var english = require('retext-english');
+var remark2retext = require('remark-retext');
+var rehype2retext = require('rehype-retext');
+var report = require('vfile-reporter');
+var equality = require('retext-equality');
+var profanities = require('retext-profanities');
+var diff = require('unified-diff');
+var pack = require('./package');
+var filter = require('./filter');
 
 var textExtensions = [
   'txt',

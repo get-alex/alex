@@ -1,10 +1,10 @@
 'use strict'
 
-var path = require('path')
-var childProcess = require('child_process')
-var test = require('tape')
+var path = require('path');
+var childProcess = require('child_process');
+var test = require('tape');
 
-var pkg = require('../package')
+var pkg = require('../package');
 
 test('alex-cli', function (t) {
   t.test('version', function (t) {
@@ -13,10 +13,12 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js -v', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, stdout],
         [null, '', pkg.version + '\n'],
         'should work'
+
       )
     }
   })
@@ -27,10 +29,12 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js -h', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, /Usage: alex \[<glob> ...] /.test(stdout)],
         [null, '', true],
         'should work'
+
       )
     }
   })
@@ -73,10 +77,12 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js --stdin ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, /Do not pass globs with `--stdin`/.test(stderr), stdout],
         [1, true, ''],
         'should work'
+
       )
     }
   })
@@ -89,11 +95,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
+
     }
   })
 
@@ -105,11 +113,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp + ' --html', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, /3 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
+
     }
   })
 
@@ -121,11 +131,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp + ' --text', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, /1 warning/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
+
     }
   })
 
@@ -137,11 +149,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp + ' --text', onexec)
 
     function onexec(err, stdout, stderr) {
+      
       t.deepEqual(
         [err.code, /10 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
+
     }
   })
 
@@ -153,11 +167,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp + ' --mdx', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, /2 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
+
     }
   })
 
@@ -169,11 +185,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
+
     }
   })
 
@@ -185,7 +203,9 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp + ' -q', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual([err, stderr, stdout], [null, '', ''], 'should work')
+
     }
   })
 
@@ -197,6 +217,7 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp + ' -q --text', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, stderr, stdout],
         [
@@ -212,6 +233,7 @@ test('alex-cli', function (t) {
         ],
         'should work'
       )
+
     }
   })
 
@@ -223,11 +245,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
+
     }
   })
 
@@ -239,6 +263,7 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, stderr, stdout],
         [
@@ -255,6 +280,7 @@ test('alex-cli', function (t) {
         ],
         'should work'
       )
+
     }
   })
 
@@ -266,6 +292,7 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, stderr, stdout],
         [
@@ -281,6 +308,7 @@ test('alex-cli', function (t) {
         ],
         'should work'
       )
+
     }
   })
 
@@ -292,11 +320,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
+
     }
   })
 
@@ -308,6 +338,7 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err.code, stderr, stdout],
         [
@@ -323,6 +354,7 @@ test('alex-cli', function (t) {
         ],
         'should work'
       )
+
     }
   })
 
@@ -332,11 +364,13 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js', onexec)
 
     function onexec(err, stdout, stderr) {
+
       t.deepEqual(
         [err, stderr, stdout],
         [null, 'readme.md: no issues found\n', ''],
         'should work'
       )
+      
     }
   })
 

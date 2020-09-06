@@ -1,9 +1,9 @@
 'use strict'
 
-var fs = require('fs')
-var path = require('path')
-var test = require('tape')
-var alex = require('..')
+var fs = require('fs');
+var path = require('path');
+var test = require('tape');
+var alex = require('..');
 
 var html = fs.readFileSync(path.join(__dirname, 'fixtures', 'three.html'))
 var mdx = fs.readFileSync(path.join(__dirname, 'fixtures', 'four.mdx'))
@@ -13,6 +13,7 @@ var mdx = fs.readFileSync(path.join(__dirname, 'fixtures', 'four.mdx'))
 // See `retextjs/retext-equality` for the gist of what
 // warnings are exposed.
 test('alex()', function (t) {
+  
   t.deepEqual(
     alex(
       [
