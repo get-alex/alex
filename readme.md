@@ -68,6 +68,7 @@ Or you can follow this step-by-step tutorial:
     *   [This is stupid!](#this-is-stupid)
     *   [alex didn’t check “X”!](#alex-didnt-check-x)
     *   [Why is this named alex?](#why-is-this-named-alex)
+*   [Further reading](#further-reading)
 *   [Contribute](#contribute)
 *   [Origin story](#origin-story)
 *   [Acknowledgments](#acknowledgments)
@@ -556,6 +557,46 @@ See [`contributing.md`][contributing] on how to get “X” checked by alex.
 It’s a nice unisex name, it was free on npm, I like it!  :smile:
 
 <!--lint enable no-heading-punctuation-->
+
+## Further reading
+
+No automated tool can replace studying inclusive communication and listening to
+the lived experiences of others.
+An error from `alex` can be an invitation to learn more.
+These resources are a launch point for deepening your own understanding and
+editorial skills beyond what `alex` can offer:
+
+*   The [18F Content Guide](https://content-guide.18f.gov/our-style/inclusive-language/)
+    has a helpful list of links to other inclusive language guides used in
+    journalism and academic writing.
+*   The [Conscious Style Guide](https://consciousstyleguide.com/articles/) has
+    articles on many nuanced topics of language.  For example, the terms race
+    and ethnicity mean different things, and choosing the right word is up to
+    you.
+    Likewise, a sentence that overgeneralizes about a group of people
+    (e.g. “Developers love to code all day“) may not be noticed by `alex`, but
+    it is not inclusive.  A good human editor can step up to the challenge and
+    find a better way to phrase things.
+*   Sometimes, the only way to know what is inclusive is to ask.
+    In [Disability is a nuanced thing](https://incl.ca/disability-language-is-a-nuanced-thing/),
+    Nicolas Steenhout writes about how person-first language, such as
+    ”a person with a disability,” is not always the right choice.
+*   Language is always evolving.  A term that is neutral one year ago can be
+    problematic today.  Projects like the
+    [Self-Defined Dictionary](https://github.com/selfdefined/web-app) aim to
+    collect the words that we use to define ourselves and others, and connect
+    them with the history and some helpful advice.
+*   Unconsious bias can show up in writing, just like when it is present in
+    daily decisions and conversations.
+    [Textio](https://textio.com/blog/4-overlooked-types-of-bias-in-business-writing/27521593662)
+    offers some examples of how descriptive adjective choice and tone can push
+    some people away, and how regional language differences can cause confusion.
+*   Using complex sentences and uncommon vocabulary can lead to less inclusive
+    content.  This is described as literacy exclusion in
+    [this article by Harver](https://harver.com/blog/inclusive-job-descriptions/).
+    This is critical to be aware of if your content has a global audience,
+    where a reader’s strongest language may not be the language you are writing
+    in.
 
 ## Contribute
 
