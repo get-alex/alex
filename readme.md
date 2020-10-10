@@ -617,9 +617,9 @@ Lots of [people helped since][contributors]!
 
 [vfile]: https://github.com/vfile/vfile
 
-[profanities]: https://github.com/retextjs/retext-profanities/blob/master/rules.md
+[profanities]: https://github.com/retextjs/retext-profanities/blob/main/rules.md
 
-[equality]: https://github.com/retextjs/retext-equality/blob/master/rules.md
+[equality]: https://github.com/retextjs/retext-equality/blob/main/rules.md
 
 [vfile-message]: https://github.com/vfile/vfile#vfilemessages
 
