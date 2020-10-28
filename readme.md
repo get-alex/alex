@@ -580,7 +580,7 @@ editorial skills beyond what `alex` can offer:
 *   Sometimes, the only way to know what is inclusive is to ask.
     In [Disability is a nuanced thing](https://incl.ca/disability-language-is-a-nuanced-thing/),
     Nicolas Steenhout writes about how person-first language, such as
-    ”a person with a disability,” is not always the right choice.
+    “a person with a disability,” is not always the right choice.
 *   Language is always evolving.  A term that is neutral one year ago can be
     problematic today.  Projects like the
     [Self-Defined Dictionary](https://github.com/selfdefined/web-app) aim to
