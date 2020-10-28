@@ -574,7 +574,7 @@ editorial skills beyond what `alex` can offer:
     and ethnicity mean different things, and choosing the right word is up to
     you.
     Likewise, a sentence that overgeneralizes about a group of people
-    (e.g. “Developers love to code all day“) may not be noticed by `alex`, but
+    (e.g. “Developers love to code all day”) may not be noticed by `alex`, but
     it is not inclusive.  A good human editor can step up to the challenge and
     find a better way to phrase things.
 *   Sometimes, the only way to know what is inclusive is to ask.
