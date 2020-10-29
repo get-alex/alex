@@ -586,9 +586,10 @@ editorial skills beyond what `alex` can offer:
     [Self-Defined Dictionary](https://github.com/selfdefined/web-app) aim to
     collect the words that we use to define ourselves and others, and connect
     them with the history and some helpful advice.
-*   Unconsious bias can show up in writing, just like when it is present in
-    daily decisions and conversations.
+*   Unconsious bias is present in daily decisions and conversations and can show
+    up in writing.
     [Textio](https://textio.com/blog/4-overlooked-types-of-bias-in-business-writing/27521593662)
+
     offers some examples of how descriptive adjective choice and tone can push
     some people away, and how regional language differences can cause confusion.
 *   Using complex sentences and uncommon vocabulary can lead to less inclusive
