@@ -49,6 +49,7 @@ var cli = meow(
     '  -l, --html   treat input as html (not markdown)',
     '      --mdx    treat input as mdx (not markdown)',
     '  -d, --diff   ignore unchanged lines (affects Travis only)',
+    '  -f, --format=FORMATTER use a custom formatter (default: vfile-reporter)',
     '  --stdin      read from stdin',
     '',
     'When no input files are given, searches for markdown and text',
@@ -68,6 +69,7 @@ var cli = meow(
       mdx: {type: 'boolean'},
       html: {type: 'boolean', alias: 'l'},
       diff: {type: 'boolean', alias: 'd'},
+      format: {type: 'string', alias: 'f'},
       quiet: {type: 'boolean', alias: 'q'},
       why: {type: 'boolean', alias: 'w'}
     }
@@ -112,7 +114,10 @@ engine(
     defaultConfig: transform()
   },
   function (err, code, result) {
-    var out = report(err || result.files, {
+    const reporter = cli.flags.format
+      ? require(`alex-formatter-${cli.flags.format}`)
+      : report
+    var out = reporter(err || result.files, {
       verbose: cli.flags.why,
       quiet: cli.flags.quiet
     })

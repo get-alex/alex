@@ -300,6 +300,26 @@ test('alex-cli', function (t) {
     }
   })
 
+  t.test('custom formatter', function (t) {
+    var fp = path.join('test', 'fixtures')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js -f test' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [
+          err.code,
+          /Cannot find module 'alex-formatter-test/.test(stderr),
+          stdout
+        ],
+        [1, true, ''],
+        'should work'
+      )
+    }
+  })
+
   t.test('deny', function (t) {
     var fp = path.join('test', 'fixtures', 'deny', 'two.md')
 
