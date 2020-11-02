@@ -82,6 +82,7 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
+    "alex-formatter-test": "file:test/fixtures/formatter-test",
     "browserify": "^16.0.0",
     "nyc": "^15.0.0",
     "prettier": "^2.0.0",

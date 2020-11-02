@@ -305,13 +305,29 @@ test('alex-cli', function (t) {
 
     t.plan(1)
 
-    childProcess.exec('./cli.js -f test' + fp, onexec)
+    childProcess.exec('./cli.js -f test ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err.code, stdout, stderr],
+        [1, 'Hello from plugin\n', ''],
+        'should work'
+      )
+    }
+  })
+
+  t.test("custom formatter that isn't installed", function (t) {
+    var fp = path.join('test', 'fixtures')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js -f doesntexist ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
       t.deepEqual(
         [
           err.code,
-          /Cannot find module 'alex-formatter-test/.test(stderr),
+          /Cannot find module 'alex-formatter-doesntexist'/.test(stderr),
           stdout
         ],
         [1, true, ''],
