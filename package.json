@@ -82,7 +82,6 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
-    "alex-formatter-test": "file:test/fixtures/formatter-test",
     "browserify": "^16.0.0",
     "nyc": "^15.0.0",
     "prettier": "^2.0.0",
@@ -90,6 +89,7 @@
     "remark-preset-wooorm": "^7.0.0",
     "tape": "^5.0.0",
     "tinyify": "^3.0.0",
+    "vfile-reporter-json": "^2.0.1",
     "xo": "^0.32.0"
   },
   "scripts": {

@@ -300,17 +300,26 @@ test('alex-cli', function (t) {
     }
   })
 
-  t.test('custom formatter', function (t) {
-    var fp = path.join('test', 'fixtures')
+  t.test('custom reporter', function (t) {
+    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
     t.plan(1)
 
-    childProcess.exec('./cli.js -f test ' + fp, onexec)
+    childProcess.exec('./cli.js -r json ' + fp, onexec)
+
+    const expectedJson = JSON.stringify([
+      {
+        path: fp,
+        cwd: process.cwd(),
+        history: [fp],
+        messages: []
+      }
+    ])
 
     function onexec(err, stdout, stderr) {
       t.deepEqual(
-        [err.code, stdout, stderr],
-        [1, 'Hello from plugin\n', ''],
+        [err, stdout, stderr],
+        [null, '', expectedJson + '\n'],
         'should work'
       )
     }
@@ -321,13 +330,13 @@ test('alex-cli', function (t) {
 
     t.plan(1)
 
-    childProcess.exec('./cli.js -f doesntexist ' + fp, onexec)
+    childProcess.exec('./cli.js -r doesntexist ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
       t.deepEqual(
         [
           err.code,
-          /Cannot find module 'alex-formatter-doesntexist'/.test(stderr),
+          /Cannot find module 'vfile-reporter-doesntexist'/.test(stderr),
           stdout
         ],
         [1, true, ''],

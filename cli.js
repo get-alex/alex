@@ -13,7 +13,7 @@ var mdx = require('remark-mdx')
 var english = require('retext-english')
 var remark2retext = require('remark-retext')
 var rehype2retext = require('rehype-retext')
-var report = require('vfile-reporter')
+var defaultReporter = require('vfile-reporter')
 var equality = require('retext-equality')
 var profanities = require('retext-profanities')
 var diff = require('unified-diff')
@@ -49,7 +49,7 @@ var cli = meow(
     '  -l, --html   treat input as html (not markdown)',
     '      --mdx    treat input as mdx (not markdown)',
     '  -d, --diff   ignore unchanged lines (affects Travis only)',
-    '  -f, --format=FORMATTER use a custom formatter (default: vfile-reporter)',
+    '  -r, --reporter=REPORTER use a custom vfile-reporter',
     '  --stdin      read from stdin',
     '',
     'When no input files are given, searches for markdown and text',
@@ -69,7 +69,7 @@ var cli = meow(
       mdx: {type: 'boolean'},
       html: {type: 'boolean', alias: 'l'},
       diff: {type: 'boolean', alias: 'd'},
-      format: {type: 'string', alias: 'f'},
+      reporter: {type: 'string', alias: 'r'},
       quiet: {type: 'boolean', alias: 'q'},
       why: {type: 'boolean', alias: 'w'}
     }
@@ -114,9 +114,10 @@ engine(
     defaultConfig: transform()
   },
   function (err, code, result) {
-    const reporter = cli.flags.format
-      ? require(`alex-formatter-${cli.flags.format}`)
-      : report
+    const reporter = cli.flags.reporter
+      ? require(`vfile-reporter-${cli.flags.reporter}`)
+      : defaultReporter
+
     var out = reporter(err || result.files, {
       verbose: cli.flags.why,
       quiet: cli.flags.quiet
