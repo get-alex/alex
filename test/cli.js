@@ -305,7 +305,7 @@ test('alex-cli', function (t) {
 
     t.plan(1)
 
-    childProcess.exec('./cli.js -r json ' + fp, onexec)
+    childProcess.exec('./cli.js --reporter json ' + fp, onexec)
 
     const expectedJson = JSON.stringify([
       {
@@ -326,22 +326,14 @@ test('alex-cli', function (t) {
   })
 
   t.test("custom formatter that isn't installed", function (t) {
-    var fp = path.join('test', 'fixtures')
+    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
     t.plan(1)
 
-    childProcess.exec('./cli.js -r doesntexist ' + fp, onexec)
+    childProcess.exec('./cli.js --reporter doesntexist ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
-      t.deepEqual(
-        [
-          err.code,
-          /Cannot find module 'vfile-reporter-doesntexist'/.test(stderr),
-          stdout
-        ],
-        [1, true, ''],
-        'should work'
-      )
+      t.deepEqual([err, stderr, stdout], [null, '', ''], 'should work')
     }
   })
 
