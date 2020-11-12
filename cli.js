@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict'
 
-var PassThrough = require('stream').PassThrough
 var notifier = require('update-notifier')
+var supportsColor = require('supports-color')
 var meow = require('meow')
 var engine = require('unified-engine')
 var unified = require('unified')
@@ -104,29 +104,20 @@ engine(
     extensions: extensions,
     configTransform: transform,
     output: false,
-    out: false,
-    streamError: new PassThrough(),
     rcName: '.alexrc',
     packageField: 'alex',
+    color: supportsColor.stdout,
+    reporter: cli.flags.reporter || defaultReporter,
+    reportOptions: {
+      verbose: cli.flags.why,
+      quiet: cli.flags.quiet
+    },
     ignoreName: '.alexignore',
     silentlyIgnore: silentlyIgnore,
     frail: true,
     defaultConfig: transform()
   },
-  function (err, code, result) {
-    const reporter = cli.flags.reporter
-      ? require(`vfile-reporter-${cli.flags.reporter}`)
-      : defaultReporter
-
-    var out = reporter(err || result.files, {
-      verbose: cli.flags.why,
-      quiet: cli.flags.quiet
-    })
-
-    if (out) {
-      console.error(out)
-    }
-
+  function (_err, code) {
     process.exit(code)
   }
 )
