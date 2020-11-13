@@ -333,7 +333,11 @@ test('alex-cli', function (t) {
     childProcess.exec('./cli.js --reporter doesntexist ' + fp, onexec)
 
     function onexec(err, stdout, stderr) {
-      t.deepEqual([err, stderr, stdout], [null, '', ''], 'should work')
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, 'Could not find reporter `doesntexist`\n', ''],
+        'should work'
+      )
     }
   })
 
