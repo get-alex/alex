@@ -89,6 +89,7 @@
     "remark-preset-wooorm": "^7.0.0",
     "tape": "^5.0.0",
     "tinyify": "^3.0.0",
+    "vfile-reporter-json": "^2.0.0",
     "xo": "^0.32.0"
   },
   "scripts": {

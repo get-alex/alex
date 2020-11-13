@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict'
 
-var PassThrough = require('stream').PassThrough
 var notifier = require('update-notifier')
+var supportsColor = require('supports-color')
 var meow = require('meow')
 var engine = require('unified-engine')
 var unified = require('unified')
@@ -13,7 +13,7 @@ var mdx = require('remark-mdx')
 var english = require('retext-english')
 var remark2retext = require('remark-retext')
 var rehype2retext = require('rehype-retext')
-var report = require('vfile-reporter')
+var defaultReporter = require('vfile-reporter')
 var equality = require('retext-equality')
 var profanities = require('retext-profanities')
 var diff = require('unified-diff')
@@ -43,13 +43,14 @@ var cli = meow(
     '',
     'Options:',
     '',
-    '  -w, --why    output sources (when available)',
-    '  -q, --quiet  output only warnings and errors',
-    '  -t, --text   treat input as plain-text (not markdown)',
-    '  -l, --html   treat input as html (not markdown)',
-    '      --mdx    treat input as mdx (not markdown)',
-    '  -d, --diff   ignore unchanged lines (affects Travis only)',
-    '  --stdin      read from stdin',
+    '  -w, --why               output sources (when available)',
+    '  -q, --quiet             output only warnings and errors',
+    '  -t, --text              treat input as plain-text (not markdown)',
+    '  -l, --html              treat input as html (not markdown)',
+    '      --mdx               treat input as mdx (not markdown)',
+    '  -d, --diff              ignore unchanged lines (affects Travis only)',
+    '      --reporter=REPORTER use a custom vfile-reporter',
+    '  --stdin                 read from stdin',
     '',
     'When no input files are given, searches for markdown and text',
     'files in the current directory, `doc`, and `docs`.',
@@ -68,6 +69,7 @@ var cli = meow(
       mdx: {type: 'boolean'},
       html: {type: 'boolean', alias: 'l'},
       diff: {type: 'boolean', alias: 'd'},
+      reporter: {type: 'string'},
       quiet: {type: 'boolean', alias: 'q'},
       why: {type: 'boolean', alias: 'w'}
     }
@@ -101,26 +103,23 @@ engine(
     files: globs,
     extensions: extensions,
     configTransform: transform,
-    output: false,
     out: false,
-    streamError: new PassThrough(),
+    output: false,
     rcName: '.alexrc',
     packageField: 'alex',
+    color: supportsColor.stderr,
+    reporter: cli.flags.reporter || defaultReporter,
+    reporterOptions: {
+      verbose: cli.flags.why
+    },
+    quiet: cli.flags.quiet,
     ignoreName: '.alexignore',
     silentlyIgnore: silentlyIgnore,
     frail: true,
     defaultConfig: transform()
   },
-  function (err, code, result) {
-    var out = report(err || result.files, {
-      verbose: cli.flags.why,
-      quiet: cli.flags.quiet
-    })
-
-    if (out) {
-      console.error(out)
-    }
-
+  function (err, code) {
+    if (err) console.error(err.message)
     process.exit(code)
   }
 )

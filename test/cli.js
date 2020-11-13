@@ -300,6 +300,47 @@ test('alex-cli', function (t) {
     }
   })
 
+  t.test('custom reporter', function (t) {
+    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js --reporter json ' + fp, onexec)
+
+    const expectedJson = JSON.stringify([
+      {
+        path: fp,
+        cwd: process.cwd(),
+        history: [fp],
+        messages: []
+      }
+    ])
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stdout, stderr],
+        [null, '', expectedJson + '\n'],
+        'should work'
+      )
+    }
+  })
+
+  t.test("custom formatter that isn't installed", function (t) {
+    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js --reporter doesntexist ' + fp, onexec)
+
+    function onexec(err, stdout, stderr) {
+      t.deepEqual(
+        [err, stderr, stdout],
+        [null, 'Could not find reporter `doesntexist`\n', ''],
+        'should work'
+      )
+    }
+  })
+
   t.test('deny', function (t) {
     var fp = path.join('test', 'fixtures', 'deny', 'two.md')
 
