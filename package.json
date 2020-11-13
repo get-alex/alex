@@ -93,9 +93,9 @@
     "xo": "^0.34.0"
   },
   "scripts": {
-    "format": "remark . -qfo && prettier . --write && xo --fix",
+    "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix",
     "build-bundle": "browserify . -s alex -o alex.js",
-    "build-mangle": "browserify . -s alex -p tinyify -o alex.min.js",
+    "build-mangle": "browserify . -s alex -o alex.min.js -p tinyify",
     "build": "npm run build-bundle && npm run build-mangle",
     "test-api": "node test",
     "test-coverage": "nyc --reporter lcov tape test/index.js",

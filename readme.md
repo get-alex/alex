@@ -631,9 +631,9 @@ Lots of [people helped since][contributors]!
 
 <!-- Definitions. -->
 
-[build]: https://travis-ci.org/get-alex/alex
+[build]: https://github.com/get-alex/alex/actions
 
-[build-badge]: https://img.shields.io/travis/get-alex/alex.svg
+[build-badge]: https://github.com/get-alex/alex/workflows/main/badge.svg
 
 [coverage]: https://codecov.io/github/get-alex/alex
 
