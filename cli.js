@@ -87,7 +87,7 @@ var silentlyIgnore
 var globs
 
 if (cli.flags.stdin) {
-  if (cli.input.length !== 0) {
+  if (cli.input.length > 0) {
     throw new Error('Do not pass globs with `--stdin`')
   }
 } else if (cli.input.length === 0) {
