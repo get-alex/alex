@@ -12,9 +12,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js -v', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, '', pkg.version + '\n'],
         'should work'
       )
@@ -26,9 +26,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js -h', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, /Usage: alex \[<glob> ...] /.test(stdout)],
+        [error, stderr, /Usage: alex \[<glob> ...] /.test(stdout)],
         [null, '', true],
         'should work'
       )
@@ -46,9 +46,9 @@ test('alex-cli', function (t) {
       subprocess.stdin.end('His')
     }
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, stderr, stdout],
+        [error.code, stderr, stdout],
         [
           1,
           [
@@ -72,9 +72,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js --stdin ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, /Do not pass globs with `--stdin`/.test(stderr), stdout],
+        [error.code, /Do not pass globs with `--stdin`/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
@@ -88,9 +88,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
@@ -104,9 +104,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp + ' --html', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, /3 warnings/.test(stderr), stdout],
+        [error.code, /3 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
@@ -120,9 +120,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp + ' --text', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, /1 warning/.test(stderr), stdout],
+        [error.code, /1 warning/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
@@ -136,9 +136,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp + ' --text', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, /10 warnings/.test(stderr), stdout],
+        [error.code, /10 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
@@ -152,9 +152,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp + ' --mdx', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, /2 warnings/.test(stderr), stdout],
+        [error.code, /2 warnings/.test(stderr), stdout],
         [1, true, ''],
         'should work'
       )
@@ -168,9 +168,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
@@ -184,8 +184,8 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp + ' -q', onexec)
 
-    function onexec(err, stdout, stderr) {
-      t.deepEqual([err, stderr, stdout], [null, '', ''], 'should work')
+    function onexec(error, stdout, stderr) {
+      t.deepEqual([error, stderr, stdout], [null, '', ''], 'should work')
     }
   })
 
@@ -196,9 +196,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp + ' -q --text', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, stderr, stdout],
+        [error.code, stderr, stdout],
         [
           1,
           [
@@ -222,9 +222,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
@@ -238,9 +238,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, stderr, stdout],
+        [error.code, stderr, stdout],
         [
           1,
           [
@@ -265,9 +265,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, stderr, stdout],
+        [error.code, stderr, stdout],
         [
           1,
           [
@@ -291,9 +291,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, fp + ': no issues found\n', ''],
         'should work'
       )
@@ -316,9 +316,9 @@ test('alex-cli', function (t) {
       }
     ])
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stdout, stderr],
+        [error, stdout, stderr],
         [null, '', expectedJson + '\n'],
         'should work'
       )
@@ -332,9 +332,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js --reporter doesntexist ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, 'Could not find reporter `doesntexist`\n', ''],
         'should work'
       )
@@ -348,9 +348,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js ' + fp, onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err.code, stderr, stdout],
+        [error.code, stderr, stdout],
         [
           1,
           [
@@ -372,9 +372,9 @@ test('alex-cli', function (t) {
 
     childProcess.exec('./cli.js', onexec)
 
-    function onexec(err, stdout, stderr) {
+    function onexec(error, stdout, stderr) {
       t.deepEqual(
-        [err, stderr, stdout],
+        [error, stderr, stdout],
         [null, 'readme.md: no issues found\n', ''],
         'should work'
       )

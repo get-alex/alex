@@ -377,7 +377,7 @@ Yields:
 
 Check [MDX][] (ignoring syntax).
 
-> Note: the syntax for [MDX\@2][mdx-next], while currently in beta, is used in
+> Note: the syntax for [MDX@2][mdx-next], while currently in beta, is used in
 > alex.
 
 ###### Parameters

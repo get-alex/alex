@@ -90,7 +90,7 @@
     "tape": "^5.0.0",
     "tinyify": "^3.0.0",
     "vfile-reporter-json": "^2.0.0",
-    "xo": "^0.34.0"
+    "xo": "^0.38.0"
   },
   "scripts": {
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix",
@@ -125,7 +125,7 @@
     "esnext": false,
     "rules": {
       "ava/no-import-test-files": "off",
-      "unicorn/no-fn-reference-in-iterator": "off"
+      "unicorn/no-array-callback-reference": "off"
     },
     "ignores": [
       "alex.js"

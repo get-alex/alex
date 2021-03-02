@@ -118,8 +118,8 @@ engine(
     frail: true,
     defaultConfig: transform()
   },
-  function (err, code) {
-    if (err) console.error(err.message)
+  function (error, code) {
+    if (error) console.error(error.message)
     process.exit(code)
   }
 )
