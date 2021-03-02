@@ -679,11 +679,11 @@ Lots of [people helped since][contributors]!
 
 [health]: https://github.com/get-alex/.github
 
-[contributing]: https://github.com/get-alex/.github/blob/master/contributing.md
+[contributing]: https://github.com/get-alex/.github/blob/main/contributing.md
 
-[support]: https://github.com/get-alex/.github/blob/master/support.md
+[support]: https://github.com/get-alex/.github/blob/main/support.md
 
-[coc]: https://github.com/get-alex/.github/blob/master/code-of-conduct.md
+[coc]: https://github.com/get-alex/.github/blob/main/code-of-conduct.md
 
 [tweet]: https://twitter.com/kwuchu/status/618799087006130176
 
