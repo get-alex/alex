@@ -6,3 +6,4 @@
   language: node
   types:
     - text
+  pass_filenames: false
