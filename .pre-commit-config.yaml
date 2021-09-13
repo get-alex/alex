@@ -1,0 +1,8 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/get-alex/alex
+    rev: 6a08eb5dad8b012758b8841d65d749fb56b78dbe  # TODO Replace with a tag
+    hooks:
+      - id: alex
