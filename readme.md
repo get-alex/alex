@@ -13,7 +13,7 @@
 [![First timers friendly][first-timers-badge]][first-timers]
 
 Whether your own or someone else’s writing, **alex** helps you find gender
-favoring, polarizing, race related, religion inconsiderate, or other **unequal**
+favoring, polarizing, race related, religiously inconsiderate, or other **unequal**
 phrasing in text.
 
 For example, when `We’ve confirmed his identity` is given, **alex** will warn
