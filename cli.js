@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import process from 'node:process'
+import {URL} from 'node:url'
 import notifier from 'update-notifier'
 import supportsColor from 'supports-color'
 import meow from 'meow'
@@ -20,8 +21,9 @@ import retextProfanities from 'retext-profanities'
 import unifiedDiff from 'unified-diff'
 import {filter} from './filter.js'
 
+/** @type {import('type-fest').PackageJson} */
 const pack = JSON.parse(
-  fs.readFileSync(new URL('./package.json', import.meta.url))
+  String(fs.readFileSync(new URL('./package.json', import.meta.url)))
 )
 
 const textExtensions = [
@@ -38,6 +40,7 @@ const htmlExtensions = ['htm', 'html']
 const mdxExtensions = ['mdx']
 
 // Update messages.
+/** @ts-expect-error: `package.json` is fine. */
 notifier({pkg: pack}).notify()
 
 // Set-up meow.
@@ -88,7 +91,9 @@ const extensions = cli.flags.html
   ? mdxExtensions
   : textExtensions
 const defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
+/** @type {boolean|undefined} */
 let silentlyIgnore
+/** @type {string[]|undefined} */
 let globs
 
 if (cli.flags.stdin) {
@@ -112,7 +117,7 @@ engine(
     output: false,
     rcName: '.alexrc',
     packageField: 'alex',
-    color: supportsColor.stderr,
+    color: Boolean(supportsColor.stderr),
     reporter: cli.flags.reporter || vfileReporter,
     reporterOptions: {
       verbose: cli.flags.why
@@ -121,7 +126,7 @@ engine(
     ignoreName: '.alexignore',
     silentlyIgnore,
     frail: true,
-    defaultConfig: transform()
+    defaultConfig: transform({})
   },
   function (error, code) {
     if (error) console.error(error.message)
@@ -129,28 +134,35 @@ engine(
   }
 )
 
-function transform(options) {
-  const settings = options || {}
+/**
+ * @type {import('unified-engine').ConfigTransform}
+ * @param {import('./index.js').OptionsObject} [options]
+ */
+function transform(options = {}) {
+  /** @type {import('unified').PluggableList} */
   let plugins = [
     retextEnglish,
-    [retextProfanities, {sureness: settings.profanitySureness}],
-    [retextEquality, {noBinary: settings.noBinary}]
+    [retextProfanities, {sureness: options.profanitySureness}],
+    [retextEquality, {noBinary: options.noBinary}]
   ]
 
   if (cli.flags.html) {
+    // @ts-expect-error: types are having a hard time for bridges.
     plugins = [rehypeParse, [rehypeRetext, unified().use({plugins})]]
   } else if (cli.flags.mdx) {
+    // @ts-expect-error: types are having a hard time for bridges.
     plugins = [remarkParse, remarkMdx, [remarkRetext, unified().use({plugins})]]
   } else if (!cli.flags.text) {
     plugins = [
       remarkParse,
       remarkGfm,
       [remarkFrontmatter, ['yaml', 'toml']],
+      // @ts-expect-error: types are having a hard time for bridges.
       [remarkRetext, unified().use({plugins})]
     ]
   }
 
-  plugins.push([filter, {allow: settings.allow, deny: settings.deny}])
+  plugins.push([filter, {allow: options.allow, deny: options.deny}])
 
   // Hard to check.
   /* c8 ignore next 3 */

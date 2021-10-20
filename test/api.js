@@ -1,4 +1,5 @@
 import fs from 'node:fs'
+import {URL} from 'node:url'
 import test from 'tape'
 import alex, {markdown, mdx, text, html} from '../index.js'
 
