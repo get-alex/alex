@@ -58,11 +58,10 @@ Or you can follow this step-by-step tutorial:
 *   [Configuration](#configuration)
 *   [CLI](#cli)
 *   [API](#api)
-    *   [`alex(value, config)`](#alexvalue-config)
-    *   [`alex.markdown(value, config)`](#alexmarkdownvalue-config)
-    *   [`alex.mdx(value, config)`](#alexmdxvalue-config)
-    *   [`alex.html(value, config)`](#alexhtmlvalue-config)
-    *   [`alex.text(value, config)`](#alextextvalue-config)
+    *   [`markdown(value, config)`](#markdownvalue-config)
+    *   [`mdx(value, config)`](#mdxvalue-config)
+    *   [`html(value, config)`](#htmlvalue-config)
+    *   [`text(value, config)`](#textvalue-config)
 *   [Workflow](#workflow)
 *   [FAQ](#faq)
     *   [This is stupid!](#this-is-stupid)
@@ -319,18 +318,19 @@ See `$ alex --help` for more information.
 
 ## API
 
+This package is [ESM only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c):
+Node 12+ is needed to use it and it must be `import`ed instead of `require`d.
+
 [npm][]:
 
 ```sh
 $ npm install alex --save
 ```
 
-**alex** is also available as an AMD, CommonJS, and globals module,
-[uncompressed and compressed][releases].
+This package exports the identifiers `markdown`, `mdx`, `html`, and `text`.
+The default export is `markdown`.
 
-### `alex(value, config)`
-
-### `alex.markdown(value, config)`
+### `markdown(value, config)`
 
 Check Markdown (ignoring syntax).
 
@@ -348,6 +348,8 @@ shown in the example below, because it holds the possible violations.
 ###### Example
 
 ```js
+import alex from 'alex'
+
 alex('We’ve confirmed his identity.').messages
 ```
 
@@ -373,7 +375,7 @@ Yields:
 ]
 ```
 
-### `alex.mdx(value, config)`
+### `mdx(value, config)`
 
 Check [MDX][] (ignoring syntax).
 
@@ -392,7 +394,9 @@ Check [MDX][] (ignoring syntax).
 ###### Example
 
 ```js
-alex.mdx('<Component>He walked to class.</Component>').messages
+import {mdx} from 'alex'
+
+mdx('<Component>He walked to class.</Component>').messages
 ```
 
 Yields:
@@ -413,7 +417,7 @@ Yields:
 ]
 ```
 
-### `alex.html(value, config)`
+### `html(value, config)`
 
 Check HTML (ignoring syntax).
 
@@ -429,7 +433,9 @@ Check HTML (ignoring syntax).
 ###### Example
 
 ```js
-alex.html('<p class="black">He walked to class.</p>').messages
+import {html} from 'alex'
+
+html('<p class="black">He walked to class.</p>').messages
 ```
 
 Yields:
@@ -452,7 +458,7 @@ Yields:
 ]
 ```
 
-### `alex.text(value, config)`
+### `text(value, config)`
 
 Check plain text (as in, syntax is checked).
 
@@ -468,9 +474,11 @@ Check plain text (as in, syntax is checked).
 ###### Example
 
 ```js
-alex('The `boogeyman`.').messages // => []
+import {markdown, text} from 'alex'
 
-alex.text('The `boogeyman`.').messages
+markdown('The `boogeyman`.').messages // => []
+
+text('The `boogeyman`.').messages
 ```
 
 Yields:
@@ -654,8 +662,6 @@ Lots of [people helped since][contributors]!
 [demo]: http://alexjs.com/#demo
 
 [screenshot]: screenshot.png
-
-[releases]: https://github.com/get-alex/alex/releases
 
 [vfile]: https://github.com/vfile/vfile
 

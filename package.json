@@ -55,6 +55,8 @@
     "Christian Oliff <christianoliff@yahoo.com>",
     "Daan <daan@devign.it>"
   ],
+  "type": "module",
+  "sideEffects": false,
   "bin": "cli.js",
   "files": [
     "index.js",

@@ -1,10 +1,9 @@
-'use strict'
+import fs from 'fs'
+import path from 'path'
+import childProcess from 'child_process'
+import test from 'tape'
 
-var path = require('path')
-var childProcess = require('child_process')
-var test = require('tape')
-
-var pkg = require('../package.json')
+const pkg = JSON.parse(fs.readFileSync('package.json'))
 
 test('alex-cli', function (t) {
   t.test('version', function (t) {

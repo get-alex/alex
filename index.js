@@ -1,32 +1,24 @@
-'use strict'
-
-var VFile = require('vfile')
-var unified = require('unified')
-var markdown = require('remark-parse')
-var frontmatter = require('remark-frontmatter')
-var mdx = require('remark-mdx')
-var html = require('rehype-parse')
-var english = require('retext-english')
-var equality = require('retext-equality')
-var profanities = require('retext-profanities')
-var remark2retext = require('remark-retext')
-var rehype2retext = require('rehype-retext')
-var sort = require('vfile-sort')
-var filter = require('./filter.js')
-
-module.exports = alex
-alex.text = noMarkdown
-alex.markdown = alex
-alex.mdx = mdxParse
-alex.html = htmlParse
+import VFile from 'vfile'
+import unified from 'unified'
+import remarkParse from 'remark-parse'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkMdx from 'remark-mdx'
+import rehypeParse from 'rehype-parse'
+import retextEnglish from 'retext-english'
+import retextEquality from 'retext-equality'
+import retextProfanities from 'retext-profanities'
+import remarkRetext from 'remark-retext'
+import rehypeRetext from 'rehype-retext'
+import sort from 'vfile-sort'
+import {filter} from './filter.js'
 
 function makeText(config) {
   return unified()
-    .use(english)
-    .use(equality, {
+    .use(retextEnglish)
+    .use(retextEquality, {
       noBinary: config && config.noBinary
     })
-    .use(profanities, {
+    .use(retextProfanities, {
       sureness: config && config.profanitySureness
     })
 }
@@ -53,37 +45,42 @@ function core(value, config, processor) {
   return file
 }
 
+export default markdown
+
 // Alex.
-function alex(value, config) {
+export function markdown(value, config) {
   return core(
     value,
     config,
     unified()
-      .use(markdown)
-      .use(frontmatter, ['yaml', 'toml'])
-      .use(remark2retext, makeText(config))
+      .use(remarkParse)
+      .use(remarkFrontmatter, ['yaml', 'toml'])
+      .use(remarkRetext, makeText(config))
   )
 }
 
 // Alex, for MDX.
-function mdxParse(value, config) {
+export function mdx(value, config) {
   return core(
     value,
     config,
-    unified().use(markdown).use(mdx).use(remark2retext, makeText(config))
+    unified()
+      .use(remarkParse)
+      .use(remarkMdx)
+      .use(remarkRetext, makeText(config))
   )
 }
 
 // Alex, for HTML.
-function htmlParse(value, config) {
+export function html(value, config) {
   return core(
     value,
     config,
-    unified().use(html).use(rehype2retext, makeText(config))
+    unified().use(rehypeParse).use(rehypeRetext, makeText(config))
   )
 }
 
 // Alex, without the markdown.
-function noMarkdown(value, config) {
+export function text(value, config) {
   return core(value, config, makeText(config))
 }

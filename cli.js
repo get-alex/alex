@@ -1,24 +1,26 @@
 #!/usr/bin/env node
-'use strict'
+import fs from 'fs'
+import notifier from 'update-notifier'
+import supportsColor from 'supports-color'
+import meow from 'meow'
+import engine from 'unified-engine'
+import unified from 'unified'
+import markdown from 'remark-parse'
+import html from 'rehype-parse'
+import frontmatter from 'remark-frontmatter'
+import mdx from 'remark-mdx'
+import english from 'retext-english'
+import remark2retext from 'remark-retext'
+import rehype2retext from 'rehype-retext'
+import defaultReporter from 'vfile-reporter'
+import equality from 'retext-equality'
+import profanities from 'retext-profanities'
+import diff from 'unified-diff'
+import {filter} from './filter.js'
 
-var notifier = require('update-notifier')
-var supportsColor = require('supports-color')
-var meow = require('meow')
-var engine = require('unified-engine')
-var unified = require('unified')
-var markdown = require('remark-parse')
-var html = require('rehype-parse')
-var frontmatter = require('remark-frontmatter')
-var mdx = require('remark-mdx')
-var english = require('retext-english')
-var remark2retext = require('remark-retext')
-var rehype2retext = require('rehype-retext')
-var defaultReporter = require('vfile-reporter')
-var equality = require('retext-equality')
-var profanities = require('retext-profanities')
-var diff = require('unified-diff')
-var pack = require('./package.json')
-var filter = require('./filter.js')
+const pack = JSON.parse(
+  fs.readFileSync(new URL('./package.json', import.meta.url))
+)
 
 var textExtensions = [
   'txt',

@@ -1,10 +1,6 @@
-'use strict'
+import remarkMessageControl from 'remark-message-control'
 
-var control = require('remark-message-control')
-
-module.exports = filter
-
-function filter(options) {
+export function filter(options) {
   /* c8 ignore next */
   var settings = options || {}
 
@@ -14,7 +10,7 @@ function filter(options) {
     )
   }
 
-  return control({
+  return remarkMessageControl({
     name: 'alex',
     reset: Boolean(settings.deny),
     enable: settings.deny,
