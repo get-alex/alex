@@ -17,8 +17,8 @@ var defaultReporter = require('vfile-reporter')
 var equality = require('retext-equality')
 var profanities = require('retext-profanities')
 var diff = require('unified-diff')
-var pack = require('./package')
-var filter = require('./filter')
+var pack = require('./package.json')
+var filter = require('./filter.js')
 
 var textExtensions = [
   'txt',

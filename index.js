@@ -12,7 +12,7 @@ var profanities = require('retext-profanities')
 var remark2retext = require('remark-retext')
 var rehype2retext = require('rehype-retext')
 var sort = require('vfile-sort')
-var filter = require('./filter')
+var filter = require('./filter.js')
 
 module.exports = alex
 alex.text = noMarkdown

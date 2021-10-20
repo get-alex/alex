@@ -4,7 +4,7 @@ var path = require('path')
 var childProcess = require('child_process')
 var test = require('tape')
 
-var pkg = require('../package')
+var pkg = require('../package.json')
 
 test('alex-cli', function (t) {
   t.test('version', function (t) {
