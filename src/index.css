@@ -67,7 +67,7 @@ body {
   font-size: 6em;
   font-weight: 100;
   letter-spacing: 0.05em;
-  border-bottom: 0.03125em solid currentcolor;
+  border-bottom: 0.03125em solid currentColor;
   display: inline-block;
   margin-bottom: 1em;
 }
@@ -76,7 +76,7 @@ body {
   text-transform: uppercase;
   position: relative;
   padding-left: 0.025em;
-  border-bottom: 0.03125em solid currentcolor;
+  border-bottom: 0.03125em solid currentColor;
 }
 
 .cover .logo {

@@ -26,14 +26,14 @@
     "retext-english": "^4.0.0",
     "retext-equality": "^6.0.0",
     "retext-profanities": "^7.0.0",
-    "stylelint": "^11.0.0",
-    "stylelint-config-standard": "^19.0.0",
+    "stylelint": "^13.0.0",
+    "stylelint-config-standard": "^22.0.0",
     "unified": "^10.0.0",
     "vfile": "^5.0.0",
     "vfile-sort": "^3.0.0",
     "vfile-statistics": "^2.0.0",
     "virtual-dom": "^2.0.0",
-    "xo": "^0.25.0"
+    "xo": "^0.45.0"
   },
   "scripts": {
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
@@ -57,12 +57,9 @@
   },
   "xo": {
     "prettier": true,
-    "esnext": false,
     "rules": {
-      "unicorn/prefer-node-append": "off",
-      "guard-for-in": "off",
-      "prefer-arrow-callback": "off",
-      "no-var": "off"
+      "unicorn/prefer-dom-node-append": "off",
+      "guard-for-in": "off"
     }
   },
   "postcss": {

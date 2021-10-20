@@ -1,9 +1,9 @@
-import doc from 'global/document'
-import win from 'global/window'
-import createElement from 'virtual-dom/create-element'
-import diff from 'virtual-dom/diff'
-import patch from 'virtual-dom/patch'
-import h from 'virtual-dom/h'
+import doc from 'global/document.js'
+import win from 'global/window.js'
+import createElement from 'virtual-dom/create-element.js'
+import diff from 'virtual-dom/diff.js'
+import patch from 'virtual-dom/patch.js'
+import h from 'virtual-dom/h.js'
 import debounce from 'debounce'
 import {VFile} from 'vfile'
 import {statistics} from 'vfile-statistics'
@@ -13,18 +13,20 @@ import retextEnglish from 'retext-english'
 import retextEquality from 'retext-equality'
 import retextProfanities from 'retext-profanities'
 
-var processor = unified()
+const own = {}.hasOwnProperty
+
+const processor = unified()
   .use(retextEnglish)
   .use(retextEquality)
   .use(retextProfanities)
   .use(severity)
 
-var root = doc.querySelector('#root')
-var tree = render(doc.querySelector('template').innerHTML)
-var dom = root.appendChild(createElement(tree))
+const root = doc.querySelector('#root')
+let tree = render(doc.querySelector('template').innerHTML)
+let dom = root.appendChild(createElement(tree))
 
 function onchange(ev) {
-  var next = render(ev.target.value)
+  const next = render(ev.target.value)
   dom = patch(dom, diff(tree, next))
   tree = next
 }
@@ -34,10 +36,10 @@ function resize() {
 }
 
 function render(text) {
-  var file = new VFile(text)
-  var tree = processor.parse(file)
-  var change = debounce(onchange, 4)
-  var key = 0
+  const file = new VFile(text)
+  const tree = processor.parse(file)
+  const change = debounce(onchange, 4)
+  let key = 0
 
   processor.runSync(tree, file)
 
@@ -57,18 +59,16 @@ function render(text) {
   ])
 
   function all(file) {
-    var offsets = getOffsets(file.messages)
-    var length = offsets.length
-    var results = []
-    var index = -1
-    var last = 0
-    var offset
+    const offsets = getOffsets(file.messages)
+    const results = []
+    let index = -1
+    let last = 0
 
-    while (++index < length) {
-      offset = offsets[index]
+    while (++index < offsets.length) {
+      const offset = offsets[index]
 
-      results.push(text.slice(last, offset[0]))
       results.push(
+        text.slice(last, offset[0]),
         h(
           'span.offense',
           {key: key++, className: offset[2] ? 'error' : 'warn'},
@@ -88,7 +88,7 @@ function render(text) {
    * with `white-space: pre-wrap`. Add a `br` to make the last newline
    * explicit. */
   function pad(nodes) {
-    var tail = nodes[nodes.length - 1]
+    const tail = nodes[nodes.length - 1]
 
     if (typeof tail === 'string' && tail.charAt(tail.length - 1) === '\n') {
       nodes.push(h('br', {key: 'break'}))
@@ -98,20 +98,18 @@ function render(text) {
   }
 
   function messages(file) {
-    var messages = file.messages
-    var stats = statistics(file)
-    var index = -1
-    var length = messages.length
-    var results = []
-    var message
+    const messages = file.messages
+    const stats = statistics(file)
+    const results = []
+    let index = -1
 
-    while (++index < length) {
-      message = messages[index]
+    while (++index < messages.length) {
+      const message = messages[index]
       results[index] = h('li.issue', {key: index}, decorateMessage(message))
     }
 
     return [
-      h('ol.issues', {className: length ? '' : 'empty'}, results),
+      h('ol.issues', {className: messages.length > 0 ? '' : 'empty'}, results),
       h('.issue-summary', {key: 'summary'}, [
         h('span.filename', 'example.md'),
         h('span.counts', [
@@ -136,20 +134,19 @@ function rows(node) {
   return (
     Math.ceil(
       node.getBoundingClientRect().height /
-        parseInt(win.getComputedStyle(node).lineHeight, 10)
+        Number.parseInt(win.getComputedStyle(node).lineHeight, 10)
     ) + 1
   )
 }
 
 function decorateMessage(message) {
-  var value = message.reason
-  var re = /[“`](.+?)[`”]/g
-  var results = []
-  var index = value.indexOf('use')
-  var match
-  var last = 0
-  var sub
-  var name
+  const value = message.reason
+  const re = /[“`](.+?)[`”]/g
+  const results = []
+  const index = value.indexOf('use')
+  let last = 0
+  let match
+  let sub
 
   while ((match = re.exec(value))) {
     sub = value.slice(last, re.lastIndex - match[0].length)
@@ -158,7 +155,7 @@ function decorateMessage(message) {
       results.push(sub)
     }
 
-    name = re.lastIndex > index ? 'ok' : 'nok'
+    let name = re.lastIndex > index ? 'ok' : 'nok'
 
     if (message.source === 'retext-profanities') {
       name = 'nok'
@@ -179,53 +176,51 @@ function decorateMessage(message) {
 }
 
 function getOffsets(messages) {
-  var length = messages.length
-  var map = {}
-  var offsets = []
-  var index = -1
-  var message
-  var position
-  var start
-  var end
-  var key
-  var prev
+  const map = {}
+  const offsets = []
+  let index = -1
+  let previous
 
   /* Algorithm is a bit funky as the locations are sorted,
    * thus we can expect a lot to be true. */
-  while (++index < length) {
-    message = messages[index]
-    position = message.position || {}
-    start = position.start && position.start.offset
-    end = position.end && position.end.offset
+  while (++index < messages.length) {
+    const message = messages[index]
+    const position = message.position || {}
+    const start = position.start && position.start.offset
+    const end = position.end && position.end.offset
 
-    if (isNaN(start) || isNaN(end)) {
+    if (typeof start !== 'number' || typeof end !== 'number') {
       continue
     }
 
-    if (prev && end < prev) {
+    if (previous && end < previous) {
       continue
     }
 
-    prev = end
+    previous = end
 
     if (start in map) {
       if (end > map[start]) {
-        map[start] = {end: end, fatal: message.fatal}
+        map[start] = {end, fatal: message.fatal}
       }
     } else {
-      map[start] = {end: end, fatal: message.fatal}
+      map[start] = {end, fatal: message.fatal}
     }
   }
 
+  let key
+
   for (key in map) {
-    offsets.push([Number(key), map[key].end, map[key].fatal])
+    if (own.call(map, key)) {
+      offsets.push([Number(key), map[key].end, map[key].fatal])
+    }
   }
 
   return offsets
 }
 
 function severity() {
-  var map = {
+  const map = {
     0: null,
     1: false,
     2: true,
@@ -235,11 +230,13 @@ function severity() {
   return transformer
 
   function transformer(tree, file) {
-    sort(file)
-    file.messages.forEach(transform)
-  }
+    let index = -1
 
-  function transform(message) {
-    message.fatal = map[message.profanitySeverity]
+    sort(file)
+
+    while (++index < file.messages.length) {
+      const message = file.messages[index]
+      message.fatal = map[message.profanitySeverity]
+    }
   }
 }
