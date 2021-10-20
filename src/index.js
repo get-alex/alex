@@ -5,18 +5,18 @@ import diff from 'virtual-dom/diff'
 import patch from 'virtual-dom/patch'
 import h from 'virtual-dom/h'
 import debounce from 'debounce'
-import vfile from 'vfile'
-import statistics from 'vfile-statistics'
-import sort from 'vfile-sort'
-import unified from 'unified'
-import english from 'retext-english'
-import equality from 'retext-equality'
-import profanities from 'retext-profanities'
+import {VFile} from 'vfile'
+import {statistics} from 'vfile-statistics'
+import {sort} from 'vfile-sort'
+import {unified} from 'unified'
+import retextEnglish from 'retext-english'
+import retextEquality from 'retext-equality'
+import retextProfanities from 'retext-profanities'
 
 var processor = unified()
-  .use(english)
-  .use(equality)
-  .use(profanities)
+  .use(retextEnglish)
+  .use(retextEquality)
+  .use(retextProfanities)
   .use(severity)
 
 var root = doc.querySelector('#root')
@@ -34,7 +34,7 @@ function resize() {
 }
 
 function render(text) {
-  var file = vfile(text)
+  var file = new VFile(text)
   var tree = processor.parse(file)
   var change = debounce(onchange, 4)
   var key = 0
@@ -194,7 +194,7 @@ function getOffsets(messages) {
    * thus we can expect a lot to be true. */
   while (++index < length) {
     message = messages[index]
-    position = message.location || {}
+    position = message.position || {}
     start = position.start && position.start.offset
     end = position.end && position.end.offset
 
