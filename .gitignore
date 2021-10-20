@@ -3,7 +3,4 @@
 node_modules/
 .nyc_output/
 coverage/
-alex.js
-alex.min.js
 yarn.lock
-*.tmp-browserify-*

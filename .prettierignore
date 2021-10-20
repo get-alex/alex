@@ -1,7 +1,4 @@
 node_modules/
 coverage/
-alex.js
-alex.min.js
 *.html
-*.json
 *.md
