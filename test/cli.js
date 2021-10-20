@@ -1,6 +1,7 @@
-import fs from 'fs'
-import path from 'path'
-import childProcess from 'child_process'
+import childProcess from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
+import process from 'node:process'
 import test from 'tape'
 
 const pkg = JSON.parse(fs.readFileSync('package.json'))
@@ -37,7 +38,7 @@ test('alex-cli', function (t) {
   t.test('stdin', function (t) {
     t.plan(1)
 
-    var subprocess = childProcess.exec('./cli.js --stdin', onexec)
+    const subprocess = childProcess.exec('./cli.js --stdin', onexec)
 
     setTimeout(end, 10)
 
@@ -65,7 +66,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('stdin and globs', function (t) {
-    var fp = path.join('test', 'fixtures', 'one.md')
+    const fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
 
@@ -81,7 +82,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('markdown by default', function (t) {
-    var fp = path.join('test', 'fixtures', 'one.md')
+    const fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
 
@@ -97,7 +98,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('optionally html', function (t) {
-    var fp = path.join('test', 'fixtures', 'three.html')
+    const fp = path.join('test', 'fixtures', 'three.html')
 
     t.plan(1)
 
@@ -113,7 +114,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('optionally text (on markdown)', function (t) {
-    var fp = path.join('test', 'fixtures', 'one.md')
+    const fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
 
@@ -129,7 +130,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('optionally text (on html)', function (t) {
-    var fp = path.join('test', 'fixtures', 'three.html')
+    const fp = path.join('test', 'fixtures', 'three.html')
 
     t.plan(1)
 
@@ -145,7 +146,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('mdx', function (t) {
-    var fp = path.join('test', 'fixtures')
+    const fp = path.join('test', 'fixtures')
 
     t.plan(1)
 
@@ -161,7 +162,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('successful', function (t) {
-    var fp = path.join('test', 'fixtures', 'ok.txt')
+    const fp = path.join('test', 'fixtures', 'ok.txt')
 
     t.plan(1)
 
@@ -177,7 +178,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('quiet (ok)', function (t) {
-    var fp = path.join('test', 'fixtures', 'ok.txt')
+    const fp = path.join('test', 'fixtures', 'ok.txt')
 
     t.plan(1)
 
@@ -189,7 +190,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('quiet (on error)', function (t) {
-    var fp = path.join('test', 'fixtures', 'one.md')
+    const fp = path.join('test', 'fixtures', 'one.md')
 
     t.plan(1)
 
@@ -215,7 +216,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('binary (default: ok)', function (t) {
-    var fp = path.join('test', 'fixtures', 'binary', 'two.md')
+    const fp = path.join('test', 'fixtures', 'binary', 'two.md')
 
     t.plan(1)
 
@@ -231,7 +232,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('binary (with config file)', function (t) {
-    var fp = path.join('test', 'fixtures', 'non-binary', 'two.md')
+    const fp = path.join('test', 'fixtures', 'non-binary', 'two.md')
 
     t.plan(1)
 
@@ -258,7 +259,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('profanity (default)', function (t) {
-    var fp = path.join('test', 'fixtures', 'profanity', 'two.md')
+    const fp = path.join('test', 'fixtures', 'profanity', 'two.md')
 
     t.plan(1)
 
@@ -284,7 +285,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('profanity (with config file)', function (t) {
-    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+    const fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
     t.plan(1)
 
@@ -300,7 +301,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('custom reporter', function (t) {
-    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+    const fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
     t.plan(1)
 
@@ -325,7 +326,7 @@ test('alex-cli', function (t) {
   })
 
   t.test("custom formatter that isn't installed", function (t) {
-    var fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
+    const fp = path.join('test', 'fixtures', 'profanity-sureness', 'two.md')
 
     t.plan(1)
 
@@ -341,7 +342,7 @@ test('alex-cli', function (t) {
   })
 
   t.test('deny', function (t) {
-    var fp = path.join('test', 'fixtures', 'deny', 'two.md')
+    const fp = path.join('test', 'fixtures', 'deny', 'two.md')
 
     t.plan(1)
 

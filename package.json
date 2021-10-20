@@ -87,11 +87,11 @@
   "devDependencies": {
     "c8": "^7.10.0",
     "prettier": "^2.0.0",
-    "remark-cli": "^9.0.0",
-    "remark-preset-wooorm": "^8.0.0",
+    "remark-cli": "^10.0.0",
+    "remark-preset-wooorm": "^9.0.0",
     "tape": "^5.0.0",
-    "vfile-reporter-json": "^2.0.0",
-    "xo": "^0.38.0"
+    "vfile-reporter-json": "^3.0.0",
+    "xo": "^0.45.0"
   },
   "scripts": {
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix",
@@ -114,7 +114,6 @@
   },
   "xo": {
     "prettier": true,
-    "esnext": false,
     "rules": {
       "ava/no-import-test-files": "off",
       "unicorn/no-array-callback-reference": "off"

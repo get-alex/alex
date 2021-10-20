@@ -1,11 +1,11 @@
-import fs from 'fs'
+import fs from 'node:fs'
 import test from 'tape'
 import alex, {markdown, mdx, text, html} from '../index.js'
 
-var threeHtml = fs.readFileSync(
+const threeHtml = fs.readFileSync(
   new URL('./fixtures/three.html', import.meta.url)
 )
-var fourMdx = fs.readFileSync(new URL('./fixtures/four.mdx', import.meta.url))
+const fourMdx = fs.readFileSync(new URL('./fixtures/four.mdx', import.meta.url))
 
 // Tests. Note that these are small because alex is in fact
 // just a collection of well-tested modules.

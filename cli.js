@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import fs from 'fs'
+import fs from 'node:fs'
+import process from 'node:process'
 import notifier from 'update-notifier'
 import supportsColor from 'supports-color'
 import meow from 'meow'
@@ -23,7 +24,7 @@ const pack = JSON.parse(
   fs.readFileSync(new URL('./package.json', import.meta.url))
 )
 
-var textExtensions = [
+const textExtensions = [
   'txt',
   'text',
   'md',
@@ -33,14 +34,14 @@ var textExtensions = [
   'mkdown',
   'ron'
 ]
-var htmlExtensions = ['htm', 'html']
-var mdxExtensions = ['mdx']
+const htmlExtensions = ['htm', 'html']
+const mdxExtensions = ['mdx']
 
 // Update messages.
 notifier({pkg: pack}).notify()
 
 // Set-up meow.
-var cli = meow(
+const cli = meow(
   [
     'Usage: alex [<glob> ...] [options ...]',
     '',
@@ -81,14 +82,14 @@ var cli = meow(
 )
 
 // Set-up.
-var extensions = cli.flags.html
+const extensions = cli.flags.html
   ? htmlExtensions
   : cli.flags.mdx
   ? mdxExtensions
   : textExtensions
-var defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
-var silentlyIgnore
-var globs
+const defaultGlobs = ['{docs/**/,doc/**/,}*.{' + extensions.join(',') + '}']
+let silentlyIgnore
+let globs
 
 if (cli.flags.stdin) {
   if (cli.input.length > 0) {
@@ -105,7 +106,7 @@ engine(
   {
     processor: unified(),
     files: globs,
-    extensions: extensions,
+    extensions,
     configTransform: transform,
     out: false,
     output: false,
@@ -118,7 +119,7 @@ engine(
     },
     quiet: cli.flags.quiet,
     ignoreName: '.alexignore',
-    silentlyIgnore: silentlyIgnore,
+    silentlyIgnore,
     frail: true,
     defaultConfig: transform()
   },
@@ -129,27 +130,23 @@ engine(
 )
 
 function transform(options) {
-  var settings = options || {}
-  var plugins = [
+  const settings = options || {}
+  let plugins = [
     retextEnglish,
     [retextProfanities, {sureness: settings.profanitySureness}],
     [retextEquality, {noBinary: settings.noBinary}]
   ]
 
   if (cli.flags.html) {
-    plugins = [rehypeParse, [rehypeRetext, unified().use({plugins: plugins})]]
+    plugins = [rehypeParse, [rehypeRetext, unified().use({plugins})]]
   } else if (cli.flags.mdx) {
-    plugins = [
-      remarkParse,
-      remarkMdx,
-      [remarkRetext, unified().use({plugins: plugins})]
-    ]
+    plugins = [remarkParse, remarkMdx, [remarkRetext, unified().use({plugins})]]
   } else if (!cli.flags.text) {
     plugins = [
       remarkParse,
       remarkGfm,
       [remarkFrontmatter, ['yaml', 'toml']],
-      [remarkRetext, unified().use({plugins: plugins})]
+      [remarkRetext, unified().use({plugins})]
     ]
   }
 
@@ -161,5 +158,5 @@ function transform(options) {
     plugins.push(unifiedDiff)
   }
 
-  return {plugins: plugins}
+  return {plugins}
 }

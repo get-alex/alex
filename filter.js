@@ -2,7 +2,7 @@ import remarkMessageControl from 'remark-message-control'
 
 export function filter(options) {
   /* c8 ignore next */
-  var settings = options || {}
+  const settings = options || {}
 
   if (settings.allow && settings.deny) {
     throw new Error(

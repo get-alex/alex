@@ -26,8 +26,8 @@ function makeText(config) {
 
 // Alex’s core.
 function core(value, config, processor) {
-  var allow
-  var deny
+  let allow
+  let deny
 
   if (Array.isArray(config)) {
     allow = config
@@ -36,8 +36,8 @@ function core(value, config, processor) {
     deny = config.deny
   }
 
-  var file = new VFile(value)
-  var tree = processor.use(filter, {allow: allow, deny: deny}).parse(file)
+  const file = new VFile(value)
+  const tree = processor.use(filter, {allow, deny}).parse(file)
 
   processor.runSync(tree, file)
 
