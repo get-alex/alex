@@ -10,23 +10,14 @@
   "contributors": [
     "Titus Wormer <tituswormer@gmail.com> (http://wooorm.com)"
   ],
-  "dependencies": {},
-  "scripts": {
-    "format": "remark . -qfo && prettier --write \"**/*.js\" && xo --fix && stylelint src/index.css --fix",
-    "build:js": "browserify src -p tinyify > dest/index.js",
-    "build:css": "postcss src/index.css > dest/index.css",
-    "build:html": "rehype -qf -u preset-minify -u prevent-favicon-request -o dest src",
-    "build:asset": "cp src/* dest",
-    "build": "npm run build:asset && npm run build:js && npm run build:css && npm run build:html",
-    "test": "npm run format && npm run build"
-  },
+  "type": "module",
   "devDependencies": {
-    "browserify": "^16.0.0",
     "cssnano": "^4.1.0",
     "debounce": "^1.0.0",
+    "esbuild": "^0.13.8",
     "global": "^4.3.2",
     "postcss-cli": "^6.0.0",
-    "prettier": "^1.14.2",
+    "prettier": "^2.0.0",
     "rehype-cli": "^8.0.0",
     "rehype-preset-minify": "^4.0.0",
     "rehype-prevent-favicon-request": "^2.0.0",
@@ -37,13 +28,21 @@
     "retext-profanities": "^5.0.0",
     "stylelint": "^11.0.0",
     "stylelint-config-standard": "^19.0.0",
-    "tinyify": "^2.0.0",
     "unified": "^8.0.0",
     "vfile": "^4.0.0",
     "vfile-sort": "^2.0.0",
     "vfile-statistics": "^1.0.0",
     "virtual-dom": "^2.1.1",
     "xo": "^0.25.0"
+  },
+  "scripts": {
+    "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix && stylelint src/index.css --fix",
+    "build:js": "esbuild src/index.js --log-level=warning --bundle --minify --target=es6 --outfile=dest/index.nomodule.js && esbuild src/index.js --log-level=warning --bundle --minify --target=es2020 --format=esm --outfile=dest/index.module.js",
+    "build:css": "postcss src/index.css > dest/index.css",
+    "build:html": "rehype -qf -u preset-minify -u prevent-favicon-request -o dest src",
+    "build:asset": "cp src/* dest",
+    "build": "npm run build:asset && npm run build:js && npm run build:css && npm run build:html",
+    "test": "npm run format && npm run build"
   },
   "stylelint": {
     "extends": "stylelint-config-standard"

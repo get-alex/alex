@@ -1,9 +1,6 @@
-*.log
-.nyc_output/
 coverage/
 dest/
 node_modules/
 .DS_Store
-alex.js
-alex.min.js
+*.log
 yarn.lock

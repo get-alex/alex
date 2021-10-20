@@ -1,19 +1,17 @@
-'use strict'
-
-var doc = require('global/document')
-var win = require('global/window')
-var createElement = require('virtual-dom/create-element')
-var diff = require('virtual-dom/diff')
-var patch = require('virtual-dom/patch')
-var h = require('virtual-dom/h')
-var debounce = require('debounce')
-var vfile = require('vfile')
-var statistics = require('vfile-statistics')
-var sort = require('vfile-sort')
-var unified = require('unified')
-var english = require('retext-english')
-var equality = require('retext-equality')
-var profanities = require('retext-profanities')
+import doc from 'global/document'
+import win from 'global/window'
+import createElement from 'virtual-dom/create-element'
+import diff from 'virtual-dom/diff'
+import patch from 'virtual-dom/patch'
+import h from 'virtual-dom/h'
+import debounce from 'debounce'
+import vfile from 'vfile'
+import statistics from 'vfile-statistics'
+import sort from 'vfile-sort'
+import unified from 'unified'
+import english from 'retext-english'
+import equality from 'retext-equality'
+import profanities from 'retext-profanities'
 
 var processor = unified()
   .use(english)
