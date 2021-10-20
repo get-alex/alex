@@ -1,6 +1,7 @@
-import VFile from 'vfile'
-import unified from 'unified'
+import {VFile} from 'vfile'
+import {unified} from 'unified'
 import remarkParse from 'remark-parse'
+import remarkGfm from 'remark-gfm'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkMdx from 'remark-mdx'
 import rehypeParse from 'rehype-parse'
@@ -9,7 +10,7 @@ import retextEquality from 'retext-equality'
 import retextProfanities from 'retext-profanities'
 import remarkRetext from 'remark-retext'
 import rehypeRetext from 'rehype-retext'
-import sort from 'vfile-sort'
+import {sort} from 'vfile-sort'
 import {filter} from './filter.js'
 
 function makeText(config) {
@@ -54,6 +55,7 @@ export function markdown(value, config) {
     config,
     unified()
       .use(remarkParse)
+      .use(remarkGfm)
       .use(remarkFrontmatter, ['yaml', 'toml'])
       .use(remarkRetext, makeText(config))
   )

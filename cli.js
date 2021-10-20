@@ -3,19 +3,20 @@ import fs from 'fs'
 import notifier from 'update-notifier'
 import supportsColor from 'supports-color'
 import meow from 'meow'
-import engine from 'unified-engine'
-import unified from 'unified'
-import markdown from 'remark-parse'
-import html from 'rehype-parse'
-import frontmatter from 'remark-frontmatter'
-import mdx from 'remark-mdx'
-import english from 'retext-english'
-import remark2retext from 'remark-retext'
-import rehype2retext from 'rehype-retext'
-import defaultReporter from 'vfile-reporter'
-import equality from 'retext-equality'
-import profanities from 'retext-profanities'
-import diff from 'unified-diff'
+import {engine} from 'unified-engine'
+import {unified} from 'unified'
+import rehypeParse from 'rehype-parse'
+import remarkParse from 'remark-parse'
+import remarkFrontmatter from 'remark-frontmatter'
+import remarkGfm from 'remark-gfm'
+import remarkMdx from 'remark-mdx'
+import retextEnglish from 'retext-english'
+import remarkRetext from 'remark-retext'
+import rehypeRetext from 'rehype-retext'
+import vfileReporter from 'vfile-reporter'
+import retextEquality from 'retext-equality'
+import retextProfanities from 'retext-profanities'
+import unifiedDiff from 'unified-diff'
 import {filter} from './filter.js'
 
 const pack = JSON.parse(
@@ -63,6 +64,7 @@ var cli = meow(
     '  $ alex'
   ].join('\n'),
   {
+    importMeta: import.meta,
     flags: {
       version: {type: 'boolean', alias: 'v'},
       help: {type: 'boolean', alias: 'h'},
@@ -110,7 +112,7 @@ engine(
     rcName: '.alexrc',
     packageField: 'alex',
     color: supportsColor.stderr,
-    reporter: cli.flags.reporter || defaultReporter,
+    reporter: cli.flags.reporter || vfileReporter,
     reporterOptions: {
       verbose: cli.flags.why
     },
@@ -129,24 +131,25 @@ engine(
 function transform(options) {
   var settings = options || {}
   var plugins = [
-    english,
-    [profanities, {sureness: settings.profanitySureness}],
-    [equality, {noBinary: settings.noBinary}]
+    retextEnglish,
+    [retextProfanities, {sureness: settings.profanitySureness}],
+    [retextEquality, {noBinary: settings.noBinary}]
   ]
 
   if (cli.flags.html) {
-    plugins = [html, [rehype2retext, unified().use({plugins: plugins})]]
+    plugins = [rehypeParse, [rehypeRetext, unified().use({plugins: plugins})]]
   } else if (cli.flags.mdx) {
     plugins = [
-      markdown,
-      mdx,
-      [remark2retext, unified().use({plugins: plugins})]
+      remarkParse,
+      remarkMdx,
+      [remarkRetext, unified().use({plugins: plugins})]
     ]
   } else if (!cli.flags.text) {
     plugins = [
-      markdown,
-      [frontmatter, ['yaml', 'toml']],
-      [remark2retext, unified().use({plugins: plugins})]
+      remarkParse,
+      remarkGfm,
+      [remarkFrontmatter, ['yaml', 'toml']],
+      [remarkRetext, unified().use({plugins: plugins})]
     ]
   }
 
@@ -155,7 +158,7 @@ function transform(options) {
   // Hard to check.
   /* c8 ignore next 3 */
   if (cli.flags.diff) {
-    plugins.push(diff)
+    plugins.push(unifiedDiff)
   }
 
   return {plugins: plugins}

@@ -264,11 +264,11 @@ We use [`cuss`][cuss], which has a dictionary of words that have a rating
 between 0 and 2 of how likely it is that a word or phrase is a profanity (not
 how “bad” it is):
 
-| Rating | Use as a profanity | Use in clean text | Example |
-| ------ | ------------------ | ----------------- | ------- |
-| 2      | likely             | unlikely          | asshat  |
-| 1      | maybe              | maybe             | addict  |
-| 0      | unlikely           | likely            | beaver  |
+| Rating | Use as a profanity | Use in clean text | Example  |
+| ------ | ------------------ | ----------------- | -------- |
+| 2      | likely             | unlikely          | `asshat` |
+| 1      | maybe              | maybe             | `addict` |
+| 0      | unlikely           | likely            | `beaver` |
 
 The `profanitySureness` field is the minimum rating (including) that you want to
 check for.
