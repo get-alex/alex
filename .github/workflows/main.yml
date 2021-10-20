@@ -4,51 +4,18 @@ on:
   - push
 jobs:
   main:
-    name: '${{ matrix.node }}'
+    name: ${{matrix.node}}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: dcodeIO/setup-node-nvm@master
+      - uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node }}
+          node-version: ${{matrix.node}}
       - run: npm install
-      - run: npm test && ./cli.js readme.md --why --quiet
+      - run: npm test
       - uses: codecov/codecov-action@v1
     strategy:
       matrix:
         node:
-          - lts/dubnium
-          - node
-  release:
-    if: startsWith(github.ref, 'refs/tags/')
-    name: release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: dcodeIO/setup-node-nvm@master
-        with:
-          node-version: node
-      - run: npm install
-      - run: npm run build
-      - id: release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-      - uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: alex.js
-          asset_name: alex.js
-          asset_content_type: application/javascript
-      - uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release.outputs.upload_url }}
-          asset_path: alex.min.js
-          asset_name: alex.min.js
-          asset_content_type: application/javascript
+          - lts/erbium
+          - '*'
