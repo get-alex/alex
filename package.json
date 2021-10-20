@@ -82,7 +82,7 @@
     "vfile-sort": "^2.0.0"
   },
   "devDependencies": {
-    "nyc": "^15.0.0",
+    "c8": "^7.10.0",
     "prettier": "^2.0.0",
     "remark-cli": "^9.0.0",
     "remark-preset-wooorm": "^8.0.0",
@@ -92,20 +92,14 @@
   },
   "scripts": {
     "format": "remark . -qfo && prettier . -w --loglevel warn && xo --fix",
-    "test-api": "node test",
-    "test-coverage": "nyc --reporter lcov tape test/index.js",
+    "test-api": "node test/index.js",
+    "test-coverage": "c8 --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --reporter lcov npm run test-api",
     "test": "npm run format && npm run test-coverage"
   },
   "alex": {
     "allow": [
       "butt"
     ]
-  },
-  "nyc": {
-    "check-coverage": true,
-    "lines": 100,
-    "functions": 100,
-    "branches": 100
   },
   "prettier": {
     "tabWidth": 2,

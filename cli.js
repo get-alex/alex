@@ -150,7 +150,8 @@ function transform(options) {
 
   plugins.push([filter, {allow: settings.allow, deny: settings.deny}])
 
-  /* istanbul ignore if - hard to check. */
+  // Hard to check.
+  /* c8 ignore next 3 */
   if (cli.flags.diff) {
     plugins.push(diff)
   }

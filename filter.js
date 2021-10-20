@@ -5,7 +5,8 @@ var control = require('remark-message-control')
 module.exports = filter
 
 function filter(options) {
-  var settings = options || /* istanbul ignore next */ {}
+  /* c8 ignore next */
+  var settings = options || {}
 
   if (settings.allow && settings.deny) {
     throw new Error(
