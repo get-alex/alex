@@ -100,7 +100,6 @@ like][literals] are not warned about.
 
 ## Integrations
 
-*   Atom — [`get-alex/atom-linter-alex`](https://github.com/get-alex/atom-linter-alex)
 *   Sublime — [`sindresorhus/SublimeLinter-contrib-alex`](https://github.com/sindresorhus/SublimeLinter-contrib-alex)
 *   Gulp — [`dustinspecker/gulp-alex`](https://github.com/dustinspecker/gulp-alex)
 *   Slack — [`keoghpe/alex-slack`](https://github.com/keoghpe/alex-slack)
