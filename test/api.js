@@ -4,9 +4,9 @@ import test from 'tape'
 import alex, {markdown, mdx, text, html} from '../index.js'
 
 const threeHtml = fs.readFileSync(
-  new URL('./fixtures/three.html', import.meta.url)
+  new URL('fixtures/three.html', import.meta.url)
 )
-const fourMdx = fs.readFileSync(new URL('./fixtures/four.mdx', import.meta.url))
+const fourMdx = fs.readFileSync(new URL('fixtures/four.mdx', import.meta.url))
 
 // Tests. Note that these are small because alex is in fact
 // just a collection of well-tested modules.

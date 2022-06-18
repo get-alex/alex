@@ -23,7 +23,7 @@ import {filter} from './filter.js'
 
 /** @type {import('type-fest').PackageJson} */
 const pack = JSON.parse(
-  String(fs.readFileSync(new URL('./package.json', import.meta.url)))
+  String(fs.readFileSync(new URL('package.json', import.meta.url)))
 )
 
 const textExtensions = [
@@ -147,7 +147,6 @@ function transform(options = {}) {
   ]
 
   if (cli.flags.html) {
-    // @ts-expect-error: types are having a hard time for bridges.
     plugins = [rehypeParse, [rehypeRetext, unified().use({plugins})]]
   } else if (cli.flags.mdx) {
     // @ts-expect-error: types are having a hard time for bridges.
