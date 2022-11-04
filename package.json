@@ -84,14 +84,14 @@
     "unified": "^10.0.0",
     "unified-diff": "^4.0.0",
     "unified-engine": "^10.0.0",
-    "update-notifier": "^6.0.2",
+    "update-notifier": "^6.0.0",
     "vfile": "^5.0.0",
     "vfile-reporter": "^7.0.0",
     "vfile-sort": "^3.0.0"
   },
   "devDependencies": {
     "@types/tape": "^4.0.0",
-    "@types/update-notifier": "^6.0.1",
+    "@types/update-notifier": "^6.0.0",
     "c8": "^7.10.0",
     "prettier": "^2.0.0",
     "remark-cli": "^10.0.0",
