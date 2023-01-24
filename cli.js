@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/**
+ * @typedef {import('./index.js').OptionsObject} OptionsObject
+ */
+
 import fs from 'node:fs'
 import process from 'node:process'
 import {URL} from 'node:url'
@@ -135,7 +139,6 @@ engine(
 )
 
 /**
- * @type {import('unified-engine').ConfigTransform}
  * @param {import('./index.js').OptionsObject} [options]
  */
 function transform(options = {}) {

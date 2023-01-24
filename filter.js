@@ -17,7 +17,7 @@
 
 import remarkMessageControl from 'remark-message-control'
 
-/** @type {import('unified').Plugin<[Options?]|[], Root>} */
+/** @param {Options} options */
 export function filter(options = {}) {
   if (options.allow && options.deny) {
     throw new Error(
