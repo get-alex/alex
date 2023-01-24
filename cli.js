@@ -74,7 +74,7 @@ const cli = meow(
   {
     importMeta: import.meta,
     flags: {
-      version: {type: 'boolean', alias: 'v'},
+      version: {type: 'boolean', alias: 'V'},
       help: {type: 'boolean', alias: 'h'},
       stdin: {type: 'boolean'},
       text: {type: 'boolean', alias: 't'},

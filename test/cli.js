@@ -11,7 +11,7 @@ test('alex-cli', function (t) {
   t.test('version', function (t) {
     t.plan(1)
 
-    childProcess.exec('./cli.js -v', (error, stdout, stderr) => {
+    childProcess.exec('./cli.js -V', (error, stdout, stderr) => {
       t.deepEqual(
         [error, stderr, stdout],
         [null, '', pkg.version + '\n'],
