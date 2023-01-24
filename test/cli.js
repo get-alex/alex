@@ -322,6 +322,49 @@ test('alex-cli', function (t) {
     )
   })
 
+  t.test('allow (with config file)', function (t) {
+    const fp = path.join('test', 'fixtures', 'allow', 'two.md')
+
+    t.plan(1)
+
+    childProcess.exec('./cli.js ' + fp, (error, stdout, stderr) => {
+      t.deepEqual(
+        [error, stderr, stdout],
+        [null, fp + ': no issues found\n', ''],
+        'should work'
+      )
+    })
+  })
+
+  t.test('allow (with different config file)', function (t) {
+    const basePath = path.join('test', 'fixtures', 'allow', 'two.md')
+    const fp = path.join(basePath, 'two.md')
+    const config = path.join(basePath, 'different-alex-config.json')
+
+    t.plan(1)
+
+    childProcess.exec(
+      './cli.js --alexrc ' + config + ' ' + fp,
+      (error, stdout, stderr) => {
+        t.deepEqual(
+          [error && error.code, stderr, stdout],
+          [
+            1,
+            [
+              fp,
+              '  1:22-1:26  warning  `host` may be insensitive, use `presenter`, `entertainer`, `emcee` instead  host-hostess  retext-equality',
+              '',
+              '⚠ 1 warning',
+              ''
+            ].join('\n'),
+            ''
+          ],
+          'should work'
+        )
+      }
+    )
+  })
+
   t.test('deny', function (t) {
     const fp = path.join('test', 'fixtures', 'deny', 'two.md')
 

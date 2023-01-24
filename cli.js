@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 /**
+ * @typedef {import('unified-engine').Options} UnifiedEngineOptions
  * @typedef {import('./index.js').OptionsObject} OptionsObject
+ *
+ * @typedef {OptionsObject & UnifiedEngineOptions} AlexConfigurationObject
  */
 
 import fs from 'node:fs'
@@ -62,6 +65,7 @@ const cli = meow(
     '  -d, --diff              ignore unchanged lines (affects Travis only)',
     '      --reporter=REPORTER use a custom vfile-reporter',
     '  --stdin                 read from stdin',
+    '  --alexrc                specify configuration file',
     '',
     'When no input files are given, searches for markdown and text',
     'files in the current directory, `doc`, and `docs`.',
@@ -76,6 +80,7 @@ const cli = meow(
     flags: {
       version: {type: 'boolean', alias: 'V'},
       help: {type: 'boolean', alias: 'h'},
+      alexrc: {type: 'string'},
       stdin: {type: 'boolean'},
       text: {type: 'boolean', alias: 't'},
       mdx: {type: 'boolean'},
@@ -111,32 +116,35 @@ if (cli.flags.stdin) {
   globs = cli.input
 }
 
-engine(
-  {
-    processor: unified(),
-    files: globs,
-    extensions,
-    configTransform: transform,
-    out: false,
-    output: false,
-    rcName: '.alexrc',
-    packageField: 'alex',
-    color: Boolean(supportsColor.stderr),
-    reporter: cli.flags.reporter || vfileReporter,
-    reporterOptions: {
-      verbose: cli.flags.why
-    },
-    quiet: cli.flags.quiet,
-    ignoreName: '.alexignore',
-    silentlyIgnore,
-    frail: true,
-    defaultConfig: transform({})
+/** @type {AlexConfigurationObject} */
+const configuration = {
+  processor: unified(),
+  files: globs,
+  extensions,
+  configTransform: transform,
+  out: false,
+  output: false,
+  rcName: '.alexrc',
+  packageField: 'alex',
+  color: Boolean(supportsColor.stderr),
+  reporter: cli.flags.reporter || vfileReporter,
+  reporterOptions: {
+    verbose: cli.flags.why
   },
-  function (error, code) {
-    if (error) console.error(error.message)
-    process.exit(code)
-  }
-)
+  quiet: cli.flags.quiet,
+  ignoreName: '.alexignore',
+  silentlyIgnore,
+  frail: true,
+  defaultConfig: transform({})
+}
+if (cli.flags.alexrc !== undefined) {
+  configuration.rcPath = cli.flags.alexrc
+}
+
+engine(configuration, function (error, code) {
+  if (error) console.error(error.message)
+  process.exit(code)
+})
 
 /**
  * @param {import('./index.js').OptionsObject} [options]
