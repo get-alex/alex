@@ -135,7 +135,6 @@ engine(
 )
 
 /**
- * @type {import('unified-engine').ConfigTransform}
  * @param {import('./index.js').OptionsObject} [options]
  */
 function transform(options = {}) {
