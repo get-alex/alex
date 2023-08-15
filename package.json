@@ -56,7 +56,7 @@
     "Daan <daan@devign.it>"
   ],
   "type": "module",
-  "exports": "./index.js",
+  "main": "index.js",
   "sideEffects": false,
   "bin": "cli.js",
   "types": "index.d.ts",
