@@ -152,6 +152,7 @@ function transform(options = {}) {
     plugins = [remarkParse, remarkMdx, [remarkRetext, unified().use({plugins})]]
   } else if (!cli.flags.text) {
     plugins = [
+      // @ts-expect-error: hush.
       remarkParse,
       remarkGfm,
       [remarkFrontmatter, ['yaml', 'toml']],

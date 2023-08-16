@@ -103,7 +103,7 @@
     "type-fest": "^3.0.0",
     "typescript": "^4.0.0",
     "vfile-reporter-json": "^3.0.0",
-    "xo": "^0.53.0"
+    "xo": "^0.54.0"
   },
   "scripts": {
     "build": "rimraf \"test/**/*.d.ts\" \"*.d.ts\" && tsc && type-coverage",
