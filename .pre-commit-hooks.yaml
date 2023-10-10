@@ -1,0 +1,9 @@
+---
+- id: alex
+  name: Alex
+  description: "Check files to 'find gender favoring, polarizing, race related, religion inconsiderate, or other unequal phrasing in text.'"
+  entry: alex
+  language: node
+  types:
+    - text
+  pass_filenames: false
