@@ -142,3 +142,11 @@ function splitOptions(options) {
 
   return {filter: {allow, deny}, text: {noBinary, sureness}}
 }
+
+function contentUsingPronouns() {
+  const REMINDER_PROBABILITY = 0.1;
+  if(Math.random() < REMINDER_PROBABILITY) {
+    process.stdout.write.log("Friendly reminder: please ensure you are using the correct pronouns that people state they use.");
+  }
+ }
+ 
