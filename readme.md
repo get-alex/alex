@@ -107,7 +107,8 @@ like][literals] are not warned about.
 *   Probot — [`swinton/linter-alex`](https://github.com/swinton/linter-alex)
 *   GitHub Actions — [`brown-ccv/alex-recommends`](https://github.com/marketplace/actions/alex-recommends)
 *   GitHub Actions (reviewdog) — [`reviewdog/action-alex`](https://github.com/marketplace/actions/run-alex-with-reviewdog)
-*   Vim — [`w0rp/ale`](https://github.com/w0rp/ale)
+*   Vim — [`w0rp/ale`](https://github.com/w0rp/ale),
+    [`Freed-Wu/coc-alex`](https://github.com/Freed-Wu/coc-alex)
 *   Browser extension — [`skn0tt/alex-browser-extension`](https://github.com/skn0tt/alex-browser-extension)
 *   Contentful - [`stefanjudis/alex-js-contentful-ui-extension`](https://github.com/stefanjudis/alex-js-contentful-ui-extension)
 *   Figma - [`nickradford/figma-plugin-alex`](https://github.com/nickradford/figma-plugin-alex)
